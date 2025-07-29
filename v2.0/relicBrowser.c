@@ -114,8 +114,8 @@ void __test_graph_init(){
     graph.root.ptr[2].child = &(graph.root.ptr[4]);
 
     //parent
-    int parentId[5] = {0,0,1,1,1};
-    int parentCount[5] = {1,1,1,2,1};
+    int parentId[] =    {-1,0,0,1,1,1};
+    int parentCount[] = {-1,1,1,1,2,1};
     for(int i = 1; i<=5; i++){
         graph.root.ptr[i].parentCount = parentCount[i];
         graph.root.ptr[i].parent = graph.root.ptr + parentId[i];
@@ -159,7 +159,7 @@ void json_close(JSON *json){
     free(json);
 }
 /** also assign Id */
-void __json_printGraphNodes(JSON *json){
+/* done */void __json_printGraphNodes(JSON *json){
     fprintf(json->outFile,"        \"nodes\":[\n");
     
 
@@ -232,7 +232,7 @@ void __json_printGraphNodes(JSON *json){
 
     fprintf(json->outFile,"        ],\n");
 }
-void __json_printGraphLinks(JSON *json){
+/* done */void __json_printGraphLinks(JSON *json){
     fprintf(json->outFile,"        \"links\":[\n");
     
 
@@ -248,12 +248,15 @@ void __json_printGraphLinks(JSON *json){
     while(1){
         
         //print current links
+        STATE *currentParent;
         for(int i = 0; i<current->parentCount; i++){
+            currentParent = current->parent + i;
+
             fprintf(json->outFile,"           ");
-            if(nodeid){fprintf(json->outFile,",");}
+            if(nodeid) fprintf(json->outFile,",");
             fprintf(json->outFile,"{\"src\":%d,\"dst\":%d,\"chance\":%lf}\n"
+                ,abs(json->queued[currentParent - graph.root.ptr])
                 ,abs(json->queued[current - graph.root.ptr])  
-                ,abs(json->queued[current->parent + i - graph.root.ptr])
                 ,current->parentChance[i]
             );
             nodeid++;
@@ -262,11 +265,12 @@ void __json_printGraphLinks(JSON *json){
         //append children into queue(if not already in queue)
         STATE *currentChild;
         for(int i = 0; i<current->childCount; i++){
-            currentChild
-            if( json->queued[current->child + i - graph.root.ptr] < 0) continue;
+            currentChild = current->child + i;
+            if( json->queued[currentChild - graph.root.ptr] <= 0) continue;
+
             //create queue node
             _queue = (QUEUE *)malloc(sizeof(QUEUE));
-            _queue->node = current->child + i;
+            _queue->node = currentChild;
             _queue->next = NULL;
 
             //append queue node
@@ -279,7 +283,7 @@ void __json_printGraphLinks(JSON *json){
             _queue = NULL;
 
             //mark node by assigning id 
-            json->queued[current->child + i - graph.root.ptr] *= -1;
+            json->queued[currentChild - graph.root.ptr] *= -1;
 
         }
 
@@ -302,7 +306,7 @@ void __json_printGraphLinks(JSON *json){
     fprintf(json->outFile,"        ]\n");
 }
 /** initiallized json->queued */
-void json_printGraph(JSON *json){
+/* done */void json_printGraph(JSON *json){
     if(json->graphId == 0) fprintf(json->outFile,"    {\n");
     else fprintf(json->outFile,"    ,{\n");
     

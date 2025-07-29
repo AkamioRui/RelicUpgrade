@@ -3,166 +3,176 @@ import * as d3Raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
 /** @type {import ("d3")} */  
 const d3 =d3Raw;
 
+//@ts-check
 
-
-{/* <svg width="200" height="100">
-  <rect x="0" y="0" width="200" height="100" stroke="red" stroke-width="3px" fill="white"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">TEXT</text>    
-</svg> */}
-
-let mysvg = d3.select('body').append('svg')
-  .style('background-color','aqua');
-
-// let marginx = '100px';
-// let marginy = '100px';
-// mysvg.append('text')
-//   .text('test123')
-//   .attr('x',marginx)
-//   .attr('y',marginy)
-  
-// mysvg.append('rect')
-//   .attr('x','0')
-//   .attr('y','0')
-//   .attr('width',marginx)
-//   .attr('height',marginy)
-//   .style('fill','green');
-
-let textbox = {
-  x:100,
-  y:10,
-  width:100,
-  height:20,
-  fill:'green',
-  msg:'loremIpsum'
-}
-
-mysvg.append('g')
-  .attr('transform','translate('+textbox.x+','+textbox.y+')')
-.append('rect')
-  .attr('width',textbox.width)
-  .attr('height',textbox.height)
-  .attr('fill',textbox.fill)
-.select(function (){return this.parentNode})
-.append('text')
-  .attr('x',textbox.width/2)
-  .attr('y',textbox.height/2)
-  .attr('text-anchor','middle')
-  .attr('dominant-baseline','middle')
-  .text(textbox.msg)
-
-mysvg.append('line')
-  .attr('x1',100)
-  .attr('y1',100)
-  .attr('x2',50)
-  .attr('y2',150)
-  .style('stroke-width','2')
-  .style('stroke','black')
-
-;
-
-
-
-
-
-
-
-
-let node = [
-  {x:100,y:0,msg:'aaaaaa'},
-  {x:0,y:100,msg:'aaaaaa'},
-  {x:300,y:200,msg:'aaaaaa'}
-];
-
-
-async function drawCartesian(){
-  // Set Dimensions
-  const xSize = 580; 
-  const ySize = 580;
-  const margin = 40;
-  const xMax = xSize - margin*2;
-  const yMax = ySize - margin*2;
-
-  //append svg
-  let mysvg = d3.select('body').append('svg')
-    .attr('id','mygraph')
-    .style("width",xSize)
-    .style("height",ySize)
-    /* test */.style("background-color"," aqua");
-
-  //append margin 
-  let graph = mysvg.append("g")
-    .attr("transform","translate(" + margin + "," + margin + ")")
-    .style("background-color"," green");
-
-  //append axis
-  const y = d3.scaleLinear().range([yMax, 0]).domain([0, 100]);
-  graph.append("g").call(d3.axisLeft(y));
-  const x = d3.scaleLinear().domain([0,10]).range([0,xMax]);
-  graph.append('g').call(d3.axisBottom(x))
-    .attr("transform","translate(0,"+yMax+")");
-    
-  // append dots
-  let jsondata =  (await (await fetch('mydata.json')).json());
-  /** @type {[{x:number,y:number}]} */
-  let nodes = jsondata[0].nodes;
-
-  graph.append('g')
-    .selectAll('points')  
-    .data(nodes).enter()
-    .append('circle')
-    .attr('cx', function(m){return x(m.x)})
-    .attr('cy', function(d){return y(d.y)})
-    .attr('r', 3)
-    .style('fill','red')
-  ;
-
-  /** @type {[{src:number,dst:number}]} */
-  let links= jsondata[0].links;
-  /** @type {[{x1:number,y1:number,x2:number,y2:number}]} */
-  let linkscord = links.map(function(value){return {
-    x1:nodes[value.src].x,
-    y1:nodes[value.src].y,
-    x2:nodes[value.dst].x,
-    y2:nodes[value.dst].y
-  }});
-
-  graph.append('g')
-    .selectAll('links')
-    .data(linkscord).enter()
-    .append('line')
-    .attr('x1',function(d){return x(d.x1)})
-    .attr('y1',function(d){return y(d.y1)})
-    .attr('x2',function(d){return x(d.x2)})
-    .attr('y2',function(d){return y(d.y2)})
-    .style('stroke-width','2')
-    .style('stroke','black')
-
-
-}
-
-
-/**
- * @param {string} msg 
- * @param {number} myInt 
+/** 
+ * @typedef {object} node
+ * @property {number} depth 
+ * @property {number} price 
+ * @property {number} succesR - success rate
+ * @property {string} detail
+ * @property {string} accept
  */
-function dostuff2(msg,myInt){
-    console.log(msg);
-    console.log(myInt);
-
-    /**
-     * @type {{a:boolean, b:number, c:string}}
-     */ 
-    var foo;
-    foo.a = true;
-    foo.b = 11; 
+/** 
+ * @typedef {object} link
+ * @property {number} src
+ * @property {number} dst
+ * @property {number} chance
+ */
+let nodeSetting={
+  fill:["red","green"],
+  width:75,
+  height:50,
+  padding:20
 }
 
-/* 
-tldr the size of svg element snapshot
-*/
-d3.select('.but1').on('click',()=>{
-  marginx = '10px';
-});
-d3.select('.but2').on('click',()=>{
-  console.log(marginx);
-});
+
+
+function __drawLinks(){
+
+}
+/**
+ * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} gnodeRoot 
+ * @returns {number}
+ */
+function __fixNodesX(gnodeRoot){
+
+  let parents = gnodeRoot.selectAll(':scope > .gtext');
+  let parentsLength = parents.size();
+  let parentWidthTotal = - nodeSetting.padding 
+    + parentsLength *(nodeSetting.width + nodeSetting.padding);
+
+  let children = gnodeRoot.selectAll(':scope > .gnode');
+  let childrenLength = children.size();
+  let childWidth = children.nodes().map((node)=>{
+    return __fixNodesX(gnodeRoot.select(function (){return node;}));
+  });
+  let childTotalWidth = - nodeSetting.padding;
+  childWidth.forEach((width)=>{
+    childTotalWidth += width + nodeSetting.padding;
+  });
+
+  
+
+  //adjusting x
+  let width, childCurrent, parentCurrent, childPadding, parentPadding;
+  if(childTotalWidth > parentWidthTotal){
+    width = childTotalWidth;
+    childPadding = nodeSetting.padding;
+    parentPadding = (parentWidthTotal - parentsLength*nodeSetting.width)/(parentsLength+1);
+    childCurrent = 0;
+    parentCurrent = parentPadding;
+    
+
+  } else {
+    width = parentWidthTotal;
+  }
+
+  
+
+  return width;
+}
+/**
+ * @param {SVGElement[]} drawnNode 
+ * @param {link[]} links 
+ * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} svg_g 
+ */
+function __connectNodes(drawnNode,links,svg_g){
+  links.forEach((link)=>{
+    let child = drawnNode[link.dst];// this only include the gtext
+    let parent = drawnNode[link.src];
+    if(child.parentElement.parentElement == svg_g.node()){
+      parent.parentElement.appendChild(child.parentElement)
+      
+    } else {
+      let temp = parent.parentElement;
+      child.parentElement.parentElement.appendChild(parent)
+      temp.remove();
+    }
+  })
+}
+/**
+ * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} svg_g
+ * @param {node[]} nodes
+ * @returns {SVGElement[]} 
+ */
+function __drawNodes(svg_g,nodes){
+  svg_g.selectAll("aaaa")
+  .data(nodes).enter()
+  .append('g').attr('class',function(d){return d.detail})
+    .classed('gnode',true)
+    .attr('transform','translate(0,'+(2*nodeSetting.height)+')')
+    .attr('width',0)
+  .append('g').attr('class',function(d){return d.detail})
+  .classed('gtext',true)
+  .append('rect')
+    .attr('fill', (d)=>{return nodeSetting.fill[d.accept]})
+    .attr('width',nodeSetting.width)
+    .attr('height',nodeSetting.height)
+  .select(function (){return this.parentElement;}).append('text')
+  .append('tspan')
+    .text((d)=>{return d.detail})
+    .attr('x',nodeSetting.width/2)
+    .attr('y',nodeSetting.height/2)
+    .attr('dy','-.9em')
+    .attr('dominant-baseline','middle')
+    .attr('text-anchor','middle')
+  .select(function (){return this.parentElement}).append('tspan')
+    .text((d)=>{return d.price})  
+    .attr('x',nodeSetting.width/2)
+    .attr('y',nodeSetting.height/2)
+    .attr('dy','0em')
+    .attr('dominant-baseline','middle')
+    .attr('text-anchor','middle')
+  .select(function (){return this.parentElement}).append('tspan')
+    .text((d)=>{return d.succesR})  
+    .attr('x',nodeSetting.width/2)
+    .attr('y',nodeSetting.height/2)
+    .attr('dy','0.9em')
+    .attr('dominant-baseline','middle')
+    .attr('text-anchor','middle') 
+
+  /** @type {SVGElement[]} */
+  return svg_g.selectAll('g.gtext').nodes();
+
+}
+async function drawGraph(){
+  
+  /** @type {{nodes:node[],links:link[]}[]} */
+  let jsondata = await (await fetch('mydata.json')).json();
+  
+
+  //for each graph
+  let mysvg = d3.select('body').append('svg')
+    .style('background-color','aqua');
+  let svg_g = mysvg.append('g');
+  let currentGraph = 0;
+  let nodes = jsondata[currentGraph].nodes;
+  let links = jsondata[currentGraph].links;
+
+  
+  let drawnNode = __drawNodes(svg_g,nodes);
+  __connectNodes(drawnNode,links,svg_g);
+  __fixNodesX(svg_g.select(':scope > .gnode'));
+  // __drawLinks();
+  
+
+  //fixing svg size
+  let mysvg_Size = mysvg.node().getBoundingClientRect();
+  let svg_g_Size = svg_g.node().getBoundingClientRect();
+  mysvg
+    .attr('width', svg_g_Size.right-mysvg_Size.x)
+    .attr('height',svg_g_Size.bottom-mysvg_Size.y);
+
+  
+
+
+ 
+
+}
+ 
+
+
+
+console.log();
+drawGraph();
