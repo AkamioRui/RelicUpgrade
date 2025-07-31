@@ -28,66 +28,68 @@ let nodeSetting={
 
 
 
-function __drawLinks(){
 
+
+
+
+
+
+/**
+ * @param {SVGElement[]} drawnNode 
+ * @param {link[]} links 
+ * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} svg_g 
+ */
+/* done */function __drawLinks(drawnNode,links,svg_g){
+  console.log(svg_g.node());
+  let svg_bound = svg_g.node().getBoundingClientRect();
+  
+  links.forEach(link =>{  
+    if(link.dst && link.dst) {
+      let src_bound = drawnNode[link.src].getBoundingClientRect();
+      let dst_bound = drawnNode[link.dst].getBoundingClientRect();
+
+      svg_g.append('line')
+        .attr('x1',(src_bound.left + src_bound.right)/2 - svg_bound.x)
+        .attr('y1',src_bound.bottom - svg_bound.y)
+        .attr('x2',(dst_bound.left + dst_bound.right)/2 - svg_bound.x)
+        .attr('y2',dst_bound.top - svg_bound.y)
+        .attr('stroke-width',1)
+        .attr('stroke','black')
+    } 
+  })
+  
 }
 /**
  * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} gnodeRoot 
  * @returns {number}
  */
-function __fixNodesX(gnodeRoot){
-
-  let parents = gnodeRoot.selectAll(':scope > .gtext');
-  let parentsLength = parents.size();
-  let parentWidthTotal = - nodeSetting.padding 
-    + parentsLength *(nodeSetting.width + nodeSetting.padding);
-
+/* done */function __fixNodesX(gnodeRoot){
+  let offset = 0;
   let children = gnodeRoot.selectAll(':scope > .gnode');
-  let childrenLength = children.size();
-  let childWidth = children.nodes().map((node)=>{
-    return __fixNodesX(gnodeRoot.select(function (){return node;}));
-  });
-  let childTotalWidth = - nodeSetting.padding;
-  childWidth.forEach((width)=>{
-    childTotalWidth += width + nodeSetting.padding;
+  children.nodes().forEach(node=>{
+    gnodeRoot.select(function (){return node;}).attr('transform','translate('+offset+',100)');
+    offset += __fixNodesX(gnodeRoot.select(function (){return node;})) + nodeSetting.padding;
   });
 
-  
-
-  //adjusting x
-  let width, childCurrent, parentCurrent, childPadding, parentPadding;
-  if(childTotalWidth > parentWidthTotal){
-    width = childTotalWidth;
-    childPadding = nodeSetting.padding;
-    parentPadding = (parentWidthTotal - parentsLength*nodeSetting.width)/(parentsLength+1);
-    childCurrent = 0;
-    parentCurrent = parentPadding;
-    
-
-  } else {
-    width = parentWidthTotal;
-  }
+  //move parent
+  let childWidth = offset - nodeSetting.padding; 
+  if(childWidth > 0) gnodeRoot.select(':scope > .gtext')
+    .attr('transform','translate('+(childWidth-nodeSetting.width)/2+',0)');
 
   
-
-  return width;
+  return childWidth >0 ? childWidth: nodeSetting.width;
 }
 /**
  * @param {SVGElement[]} drawnNode 
  * @param {link[]} links 
  * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} svg_g 
  */
-function __connectNodes(drawnNode,links,svg_g){
+/* done */function __connectNodes(drawnNode,links,svg_g){
   links.forEach((link)=>{
-    let child = drawnNode[link.dst];// this only include the gtext
-    let parent = drawnNode[link.src];
-    if(child.parentElement.parentElement == svg_g.node()){
-      parent.parentElement.appendChild(child.parentElement)
-      
-    } else {
-      let temp = parent.parentElement;
-      child.parentElement.parentElement.appendChild(parent)
-      temp.remove();
+    if(link.dst && link.dst) {
+      let child = drawnNode[link.dst];// this only include the gtext
+      let parent = drawnNode[link.src];
+      parent.parentElement.appendChild(child.parentElement);
     }
   })
 }
@@ -96,12 +98,12 @@ function __connectNodes(drawnNode,links,svg_g){
  * @param {node[]} nodes
  * @returns {SVGElement[]} 
  */
-function __drawNodes(svg_g,nodes){
+/* done */function __drawNodes(svg_g,nodes){
   svg_g.selectAll("aaaa")
   .data(nodes).enter()
   .append('g').attr('class',function(d){return d.detail})
     .classed('gnode',true)
-    .attr('transform','translate(0,'+(2*nodeSetting.height)+')')
+    /* redundant */.attr('transform','translate(0,'+(2*nodeSetting.height)+')')
     .attr('width',0)
   .append('g').attr('class',function(d){return d.detail})
   .classed('gtext',true)
@@ -150,11 +152,22 @@ async function drawGraph(){
   let nodes = jsondata[currentGraph].nodes;
   let links = jsondata[currentGraph].links;
 
+  console.log(links);
+  let heir = d3.stratify();
+  heir = heir.id((d) => d.dst);
+  heir = heir.parentId((d) => d.src);
+  heir = heir(links);
+  console.log(heir);
+
+  
+
   
   let drawnNode = __drawNodes(svg_g,nodes);
   __connectNodes(drawnNode,links,svg_g);
-  __fixNodesX(svg_g.select(':scope > .gnode'));
-  // __drawLinks();
+  let drawnNodeRoot = svg_g.select(':scope > .gnode');
+  drawnNodeRoot.attr('transform','translate(0,0)');
+  __fixNodesX(drawnNodeRoot);
+  __drawLinks(drawnNode,links,svg_g);
   
 
   //fixing svg size

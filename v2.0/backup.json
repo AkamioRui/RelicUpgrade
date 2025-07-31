@@ -1,41 +1,20 @@
 [
     {
         "nodes":[
-            {"x":1,"y":1},
-            {"x":2,"y":4},
-            {"x":3,"y":9},
-            {"x":4,"y":16},
-            {"x":5,"y":25},
-            {"x":6,"y":36},
-            {"x":7,"y":49}
+           {"depth":0,"price":10.000000,"succesR":0.000000,"detail":"a","accept":"0"}
+           ,{"depth":1,"price":110.000000,"succesR":1.000000,"detail":"b","accept":"0"}
+           ,{"depth":1,"price":210.000000,"succesR":2.000000,"detail":"c","accept":"0"}
+           ,{"depth":2,"price":310.000000,"succesR":3.000000,"detail":"d","accept":"0"}
+           ,{"depth":2,"price":410.000000,"succesR":4.000000,"detail":"e","accept":"0"}
+           ,{"depth":2,"price":510.000000,"succesR":5.000000,"detail":"f","accept":"0"}
         ],
         "links":[
-            {"src":0,"dst":1},
-            {"src":1,"dst":2},
-            {"src":2,"dst":3},
-            {"src":3,"dst":4},
-            {"src":4,"dst":5},
-            {"src":5,"dst":6},
-            {"src":6,"dst":0}
-
-
-        ]
-    },
-    {
-        "nodes":[],
-        "links":[
-            {"src":0,"dst":1},
-            {"src":0,"dst":2},
-            {"src":0,"dst":3},
-            {"src":1,"dst":4},
-            {"src":2,"dst":5},
-            {"src":3,"dst":6}
+           {"src":0,"dst":1,"chance":100.000000}
+           ,{"src":0,"dst":2,"chance":200.000000}
+           ,{"src":1,"dst":3,"chance":300.000000}
+           ,{"src":1,"dst":4,"chance":400.000000}
+           ,{"src":2,"dst":4,"chance":401.000000}
+           ,{"src":1,"dst":5,"chance":500.000000}
         ]
     }
-
 ]
-
-
-
-
-

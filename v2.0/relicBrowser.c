@@ -49,7 +49,7 @@ typedef struct STATE{
     void *arg;//for printing
     struct STATE *child;//the address in root array where this.children start
     int childCount;
-    
+
     //for processing
     char whitelisted;//1 if true
     struct STATE *parent;//what actually being used
@@ -81,11 +81,13 @@ struct {
     
 } graph;
 void graph_close(){
+    //parent
     for(int i = 0 ; i < graph.root.len ; i++){
         if(graph.root.ptr[i].parentChance == NULL) continue;
         free(graph.root.ptr[i].parentChance);
         graph.root.ptr[i].parentChance = NULL;
     }
+   
     
     free(graph.root.ptr);
     graph.root.ptr = NULL;
@@ -106,12 +108,12 @@ void __test_graph_init(){
     }
 
     //child 
-    graph.root.ptr[0].childCount = 2;
-    graph.root.ptr[0].child = &(graph.root.ptr[1]);
-    graph.root.ptr[1].childCount = 3;
-    graph.root.ptr[1].child = &(graph.root.ptr[3]);
-    graph.root.ptr[2].childCount = 1;
-    graph.root.ptr[2].child = &(graph.root.ptr[4]);
+    int childId[] =    {1,3,4};
+    int childCount[] = {2,3,1};
+    for(int i = 0; i<3; i++){
+        graph.root.ptr[i].childCount = childCount[i];
+        graph.root.ptr[i].child = graph.root.ptr + childId[i];
+    }
 
     //parent
     int parentId[] =    {-1,0,0,1,1,1};
@@ -159,7 +161,7 @@ void json_close(JSON *json){
     free(json);
 }
 /** also assign Id */
-/* done */void __json_printGraphNodes(JSON *json){
+/* need to also print spanning tree links  */void __json_printGraphNodes(JSON *json){
     fprintf(json->outFile,"        \"nodes\":[\n");
     
 
@@ -176,7 +178,7 @@ void json_close(JSON *json){
     short currentNodeId = 0;
     short currentDepth = 0;
     while(1){
-        //print current
+        //print current /* this should print: node data, the spanning link, all links */
         fprintf(json->outFile,"           ");
         if(currentNodeId)fprintf(json->outFile,",");
         fprintf(json->outFile,"{\"depth\":%d,\"price\":%lf,\"succesR\":%lf,\"detail\":\"%s\",\"accept\":\"%d\"}\n"
@@ -232,7 +234,7 @@ void json_close(JSON *json){
 
     fprintf(json->outFile,"        ],\n");
 }
-/* done */void __json_printGraphLinks(JSON *json){
+/* this will be redundant */void __json_printGraphLinks(JSON *json){
     fprintf(json->outFile,"        \"links\":[\n");
     
 

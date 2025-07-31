@@ -9,11 +9,11 @@
            ,{"depth":2,"price":510.000000,"succesR":5.000000,"detail":"f","accept":"0"}
         ],
         "links":[
-           {"src":0,"dst":1,"chance":100.000000}
+           {"src":"","dst":0,"chance":100.000000}
+           ,{"src":0,"dst":1,"chance":100.000000}
            ,{"src":0,"dst":2,"chance":200.000000}
            ,{"src":1,"dst":3,"chance":300.000000}
            ,{"src":1,"dst":4,"chance":400.000000}
-           ,{"src":2,"dst":4,"chance":401.000000}
            ,{"src":1,"dst":5,"chance":500.000000}
         ]
     }
