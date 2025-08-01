@@ -323,6 +323,14 @@ void json_close(JSON *json){
 }
 void json_printHeap();
 
+/**
+ * each graph is split into : nodes and outerLink
+ * nodes :{id:number, parentId:number, data:{}}[] //only one parent, from dfs
+ * outerLink:{id:number,parentId:number}[] //this is link that are not in the spanning tree
+ * */ 
+void json_printGraph2(JSON *json){
+    
+}
 
 
 /* done */void iniGlobalVariable(int piece, int mainstat, int *substat, int substat_len){

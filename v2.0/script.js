@@ -27,36 +27,300 @@ let nodeSetting={
 }
 
 
+// test();
+function test(){
+  let width = 400;
+  let height = 600;
+  let svg = d3.select('body').append('svg')
+    .attr('width',width)
+    .attr('height',height)
+  ;
+  let svg_g = svg.append('g');
+
+  let linker = d3.linkHorizontal();
+  console.log(linker.x());
+  console.log(linker.y());
+
+  let mypath = svg_g.selectAll('blabla')
+    .data([{source:[0,0],target:[100,100]}]).enter()
+    .append('path')
+    .attr('class','link')
+    .attr('d',linker)
+    .attr('fill','none')
+    .attr('stroke','black')
+  ;
+  console.log(mypath);
+   /* 
+   svg.selectAll('path')
+    .data(treeLinks).enter()
+    .append('path')
+    .attr('class','link')
+    .attr('d',d3.linkVertical()
+      .x( (d)=>d.x )
+      .y( (d)=>d.y )
+    )
+   */ 
+  
+
+}
 
 
 
 
+drawGraph2();
+async function drawGraph2(){
+  let button_back = d3.select('body').append('button').text('back');
+  let button_next = d3.select('body').append('button').text('next');
+  d3.select('body').append('br');
+  let svg = d3.select('body').append('svg');
+  let svg_g = svg.append('g');
+
+  
+
+  /** @type {{nodes:node[],links:link[]}[]} */
+  const data = await (await fetch('mydata.json')).json();
+  let currentGraph = 0;
+  /** @type {node[]} */
+  let treeNodesData;
+  /** @type {d3.HierarchyNode<link>[]}*/
+  let treeNodes;
+  /** @type {d3.HierarchyPointLink<link>[]}*/
+  let treeLinks, treeOuterLinks;
+  const treelayout = d3.tree().nodeSize([50,100]);
+  const table2Heirarchy = d3.stratify()
+    .id(function (d){return d.dst})
+    .parentId(function (d){return d.src})
+  ;
+
+
+  function generateCoordinate(){
+    treeNodesData = data[currentGraph].nodes;
+    const root = table2Heirarchy (data[currentGraph].links);
+    treeLinks = treelayout(root).links();//set x and y for each node
+    treeNodes = root.descendants();
+    treeNodes.forEach((d)=>{
+      d.mydata = treeNodesData[d.data.dst]
+    })
+
+    //still odd
+    treeOuterLinks = [];
+    treeOuterLinks.push({source:treeNodes[2],target:treeNodes[4]})
+    treeLinks = treeLinks.concat(treeOuterLinks);
+  };
+  generateCoordinate();
+  
+  
+ 
+
+  
+ /**
+  * @param {d3.Selection<SVGPathElement, HierarchyPointLink<link>, SVGGElement, any>} myselection 
+  * @param {string} color 
+  */
+  function adjustPath(myselection,color){
+    myselection
+    .attr('fill','none')
+    .attr('stroke',color)
+    .attr('stroke-width',2)
+    .attr('d',d3.linkVertical()
+      .x( d=>d.x )
+      .y( d=>d.y )
+    )
+    .each
+  }
+  /**
+   * @param {d3.Selection<SVGGElement, d3.HierarchyNode<link> & {mydata:node}, HTMLElement, any>} myselection 
+   * @param {string} color 
+   */
+  function adjustNode(myselection,color){
+    myselection
+    .attr('transform',(d)=>{return 'translate('+d.x+','+d.y+')'})
+    .each(function(d){
+      this.mydata = d.mydata;
+      this.ischanged = 0;
+    })
+  .append('circle')
+    .attr('r',4)
+    .attr('fill',color)
+    .attr('stroke','black')
+    .attr('stroke-width',1.5)
+  .select(function (){return this.parentElement;}).append('text')
+    .text( d => treeNodesData[Number(d.id)].detail)
+    .attr('x',4)
+    .attr('dominant-baseline','middle')
+  }
+  /**
+   * @param {d3.Selection<SVGGElement, d3.HierarchyNode<link> & {mydata:node}, HTMLElement, any>} myselection 
+   * @param {string} color 
+   */
+  function updateNode(myselection,color_modified,color_unchanged){
+    
+    myselection
+    .attr('transform',(d)=>{return 'translate('+d.x+','+d.y+')'})
+    .each(function(d){
+      for(let v of Object.entries(this.mydata)){
+        if(d.mydata[v[0]]==v[1]) continue;
+        else{      
+          this.ischanged = 1;
+          break;
+        }
+      }
+    })
+    .select('circle')
+      // .attr('r',4)
+      .attr('fill',function(){
+        if(this.parentElement.ischanged) return color_modified;
+        else return color_unchanged;
+      })
+      // .attr('stroke','black')
+      // .attr('stroke-width',1.5)
+    .select(function (){return this.parentElement;}).select('text')
+      .text( d => treeNodesData[Number(d.id)].detail)
+      // .attr('x',4)
+      // .attr('dominant-baseline','middle')
+  }
+  
+  
+  
+  
+  let linksElement = svg_g.append('g').attr('class','link').selectAll('path')
+    .data(treeLinks).enter()
+    .append("path")
+    .call(adjustPath,'black')
+  ;
+  let nodesElement = svg_g.append('g').attr('class','node').selectAll('g.node')
+    .data(treeNodes).enter()
+    .append('g').attr('class','node')
+    .call(adjustNode,'blue')  
+  ;
+  
+  
+
+
+    // updateGraph();
+  function updateGraph(){
+    nodesElement
+      .data(treeNodes, d => d.id)
+      .join(
+        enter => enter.append('g').attr('class','node').call(adjustNode,'green'),
+        update => update.call(updateNode,'blue','black'),
+        exit => exit.remove()
+      )
+    ;
+
+    linksElement
+      .data(treeLinks, d => d.source.id+','+ d.target.id)
+      .join(
+        enter => enter.append('path').call(adjustPath,'green'),
+        update => update.call(adjustPath,'black'),
+        exit => exit.remove()
+      )  
+    ;
+      
+  }
+  
+  
+  
+
+
+  //correcting
+  /** @type {DOMRect} */
+  let svg_bound, svg_g_bound;
+  function adjustSVG(){
+    svg_g
+    .attr('transform','translate(0,0)');
+    svg_bound = svg.node().getBoundingClientRect();
+    svg_g_bound = svg_g.node().getBoundingClientRect();
+    
+    svg_g
+    .attr('transform','translate('+(svg_bound.x - svg_g_bound.left)+','+(svg_bound.y - svg_g_bound.top)+')')
+    ;
+    svg
+      .attr('width',svg_g_bound.right - svg_g_bound.left)
+      .attr('height',svg_g_bound.bottom - svg_g_bound.top)
+    ;
+  }
+  adjustSVG();
+  
+
+  //next button
+  
+  button_next.on('click',()=>{
+    currentGraph++;
+    generateCoordinate();
+    updateGraph();
+    adjustSVG();
+  });
+  button_back.on('click',()=>{
+    currentGraph--;
+    generateCoordinate();
+    updateGraph();
+    adjustSVG();
+  });
+}
 
 
 
+
+// drawGraph();
 /**
  * @param {SVGElement[]} drawnNode 
  * @param {link[]} links 
- * @param {import ("d3").Selection<SVGSVGElement, any, HTMLElement, any>} svg_g 
+ * @param {d3.Selection<SVGSVGElement, any, HTMLElement, any>} svg_g 
  */
 /* done */function __drawLinks(drawnNode,links,svg_g){
   console.log(svg_g.node());
   let svg_bound = svg_g.node().getBoundingClientRect();
   
-  links.forEach(link =>{  
-    if(link.dst && link.dst) {
-      let src_bound = drawnNode[link.src].getBoundingClientRect();
-      let dst_bound = drawnNode[link.dst].getBoundingClientRect();
+  // links.forEach(link =>{  
+  //   if(link.dst && link.dst) {
+  //     let src_bound = drawnNode[link.src].getBoundingClientRect();
+  //     let dst_bound = drawnNode[link.dst].getBoundingClientRect();
 
-      svg_g.append('line')
-        .attr('x1',(src_bound.left + src_bound.right)/2 - svg_bound.x)
-        .attr('y1',src_bound.bottom - svg_bound.y)
-        .attr('x2',(dst_bound.left + dst_bound.right)/2 - svg_bound.x)
-        .attr('y2',dst_bound.top - svg_bound.y)
-        .attr('stroke-width',1)
-        .attr('stroke','black')
-    } 
-  })
+  //     svg_g.append('line')
+  //       .attr('x1',(src_bound.left + src_bound.right)/2 - svg_bound.x)
+  //       .attr('y1',src_bound.bottom - svg_bound.y)
+  //       .attr('x2',(dst_bound.left + dst_bound.right)/2 - svg_bound.x)
+  //       .attr('y2',dst_bound.top - svg_bound.y)
+  //       .attr('stroke-width',1)
+  //       .attr('stroke','black')
+  //   } 
+  // })
+
+  
+  let mylink = svg_g.selectAll('path')
+    .data(links).enter()
+    .append('path')
+    .attr('stroke','black')
+    .attr('fill','none')
+    .attr('d',d3.linkVertical()
+      .source((d)=>{ 
+        let a;
+        if(d.src === ""){
+          a = drawnNode[d.dst].getBoundingClientRect();
+          a.source = 0;
+
+        } else {
+          a = drawnNode[d.src].getBoundingClientRect();
+          a.source = 1;
+        }
+        return a;
+      })
+      .target((d)=>{ 
+        let a = drawnNode[d.dst].getBoundingClientRect();
+        a.source = 0;
+        return a;
+      })
+      .x((d)=>(d.left + d.right)/2 - svg_bound.x)
+      .y((d)=>{
+        if(d.source == 1) return d.bottom - svg_bound.y
+        else return d.top - svg_bound.y;
+        
+      })
+  
+    )
+  ;
+  console.log(mylink);
   
 }
 /**
@@ -187,5 +451,4 @@ async function drawGraph(){
 
 
 
-console.log();
-drawGraph();
+
