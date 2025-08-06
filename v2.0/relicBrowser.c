@@ -44,14 +44,13 @@ typedef struct STATE{
     double price;//the average price
     double successChance;
     char msg[16];
+    char whitelisted;//1 if true
 
-    
     void *arg;//for printing
     struct STATE *child;//the address in root array where this.children start
     int childCount;
 
     //for processing
-    char whitelisted;//1 if true
     struct STATE *parent;//what actually being used
     int parentCount;
     double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
@@ -69,8 +68,7 @@ struct {
         STATE_array start;
         STATE_array combination;
         STATE_array good;
-        STATE_array upgrade[4];//index = number of good substat -1
-        
+        STATE_array upgrade[4];//index = number of good substat -1 
     } three;
 
     struct{
@@ -78,7 +76,6 @@ struct {
         STATE_array good;
         STATE_array upgrade[4];
     } four;
-    
 } graph;
 void graph_close(){
     //parent

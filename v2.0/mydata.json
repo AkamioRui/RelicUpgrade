@@ -1,28 +1,5 @@
-[
-    {
-        "treeLinks":[
-            {"id":0,"parentId":"","data":{"chance":100.000000,"price":10.000000,"succesR":0.000000,"detail":"a","accept":"0"}}
-           ,{"id":1,"parentId":0 ,"data":{"chance":100.000000,"price":110.000000,"succesR":1.000000,"detail":"b","accept":"0"}}
-           ,{"id":2,"parentId":0 ,"data":{"chance":200.000000,"price":210.000000,"succesR":2.000000,"detail":"c","accept":"0"}}
-           ,{"id":3,"parentId":1 ,"data":{"chance":300.000000,"price":310.000000,"succesR":3.000000,"detail":"d","accept":"0"}}
-           ,{"id":4,"parentId":1 ,"data":{"chance":400.000000,"price":410.000000,"succesR":4.000000,"detail":"e","accept":"0"}}
-           ,{"id":5,"parentId":1 ,"data":{"chance":500.000000,"price":510.000000,"succesR":5.000000,"detail":"f","accept":"0"}}
-        ],
-        "outerLinks":[
-            {"id":4,"parentId":2,"data":{"chance":100.000000}}
-        ]
-    },
-    {
-        "treeLinks":[
-            {"id":0,"parentId":"","data":{"chance":100.000000,"price":10.000000,"succesR":0.000000,"detail":"a","accept":"0"}}
-           ,{"id":1,"parentId":0 ,"data":{"chance":100.000000,"price":110.000000,"succesR":1.000000,"detail":"b","accept":"0"}}
-           ,{"id":2,"parentId":0 ,"data":{"chance":200.000000,"price":210.000000,"succesR":2.000000,"detail":"c","accept":"0"}}
-           ,{"id":4,"parentId":1 ,"data":{"chance":400.000000,"price":410.000000,"succesR":4.000000,"detail":"e","accept":"0"}}
-           ,{"id":5,"parentId":1 ,"data":{"chance":500.000000,"price":1510.000000,"succesR":5.000000,"detail":"f","accept":"0"}}
-           ,{"id":6,"parentId":2 ,"data":{"chance":500.000000,"price":610.000000,"succesR":6.000000,"detail":"g","accept":"0"}}
-        ],
-        "outerLinks":[
-            {"id":4,"parentId":2,"data":{"chance":100.000000}}
-        ]
-    }
-]
+hello
+
+
+
+there
