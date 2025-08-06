@@ -21,53 +21,257 @@ const d3 =d3Raw;
  */
 let nodeSetting={
   fill:["red","green"],
-  width:75,
+  width:110,
   height:50,
   padding:20
 }
 
 
 // test();
-function test(){
-  let width = 400;
-  let height = 600;
-  let svg = d3.select('body').append('svg')
-    .attr('width',width)
-    .attr('height',height)
-  ;
-  let svg_g = svg.append('g');
 
-  let linker = d3.linkHorizontal();
-  console.log(linker.x());
-  console.log(linker.y());
 
-  let mypath = svg_g.selectAll('blabla')
-    .data([{source:[0,0],target:[100,100]}]).enter()
-    .append('path')
-    .attr('class','link')
-    .attr('d',linker)
-    .attr('fill','none')
-    .attr('stroke','black')
-  ;
-  console.log(mypath);
-   /* 
-   svg.selectAll('path')
-    .data(treeLinks).enter()
-    .append('path')
-    .attr('class','link')
-    .attr('d',d3.linkVertical()
-      .x( (d)=>d.x )
-      .y( (d)=>d.y )
-    )
-   */ 
+drawGraphD3();
+async function drawGraphD3(){
+  //common element
+  const all = d3.select('body').append('div');
+  const backButton = all.append('button').text('back');
+  const nextButton = all.append('button').text('next');
+  all.append('br');
+  const svg = all.append('svg');
+  const svg_g = svg.append('g');
+
+  /** @typedef {{chance:number,price:number,succesR:number,detail:string,accept:number}} treeLinkData */
+  /** @typedef {{id:number,parentId:any,data:treeLinkData}} treeLink */
+  /** @typedef {{id:number,parentId:any,data:{chance:number}}} outerLink */
+
   
 
+
+  //create some constant variable
+  /** @type {{treeLinks:treeLink[],outerLinks:outerLink[]}[]} */
+  const jsondata = await (await fetch('mydata.json')).json();
+  /** @type {d3.StratifyOperator<treeLink>} */
+  const json2heirarchy = d3.stratify();
+    json2heirarchy
+    .id(d=>d.id)
+    .parentId(d=>d.parentId)
+  ;
+  /** @type {d3.TreeLayout<treeLink>} */
+  const treelayout = d3.tree()
+    .nodeSize([nodeSetting.width+nodeSetting.padding*2,nodeSetting.height*2])
+  ; 
+  let currentGraph = 0;
+  /** @type {d3.HierarchyPointLink<treeLink>[]} */
+  let treeLinks;
+  /* 
+  children: (2) [h, h]
+  data: {id: 0, parentId: '', data: {…}}
+  depth: 0
+  height: 2
+  id: "0"
+  parent: null
+  x: 0
+  y: 0
+  */
+  /** @type {d3.HierarchyNode<treeLink>[]} */
+  let treeNodes;
+  function getGraphData(){
+    let root = json2heirarchy(jsondata[currentGraph].treeLinks);
+    treeLinks = treelayout(root).links();
+    treeNodes = root.descendants();
+
+    let treeNodesMap = [];
+    treeNodes.forEach((d)=>{
+      treeNodesMap[d.id] = d;
+    })
+
+    let treeOuterLinks = jsondata[currentGraph].outerLinks.map(
+      (v)=>{return {source:treeNodesMap[v.parentId],target:treeNodesMap[v.id]} ;}
+    )
+    treeLinks.push(...treeOuterLinks);
+  }
+  getGraphData();
+  
+  
+  
+  function resizeSVG(){
+    let xArr = treeNodes.map((d)=>d.x);
+    let minX = Math.min(...xArr);
+    let maxX = Math.max(...xArr);
+    let yArr = treeNodes.map(d=>d.y);
+
+    svg_g.attr('transform','translate('
+      +(minX*(-1) + nodeSetting.width/2)+
+      ','
+      +(nodeSetting.height/2)+
+      ')')
+    ;
+
+    svg
+    .attr('width',nodeSetting.width + maxX-minX+1)
+    .attr('height',nodeSetting.height + Math.max(...yArr) + 1)
+  }
+  resizeSVG();
+
+
+
+
+  //drawLinks
+  /**
+   * @param {d3.Selection<SVGPathElement, HierarchyPointLink<treeLink>, SVGGElement, any>} myselection 
+   */
+  /** @type {d3.Link< any, d3.HierarchyPointLink<treeLink>, d3.HierarchyNode<treeLink> >} */
+  const linkGenerator = d3.linkVertical();
+    linkGenerator
+    .source(d=>d.source)
+    .target(d=>d.target)
+    .x(d=>d.x)
+    .y(d=>d.y)
+  ;
+  /**
+   * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<treeLink>, SVGGElement, any>} myselection 
+   * @param {string} color 
+   */
+  function adjustLink(myselection,color){
+    myselection
+      .attr('d',linkGenerator)
+      .attr('fill',"none")
+      .attr('stroke',color)
+  }
+
+  const linkElements = svg_g
+    .append('g').attr('class','links')
+    .selectAll('linkElement')
+    .data(treeLinks).enter()
+    .append('path') 
+    .call(adjustLink,'black')
+  ;
+
+  ///*  */3 gone, 5 edited, 6 added
+  //normal: black, enter:green
+  function updateLinks(){
+    linkElements.data(treeLinks, d=>d.source.id+','+d.target.id ).join(
+        enter => enter
+          .append('path')
+          .call(adjustLink,'lime')  
+        ,
+        update => update.call(adjustLink,'black'),
+        exit => exit.remove()
+      );
+  }
+  
+
+  //draw node;
+  /**
+   * @param { d3.Selection<SVGGElement, d3.HierarchyNode<treeLink>, SVGGElement, any>} selection 
+   * @param {string} color 
+   */
+  function initNode(selection,color){
+    selection
+      .attr('transform', d => 'translate('+d.x+','+d.y+')')
+      .each(function (d){
+        this.oldData = d.data.data;
+      })
+    selection.append('rect')
+      .attr('x'       ,-nodeSetting.width/2)
+      .attr('y'       ,-nodeSetting.height/2)
+      .attr('width'   ,nodeSetting.width)
+      .attr('height'  ,nodeSetting.height)
+      .attr('fill','white')
+      .attr('stroke',color)
+
+    let text = selection.append('text');
+    text  
+      .attr('dominant-baseline','middle')
+      .attr('text-anchor','middle')
+    text.append('tspan').attr('class','detail')
+      .text(d=>d.data.data.detail)
+      .attr('dy','-0.9em')
+      .attr('x','0')
+      .attr('y','0')
+    text.append('tspan').attr('class','price')
+      .text(d=>d.data.data.price)
+      .attr('dy','0.9em')
+      .attr('x','0')
+    text.append('tspan').attr('class','succesR')
+      .text(d=>d.data.data.succesR)
+      .attr('dy','0.9em')
+      .attr('x','0')
+    text.append('tspan').attr('class','accept')//this will be depricated, accept will dictate the color of rect
+      .text(d=>d.data.data.accept)
+      .attr('dy','0.9em')
+      .attr('x','0')
+  }
+  const nodeElements = svg_g
+    .append('g').attr('class','nodes')
+    .selectAll('nodeElement')
+    .data(treeNodes).enter()
+    .append('g').attr('class','node')
+    .call(initNode,'black')
+
+  //normal:black, new:lime, updated:aqua
+  function reRenderNodes(){
+    /**
+     * @param { d3.Selection<SVGGElement , d3.HierarchyNode<treeLink>, SVGGElement, any> } selection 
+     * @param {string} colorModiefied 
+     * @param {string} colorStable 
+     */
+    function updateNode(selection,colorModiefied,colorStable){
+      selection
+        .attr('transform', d => 'translate('+d.x+','+d.y+')')
+        .each(function (d){
+          let treeLinkData = d.data.data;
+          this.modified = 0;
+          for(let v of Object.entries(this.oldData)){
+            if( v[1] == treeLinkData[v[0]]) continue;
+            this.modified = 1;
+            break;
+          }
+          this.oldData = d.data;
+        })
+      selection.select('rect')
+        .attr('stroke',function (){
+          if(this.parentNode.modified)return colorModiefied;
+          else return colorStable;
+        })
+
+      let text = selection.select('text');
+      text.select('tspan.detail')
+        .text(d=>d.data.data.detail)
+      text.select('tspan.price')
+        .text(d=>d.data.data.price)
+      text.select('tspan.succesR')
+        .text(d=>d.data.data.succesR)
+      //this will be depricated, accept will dictate the color of rect
+      text.select('tspan.accept')
+        .text(d=>d.data.data.accept)
+      
+    }
+
+    //join statement
+    nodeElements.data(treeNodes,d=>d.id).join(
+      enter => enter.append('g').attr('class','node')
+      .call(initNode,'lime'),
+      update => update.call(updateNode,'aqua','black'),
+      exit => exit.remove()
+    )
+
+  }
+  
+
+
+  /*  */nextGraph();
+  function nextGraph(){
+    currentGraph++;
+    getGraphData();
+    resizeSVG();
+    updateLinks();
+    reRenderNodes();
+  }
+  nextButton.on('click',nextGraph);
 }
 
-
-
-
-drawGraph2();
+// drawGraph2();
 async function drawGraph2(){
   let button_back = d3.select('body').append('button').text('back');
   let button_next = d3.select('body').append('button').text('next');
@@ -101,6 +305,7 @@ async function drawGraph2(){
     treeNodes.forEach((d)=>{
       d.mydata = treeNodesData[d.data.dst]
     })
+    /* test */console.log(treeNodes);
 
     //still odd
     treeOuterLinks = [];
@@ -145,7 +350,10 @@ async function drawGraph2(){
     .attr('stroke','black')
     .attr('stroke-width',1.5)
   .select(function (){return this.parentElement;}).append('text')
-    .text( d => treeNodesData[Number(d.id)].detail)
+    .text( d => {
+      /* test */console.log(d);
+      return d.mydata.detail;
+    })
     .attr('x',4)
     .attr('dominant-baseline','middle')
   }
@@ -160,13 +368,14 @@ async function drawGraph2(){
     .each(function(d){
       for(let v of Object.entries(this.mydata)){
         if(d.mydata[v[0]]==v[1]) continue;
-        else{      
+        else{   
+          this.mydata = d.mydata;   
           this.ischanged = 1;
           break;
         }
       }
     })
-    .select('circle')
+    myselection.select('circle')
       // .attr('r',4)
       .attr('fill',function(){
         if(this.parentElement.ischanged) return color_modified;
@@ -174,8 +383,11 @@ async function drawGraph2(){
       })
       // .attr('stroke','black')
       // .attr('stroke-width',1.5)
-    .select(function (){return this.parentElement;}).select('text')
-      .text( d => treeNodesData[Number(d.id)].detail)
+    myselection.select('text')
+      .text( function(d) {
+        console.log(d);
+        return d.mydata.detail;
+      })
       // .attr('x',4)
       // .attr('dominant-baseline','middle')
   }
@@ -199,14 +411,18 @@ async function drawGraph2(){
 
     // updateGraph();
   function updateGraph(){
+    let a = 
     nodesElement
-      .data(treeNodes, d => d.id)
-      .join(
+      .data(treeNodes, d => d.id);
+    console.log(a);
+    
+    a.join(
         enter => enter.append('g').attr('class','node').call(adjustNode,'green'),
         update => update.call(updateNode,'blue','black'),
         exit => exit.remove()
       )
     ;
+    console.log(a);
 
     linksElement
       .data(treeLinks, d => d.source.id+','+ d.target.id)
