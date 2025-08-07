@@ -104,9 +104,13 @@ void fseek2delete(){
 void print2(){
     printf("2\n");
 }
+#define say_generic(MSG)\
+void say_##MSG(){\
+    printf(#MSG);\
+}
+say_generic(hello)
 int main(){
-    void (*p)()= print2;
-    p();
-    printf("done");
+
+    say_hello();
     return 0;
 }
