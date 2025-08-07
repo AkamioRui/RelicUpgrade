@@ -1,0 +1,78 @@
+
+void __json_printSpanningTree_Graph(JSON *treeF, JSON *outerF, int *nodeCount, int *outer_exist){
+    //copy this function for each case
+    STATE *(*getChild)(STATE *node, int index) = STATE_getChild;
+    int (*getChildCount)(STATE *node, int index) = STATE_getChildCount;
+    void (*fprintNodeData)(FILE *outFile,STATE *node) = STATE_fprintNodeData;
+    void (*fprintLinkData)(FILE *outFile, STATE *parentNode, STATE *childNode) = STATE_fprintLinkData;
+    // typedef STATE NODE;
+
+
+    //result
+    *outer_exist = 0;
+    *nodeCount = 0;
+      
+    /*  */STATE *root = graph.root.ptr;
+    //for bfs
+    typedef struct QUEUE {
+        STATE *node;
+        struct QUEUE *next;
+    } QUEUE;
+    QUEUE *queueTemp = NULL, *queueRoot = NULL, *queueTail = NULL;
+    STATE *theNode;
+    
+    
+    //symbollically placing root on queue
+    root->arg = malloc(sizeof(int));
+    *(int *)root->arg = (*nodeCount)++;
+
+    fprintf(treeF,"            {");
+    fprintf(treeF," \"id\":%d,",*(int *)root->arg);
+    fprintf(treeF,",\"parentId\":\"\"");
+    fprintf(treeF,",\"linkData\":{\"chance\":100}");
+    fprintf(treeF,",\"nodeData\":");fprintNodeData(treeF,root);
+    fprintf(treeF,"},\n");
+    //pick root as current link
+    theNode = root;
+
+    while(1){
+        for(int i = 0; i < theNode->childCount; i++){
+            STATE *child = theNode->child + i;
+            int *childArg = (int *)child->arg;
+
+            if(!childArg){//if it has never been in queue,
+
+                //give id, increment id
+                childArg = malloc(sizeof(int));
+                *childArg = (*nodeCount)++;
+
+                //add to queue
+                if(queueTail)  queueTail = queueTail->next = malloc(sizeof(QUEUE));
+                else  queueTail = queueRoot = malloc(sizeof(QUEUE));
+                queueTail->node = child;
+                queueTail->next = NULL;
+                
+
+                //print link(this,child) in treelink along with its data, 
+                fprintf(treeF,"            {");
+                fprintf(treeF," \"id\":%d,",*(int *)root->arg);
+                fprintf(treeF,",\"parentId\":\"\"");
+                fprintf(treeF,",\"linkData\":");
+                fprintLinkData(treeF,theNode,child);
+                fprintf(treeF,",\"nodeData\":");
+                fprintNodeData(treeF,theNode);
+                fprintf(treeF,"},\n");
+
+            } else {//else print this link in outer
+
+            }
+
+            //pick current node
+        }
+            
+
+    }
+
+
+
+}

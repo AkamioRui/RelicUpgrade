@@ -56,10 +56,33 @@ typedef struct STATE{
     double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
 
 } STATE ;
+STATE *STATE_getChild(STATE *node, int index){return node->child + index;}
+int STATE_getChildCount(STATE *node, int index){return node->childCount;}
+void STATE_fprintNodeData(FILE *outFile,STATE *node){
+    fprintf(
+        outFile,
+        "{\"price\":%.2lf,\"succesR\":%.2lf,\"detail\":\"%s\",\"accept\":%d}"
+        ,node->price
+        ,node->successChance
+        ,node->msg
+        ,node->whitelisted
+    );
+}
+void STATE_fprintLData(FILE *outFile, STATE *parentNode, STATE *childNode){
+    fprintf(
+        outFile,
+        "{\"chance\":%.2lf}"
+        ,childNode->parentChance[parentNode - childNode->parent]
+    );
+}
+
+
+
 typedef struct STATE_array{
     STATE *ptr;
     int len;
 } STATE_array;
+
 struct {
     STATE_array root;//len is the entire nodes
 
@@ -78,11 +101,17 @@ struct {
     } four;
 } graph;
 void graph_close(){
-    //parent
     for(int i = 0 ; i < graph.root.len ; i++){
-        if(graph.root.ptr[i].parentChance == NULL) continue;
-        free(graph.root.ptr[i].parentChance);
-        graph.root.ptr[i].parentChance = NULL;
+        STATE *currentNode = graph.root.ptr+i;
+        if(currentNode->arg){
+            free(currentNode->arg);
+            currentNode->arg = NULL;
+        }
+        if(currentNode->parentChance){
+            free(currentNode->parentChance);
+            currentNode->parentChance = NULL;
+        }
+        
     }
    
     
@@ -91,6 +120,7 @@ void graph_close(){
 
     printf("graph closed\n");
 }
+/* this is still for testing, only filling in the root */
 void __test_graph_init(){
     printf("graph initialized\n");
     // currently only for the root
@@ -113,21 +143,31 @@ void __test_graph_init(){
     }
 
     //parent
-    int parentId[] =    {-1,0,0,1,1,1};
-    int parentCount[] = {-1,1,1,1,2,1};
-    for(int i = 1; i<=5; i++){
-        graph.root.ptr[i].parentCount = parentCount[i];
-        graph.root.ptr[i].parent = graph.root.ptr + parentId[i];
-        graph.root.ptr[i].parentChance = (double*)malloc(sizeof(double)*parentCount[i]);
-        for(int j = 0; j<graph.root.ptr[i].parentCount; j++){
-            graph.root.ptr[i].parentChance[j] = i*100 + j;    
+    int parentId[] =    {0,0,0,1,1,1};
+    int parentCount[] = {0,1,1,1,2,1};
+    for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
+        STATE *root = graph.root.ptr;
+        STATE *theNode = root+nodeId;
+        theNode->parentCount = parentCount[nodeId];
+        theNode->parent = root + parentId[nodeId];
+        theNode->parentChance = (double*)malloc(sizeof(double)*parentCount[nodeId]);
+        for(int parentIdx = 0; parentIdx<theNode->parentCount; parentIdx++){
+            theNode->parentChance[parentIdx] = nodeId*100 + theNode->parent+parentIdx-root;    
         }
     }
     
   
     atexit(graph_close);
 }
-
+void STATE_clearArg(){
+    for(int i = 0 ; i < graph.root.len ; i++){
+        STATE *currentNode = graph.root.ptr+i;
+        if(currentNode->arg){
+            free(currentNode->arg);
+            currentNode->arg = NULL;
+        }
+    }
+}
 
 
 struct HEAP{
@@ -140,194 +180,170 @@ struct HEAP{
 
 
 typedef struct {
-    int graphId;
-    short *queued;//a bool array for each node indicating wheter it has already been processed
+    short *queued;//redundant//a bool array for each node indicating wheter it has already been processed
     FILE *outFile;
 } JSON ;
 JSON *json_init(char *filename){
     JSON *json = (JSON *)calloc(1,sizeof(JSON));
-    json->graphId = 0;
+    
     json->queued = NULL;
     json->outFile = fopen(filename,"w");
     fprintf(json->outFile,"[\n");
     return json;
 }
 void json_close(JSON *json){
-    fprintf(json->outFile,"]\n");
-    fclose(json->outFile);
+    FILE *outFile = json->outFile;
+
+    if(ftell(outFile) >3)fseek(outFile,-3,SEEK_CUR);
+    fprintf(outFile," \n]");
+    fflush(outFile);
+
+    fclose(outFile);
     free(json);
 }
-/** also assign Id */
-/* need to also print spanning tree links  */void __json_printGraphNodes(JSON *json){
-    fprintf(json->outFile,"        \"nodes\":[\n");
-    
+/* this prints both the spanning tree and the additional link
+    return _nodeCount and _outerExist
+*/
 
-    typedef struct QUEUE {
-        int depth;
-        STATE *node;
-        struct QUEUE *next;
-    } QUEUE;
-    QUEUE *queueHead = NULL, *_queue, *queueTail = NULL;
-    memset(json->queued,0,graph.root.len); 
-   
+void __json_printSpanningTree_Graph(FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){
+    //copy this function for each case
+    STATE *(*getChild)(STATE *node, int index) = STATE_getChild;
+    int (*getChildCount)(STATE *node, int index) = STATE_getChildCount;
+    void (*fprintD)(FILE *outFile,STATE *node) = STATE_fprintNodeData;
+    void (*fprintLinkD)(FILE *outFile, STATE *parentNode, STATE *childNode) = STATE_fprintLData;
+    void (*clearArg)() = STATE_clearArg;
+    // typedef STATE NODE;
 
-    STATE *current = graph.root.ptr;
-    short currentNodeId = 0;
-    short currentDepth = 0;
-    while(1){
-        //print current /* this should print: node data, the spanning link, all links */
-        fprintf(json->outFile,"           ");
-        if(currentNodeId)fprintf(json->outFile,",");
-        fprintf(json->outFile,"{\"depth\":%d,\"price\":%lf,\"succesR\":%lf,\"detail\":\"%s\",\"accept\":\"%d\"}\n"
-            ,currentDepth
-            ,current->price
-            ,current->successChance
-            ,current->msg
-            ,(int)current->whitelisted
-        );
-        
-        
-        //append children into queue(if not already in queue)
-        currentDepth++;
-        for(int i = 0; i<current->childCount; i++){
-            if( json->queued[current->child + i - graph.root.ptr] ) continue;
-            //create queue node
-            _queue = (QUEUE *)malloc(sizeof(QUEUE));
-            _queue->node = current->child + i;
-            _queue->depth = currentDepth;
-            _queue->next = NULL;
 
-            //append queue node
-            if(queueTail == NULL){ 
-                queueHead = queueTail = _queue;
-            } else {
-                queueTail->next = _queue;
-                queueTail = queueTail->next;
-            }
-            _queue = NULL;
-
-            //mark node by assigning id
-            currentNodeId++;
-            json->queued[current->child + i - graph.root.ptr] = currentNodeId;
-
-        }
-        
-        //pop QUEUE, set to current
-        if(queueHead == NULL)break;        
-        current = queueHead->node;
-        currentDepth = queueHead->depth;
-
-        if(queueHead == queueTail){
-            free(queueHead);
-            queueHead = queueTail = NULL;
-        } else {
-            _queue = queueHead;
-            queueHead = queueHead->next;
-            free(_queue);
-            _queue = NULL;
-        }
-
-    } 
-
-    fprintf(json->outFile,"        ],\n");
-}
-/* this will be redundant */void __json_printGraphLinks(JSON *json){
-    fprintf(json->outFile,"        \"links\":[\n");
-    
-
+    //result
+    *outer_exist = 0;
+    *nodeCount = 0;
+      
+    /*  */STATE *root = graph.root.ptr;
+    //for bfs
     typedef struct QUEUE {
         STATE *node;
         struct QUEUE *next;
     } QUEUE;
-    QUEUE *queueHead = NULL, *queueTail = NULL, *_queue;
-   
+    QUEUE *queueTemp = NULL, *queueRoot = NULL, *queueTail = NULL;
+    STATE *theNode;
+    
+    
+    //symbollically placing root on queue
+    root->arg = malloc(sizeof(int));
+    *(int *)root->arg = (*nodeCount)++;
 
-    STATE *current = graph.root.ptr;
-    short nodeid = 0;
+    fprintf(treeF,"            {");
+    fprintf(treeF," \"id\":%d",*(int *)root->arg);
+    fprintf(treeF,",\"parentId\":\"\"");
+    fprintf(treeF,",\"linkData\":{\"chance\":100}");
+    fprintf(treeF,",\"nodeData\":");fprintD(treeF,root);
+    fprintf(treeF,"},\n");
+    //pick root as current link
+    theNode = root;
+
     while(1){
-        
-        //print current links
-        STATE *currentParent;
-        for(int i = 0; i<current->parentCount; i++){
-            currentParent = current->parent + i;
+        for(int i = 0; i < theNode->childCount; i++){
+            STATE *child = theNode->child + i;
 
-            fprintf(json->outFile,"           ");
-            if(nodeid) fprintf(json->outFile,",");
-            fprintf(json->outFile,"{\"src\":%d,\"dst\":%d,\"chance\":%lf}\n"
-                ,abs(json->queued[currentParent - graph.root.ptr])
-                ,abs(json->queued[current - graph.root.ptr])  
-                ,current->parentChance[i]
-            );
-            nodeid++;
-        }
+            if(!child->arg){//if it has never been in queue,
 
-        //append children into queue(if not already in queue)
-        STATE *currentChild;
-        for(int i = 0; i<current->childCount; i++){
-            currentChild = current->child + i;
-            if( json->queued[currentChild - graph.root.ptr] <= 0) continue;
+                //give id
+                child->arg = malloc(sizeof(int));
+                *(int *)child->arg = (*nodeCount)++;
 
-            //create queue node
-            _queue = (QUEUE *)malloc(sizeof(QUEUE));
-            _queue->node = currentChild;
-            _queue->next = NULL;
+                //add to queue
+                if(queueTail)  queueTail = queueTail->next = malloc(sizeof(QUEUE));
+                else  queueTail = queueRoot = malloc(sizeof(QUEUE));
+                queueTail->node = child;
+                queueTail->next = NULL;
+                
 
-            //append queue node
-            if(queueTail == NULL){ 
-                queueHead = queueTail = _queue;
-            } else {
-                queueTail->next = _queue;
-                queueTail = queueTail->next;
+                //print link(this,child) in treelink along with its data, 
+                fprintf(treeF,"            {");
+                fprintf(treeF," \"id\":%d",*(int *)child->arg);
+                fprintf(treeF,",\"parentId\":%d",*(int *)theNode->arg);
+                fprintf(treeF,",\"linkData\":");
+                fprintLinkD(treeF,theNode,child);
+                fprintf(treeF,",\"nodeData\":");
+                fprintD(treeF,child);
+                fprintf(treeF,"},\n");
+
+            } else {//else print this link in outer
+                *outer_exist = 1;
+                fprintf(outerF,"            {");
+                fprintf(outerF," \"id\":%d",*(int *)child->arg);
+                fprintf(outerF,",\"parentId\":%d",*(int *)theNode->arg);
+                fprintf(outerF,",\"linkData\":");
+                fprintLinkD(outerF,theNode,child);
+                fprintf(outerF,"},\n");
             }
-            _queue = NULL;
 
-            //mark node by assigning id 
-            json->queued[currentChild - graph.root.ptr] *= -1;
-
+            
         }
-
         
-        //pop QUEUE, set to current
-        if(queueHead == NULL)break;        
-        current = queueHead->node;
-        if(queueHead == queueTail){
-            free(queueHead);
-            queueHead = queueTail = NULL;
-        } else {
-            _queue = queueHead;
-            queueHead = queueHead->next;
-            free(_queue);
-            _queue = NULL;
-        }
+        
+        //pick current node
+        if(queueRoot){
+            theNode = queueRoot->node;
+            if(queueRoot->next){
+                queueTemp = queueRoot;
+                queueRoot = queueRoot->next;
+                free(queueTemp);
+            }else{
+                free(queueRoot);
+                queueTail = queueRoot = NULL;
+            }
 
-    } 
+        } else break;
 
-    fprintf(json->outFile,"        ]\n");
+    }
+
+
+    //clean up
+    clearArg();
 }
+
 /** initiallized json->queued */
-/* done */void json_printGraph(JSON *json){
-    if(json->graphId == 0) fprintf(json->outFile,"    {\n");
-    else fprintf(json->outFile,"    ,{\n");
+void json_printGraph(JSON *json){
+    FILE *outFile = json->outFile;
+    fprintf(outFile,"    {\n");
     
-    json->queued = (short *)calloc(graph.root.len,sizeof(short));
-    __json_printGraphNodes(json);
-    __json_printGraphLinks(json);
-    free(json->queued);
-    json->queued = NULL;
+    
+    //for each object property open array (create new file for buffer)
+    FILE *treeLinkFile = outFile;
+    fprintf(treeLinkFile,"        \"treeLinks\":[\n");
+    int availableId = 0;
+    // FILE *tempFile = tmpfile();
+    /*  */FILE *outerLinkFile = fopen("outerLink.json","wb+");
+    fprintf(outerLinkFile,"        \"outerLinks\":[\n");
+    int _outer_exist = 0;
+    
+    
+    /* generalized */__json_printSpanningTree_Graph(treeLinkFile, outerLinkFile,&availableId,&_outer_exist);
 
-    fprintf(json->outFile,"    }\n");
-    json->graphId++;
+    
+    //close both array
+    if(availableId)fseek(treeLinkFile,-3,SEEK_CUR);
+    fprintf(treeLinkFile ,"\n        ],\n");
+    if(_outer_exist)fseek(outerLinkFile,-2,SEEK_CUR);
+    fprintf(outerLinkFile,"\n        ]\n");
+    
+    //print outerLinkFile
+    int count;
+    char buffer[1024];
+    for(rewind(outerLinkFile); (count = fread(buffer,1,1024,outerLinkFile)) != 0 ;){
+        fwrite(buffer,1,count,treeLinkFile);
+    }
+
+    //clean up
+    fclose(outerLinkFile);
+
+    fprintf(outFile,"    },\n");
 }
 void json_printHeap();
 
-/**
- * each graph is split into : nodes and outerLink
- * nodes :{id:number, parentId:number, data:{}}[] //only one parent, from dfs
- * outerLink:{id:number,parentId:number}[] //this is link that are not in the spanning tree
- * */ 
-void json_printGraph2(JSON *json){
-    
-}
+
 
 
 /* done */void iniGlobalVariable(int piece, int mainstat, int *substat, int substat_len){
@@ -438,6 +454,8 @@ int main(){
 
     //
     JSON *json = json_init("mydata.json");
+    // fprintf(json->outFile,"     {},\n");
+    json_printGraph(json);
     json_printGraph(json);
     json_close(json);
     
@@ -446,7 +464,7 @@ int main(){
     
 
     
-    
+    printf("\ndone\n");
     return 0;
 }
 /* 

@@ -29,7 +29,10 @@ let nodeSetting={
 
 // test();
 
-
+/* 
+json type is updated
+also create a 
+*/
 drawGraphD3();
 async function drawGraphD3(){
 

@@ -71,9 +71,42 @@ void printAll2(FILE *inFile, FILE *outFile){
         else break;
     }
 }
-int main(){
-    printGraphPrinting();
+void fseek2delete(){
+    FILE *outFile = fopen("111Test.json","w+");
+    
+    
+    fprintf(outFile,"[\n");
+    
+    fprintf(outFile,"[1],\n");
+    fprintf(outFile,"[1],\n");
 
+    // fseek(outFile,-3,SEEK_CUR);
+    // fprintf(outFile," \n");//fine up til here
+
+    // rewind(outFile);
+    // for(char buff; (buff = fgetc(outFile)) != EOF ; printf("[%d] ",buff)){}
+    // printf("\n");
+
+    fseek(outFile,4,SEEK_SET);
+    fprintf(outFile,"2");
+
+    // fflush(outFile);
+    // rewind(outFile);
+    // for(char buff; (buff = fgetc(outFile)) != EOF; printf("[%d] ",buff)){}
+    // printf("\n");
+
+    fseek(outFile,0,SEEK_END);
+    fprintf(outFile,"]\n");
+
+
+    fclose(outFile);
+}
+void print2(){
+    printf("2\n");
+}
+int main(){
+    void (*p)()= print2;
+    p();
     printf("done");
     return 0;
 }

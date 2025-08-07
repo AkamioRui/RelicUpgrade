@@ -1,0 +1,13 @@
+typedef struct {
+    short *queued;//redundant//a bool array for each node indicating wheter it has already been processed
+    FILE *outFile;
+} JSON ;
+
+/*  */FILE *tempFile = fopen("outerLink.json","wb+");
+
+generalize __json_printSpanningTree into __json_printSpanningTree(
+    JSON * json, 
+    void *root
+){
+
+}
