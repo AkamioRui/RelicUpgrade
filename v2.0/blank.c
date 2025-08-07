@@ -1,20 +1,35 @@
-void __json_printSpanningTree(void* root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){
-    //copy this function for each case
-    typedef STATE NODE;
-    NODE *(*getChild)(NODE *node, int index) = NODE_getChild;
-    int (*getChildCount)(NODE *node, int index) = NODE_getChildCount;
-    void (*fprintD)(FILE *outFile,NODE *node) = NODE_fprintNodeData;
-    void (*fprintLinkD)(FILE *outFile, NODE *parentNode, NODE *childNode) = NODE_fprintLData;
-    void (*clearArg)() = NODE_clearArg;
-    
 
+typedef struct{
+    void *arg;
+}STATE;
+STATE *STATE_getChild(STATE *node, int index);
+int   STATE_getChildCount(STATE *node);
+void  STATE_fprintNodeD(FILE *outFile,STATE *node);
+void  STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
+void  STATE_clearArg();
+
+/* 
+NODE{
+void* arg;
+have all function
+}
+*/
+
+
+void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){
+    #define NODE STATE
+    #define NODE_getChild STATE_getChild
+    #define NODE_getChildCount STATE_getChildCount
+    #define NODE_fprintNodeD STATE_fprintNodeD
+    #define NODE_fprintLinkD STATE_fprintLinkD
+    #define NODE_clearArg STATE_clearArg
 
     //result
     *outer_exist = 0;
     *nodeCount = 0;
       
-    
     //for bfs
+    NODE *root = (NODE *)_root;
     typedef struct QUEUE {
         NODE *node;
         struct QUEUE *next;
@@ -31,14 +46,15 @@ void __json_printSpanningTree(void* root, FILE *treeF, FILE *outerF, int *nodeCo
     fprintf(treeF," \"id\":%d",*(int *)root->arg);
     fprintf(treeF,",\"parentId\":\"\"");
     fprintf(treeF,",\"linkData\":{\"chance\":100}");
-    fprintf(treeF,",\"nodeData\":");fprintD(treeF,root);
+    fprintf(treeF,",\"nodeData\":");NODE_fprintNodeD(treeF,root);
     fprintf(treeF,"},\n");
     //pick root as current link
     theNode = root;
 
     while(1){
-        for(int i = 0; i < theNode->childCount; i++){
-            NODE *child = theNode->child + i;
+        int theNodeChildCount = NODE_getChildCount(theNode);
+        for(int i = 0; i < theNodeChildCount; i++){
+            NODE *child = NODE_getChild(theNode,i);
 
             if(!child->arg){//if it has never been in queue,
 
@@ -58,9 +74,9 @@ void __json_printSpanningTree(void* root, FILE *treeF, FILE *outerF, int *nodeCo
                 fprintf(treeF," \"id\":%d",*(int *)child->arg);
                 fprintf(treeF,",\"parentId\":%d",*(int *)theNode->arg);
                 fprintf(treeF,",\"linkData\":");
-                fprintLinkD(treeF,theNode,child);
+                NODE_fprintLinkD(treeF,theNode,child);
                 fprintf(treeF,",\"nodeData\":");
-                fprintD(treeF,child);
+                NODE_fprintNodeD(treeF,child);
                 fprintf(treeF,"},\n");
 
             } else {//else print this link in outer
@@ -69,7 +85,7 @@ void __json_printSpanningTree(void* root, FILE *treeF, FILE *outerF, int *nodeCo
                 fprintf(outerF," \"id\":%d",*(int *)child->arg);
                 fprintf(outerF,",\"parentId\":%d",*(int *)theNode->arg);
                 fprintf(outerF,",\"linkData\":");
-                fprintLinkD(outerF,theNode,child);
+                NODE_fprintLinkD(outerF,theNode,child);
                 fprintf(outerF,"},\n");
             }
 
@@ -95,5 +111,11 @@ void __json_printSpanningTree(void* root, FILE *treeF, FILE *outerF, int *nodeCo
 
 
     //clean up
-    clearArg();
+    NODE_clearArg();
+    #undef NODE
+    #undef NODE_getChild
+    #undef NODE_getChildCount
+    #undef NODE_fprintNodeD
+    #undef NODE_fprintLinkD
+    #undef NODE_clearArg
 }
