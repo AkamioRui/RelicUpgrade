@@ -11,7 +11,7 @@ typedef enum PIECE{
     PIECE_FEET,
     PIECE_PLANAR,
     PIECE_ROPE
-}PIECE;
+} PIECE;
 typedef enum STAT{
     STAT_HP = 0,
     STAT_ATK = 1,
@@ -109,7 +109,12 @@ typedef struct {
 JSON *json_init(char *filename);
 void json_close(JSON *json);
 void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist);
-void json_printGraph(JSON *json);
+
+void json_printGraph(
+    JSON *json, 
+    void *root, 
+    void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
+);
 #define __json_printSpannigTree_generic(TYPE) \
 void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){\
     \
@@ -217,8 +222,12 @@ int main(){
 
 
     JSON *mainGraphJson = json_init("mydata.json");
-    json_printGraph(mainGraphJson);
-    json_printGraph(mainGraphJson);
+    json_printGraph(
+        mainGraphJson,
+        (void *)graph.root.ptr,
+        (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
+    );
+    
     json_close(mainGraphJson);
     
     
@@ -421,7 +430,7 @@ void graph_init_test(){
 
 
 //for JSON
-/* [ */
+/* print into file: [ */
 JSON *json_init(char *filename){
     JSON *json = (JSON *)calloc(1,sizeof(JSON));
     
@@ -429,7 +438,7 @@ JSON *json_init(char *filename){
     fprintf(json->outFile,"[\n");
     return json;
 }
-/* ] */
+/* print into json: ] */
 void json_close(JSON *json){
     FILE *outFile = json->outFile;
 
@@ -440,11 +449,15 @@ void json_close(JSON *json){
     fclose(outFile);
     free(json);
 }
-/* {"treeLink":[   +   ],"outerLink:[  +  ]"}, */
-void json_printGraph(JSON *json){
+/* print into json: {"treeLink":[...],"outerLink:[...]"}, */
+void json_printGraph(
+    JSON *json, 
+    void *root, 
+    void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
+){
     FILE *outFile = json->outFile;
     fprintf(outFile,"    {\n");
-    
+
     
     //for each object property open array (create new file for buffer)
     FILE *treeLinkFile = outFile;
@@ -455,8 +468,9 @@ void json_printGraph(JSON *json){
     fprintf(outerLinkFile,"        \"outerLinks\":[\n");
     int _outer_exist = 0;
     
-    __json_printSpanningTree_STATE(
-        graph.root.ptr,
+    
+    json_printSpanningTree(
+        root,
         treeLinkFile, 
         outerLinkFile,
         &availableId,
@@ -483,8 +497,8 @@ void json_printGraph(JSON *json){
     fprintf(outFile,"    },\n");
 }
 /* 
-    {treeLinkObject} 
-    {outerLinkObject}
+    print into treeF: {treeLinkObject},[] 
+    print into outerF: {outerLinkObject},[]
     return _nodeCount and _outerExist
 */
 void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){
