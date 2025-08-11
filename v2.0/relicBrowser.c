@@ -94,11 +94,45 @@ void graph_init_test();
 
 
 //for min HEAP
-struct HEAP{
+typedef struct HEAP_STATE{
+    int length;
     STATE *data;
-    struct HEAP *left;
-    struct HEAP *right;
-}candidate;
+    struct HEAP_STATE *left;
+    struct HEAP_STATE *right;
+} HEAP_STATE;
+HEAP_STATE* HEAP_STATE_init(STATE * data);
+void HEAP_STATE_free(HEAP_STATE * root);
+HEAP_STATE* HEAP_STATE_at(HEAP_STATE * root, int index);
+void HEAP_STATE_add(HEAP_STATE * root, STATE * data);
+HEAP_STATE* HEAP_STATE_pop(HEAP_STATE * root);
+
+
+HEAP_STATE* HEAP_STATE_init(STATE * data){
+    HEAP_STATE *result = calloc(1,sizeof(HEAP_STATE));
+    result->length = 1;
+    result->data = data;
+    return result;
+}
+HEAP_STATE* HEAP_STATE_at(HEAP_STATE * root, int index){
+    if(index < 0)return NULL;
+    if(index == 0) return root;
+    if(index >= root->length)return NULL;
+    index += 1;//root start at index 1;
+
+    //get depth
+    int depth = 0;
+    for(int _index = index; _index>0; _index >> 1)depth++;
+    
+    //for all level(excluding the highest order), get 0/1, move pointer to
+    HEAP_STATE *result = root;
+    for(int level = depth -1, code; level >= 0; level--){
+        code = (index >> (level - 1)) / 2;
+        result = code ? (result->right) : (result->left);
+    }
+
+    
+    
+}
 
 
 
@@ -337,14 +371,13 @@ return the pointer to the child
 STATE *STATE_getChild(STATE *node, int index){return node->child + index;}
 int STATE_getChildCount(STATE *node){return node->childCount;}
 void STATE_fprintNodeD(FILE *outFile,STATE *node){
-    fprintf(
-        outFile,
-        "{\"price\":%.2lf,\"succesR\":%.2lf,\"detail\":\"%s\",\"accept\":%d}"
-        ,node->price
-        ,node->successChance
-        ,node->msg
-        ,node->whitelisted
-    );
+    
+    fprintf(outFile,"{");
+    fprintf(outFile," \"detail\":\"%s\"",node->msg);
+    fprintf(outFile,",\"price\":%.2lf"  ,node->price);
+    fprintf(outFile,",\"succesR\":%.2lf",node->successChance);
+    fprintf(outFile,",\"accept\":%d"    ,node->whitelisted);
+    fprintf(outFile,"}");
 }
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
     fprintf(
