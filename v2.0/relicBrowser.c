@@ -496,8 +496,7 @@ void json_printGraph(
     FILE *treeLinkFile = outFile;
     fprintf(treeLinkFile,"        \"treeLinks\":[\n");
     int availableId = 0;
-    // FILE *tempFile = tmpfile();
-    /*  */FILE *outerLinkFile = fopen("outerLink.json","wb+");
+    FILE *outerLinkFile = tmpfile();
     fprintf(outerLinkFile,"        \"outerLinks\":[\n");
     int _outer_exist = 0;
     
