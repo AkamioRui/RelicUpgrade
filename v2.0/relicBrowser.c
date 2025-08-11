@@ -64,7 +64,7 @@ STATE *STATE_getChild(STATE *node, int index);
 int STATE_getChildCount(STATE *node);
 void STATE_fprintNodeD(FILE *outFile,STATE *node);
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
-void STATE_clearArg();
+void STATE_clearArg(STATE *root);
 
 
 //for global graph
@@ -93,45 +93,44 @@ void graph_close();
 void graph_init_test();
 
 
+
 //for min HEAP
 typedef struct HEAP_STATE{
     int length;
-    STATE *data;
+    // STATE *data;
+    /*  */int data;
     struct HEAP_STATE *left;
     struct HEAP_STATE *right;
+
+    //for printing
+    void * arg;
 } HEAP_STATE;
 HEAP_STATE* HEAP_STATE_init(STATE * data);
 void HEAP_STATE_free(HEAP_STATE * root);
-HEAP_STATE* HEAP_STATE_at(HEAP_STATE * root, int index);
+void int2binary(int number, char **out_binary, int *out_length);
 void HEAP_STATE_add(HEAP_STATE * root, STATE * data);
 HEAP_STATE* HEAP_STATE_pop(HEAP_STATE * root);
 
 
-HEAP_STATE* HEAP_STATE_init(STATE * data){
-    HEAP_STATE *result = calloc(1,sizeof(HEAP_STATE));
-    result->length = 1;
-    result->data = data;
-    return result;
+//for printing
+HEAP_STATE *HEAP_STATE_getChild(HEAP_STATE *node, int index);
+int HEAP_STATE_getChildCount(HEAP_STATE *node);
+void HEAP_STATE_fprintNodeD(FILE *outFile,HEAP_STATE *node);
+void HEAP_STATE_fprintLinkD(FILE *outFile, HEAP_STATE *parentNode, HEAP_STATE *childNode);
+void HEAP_STATE_clearArg();
+
+HEAP_STATE *HEAP_STATE_getChild(HEAP_STATE *node, int index){return index? node->right: node->left;}
+int HEAP_STATE_getChildCount(HEAP_STATE *node){return (node->left != NULL) + (node->right != NULL);}
+/* test */void HEAP_STATE_fprintNodeD(FILE *outFile,HEAP_STATE *node){
+    //STATE_fprintNodeD(outFile,node->data);
+    fprintf(outFile,"{%d}",node->data);
 }
-HEAP_STATE* HEAP_STATE_at(HEAP_STATE * root, int index){
-    if(index < 0)return NULL;
-    if(index == 0) return root;
-    if(index >= root->length)return NULL;
-    index += 1;//root start at index 1;
-
-    //get depth
-    int depth = 0;
-    for(int _index = index; _index>0; _index >> 1)depth++;
-    
-    //for all level(excluding the highest order), get 0/1, move pointer to
-    HEAP_STATE *result = root;
-    for(int level = depth -1, code; level >= 0; level--){
-        code = (index >> (level - 1)) / 2;
-        result = code ? (result->right) : (result->left);
-    }
-
-    
-    
+void HEAP_STATE_fprintLinkD(FILE *outFile, HEAP_STATE *parentNode, HEAP_STATE *childNode){fprintf(outFile,"{}");}
+void HEAP_STATE_clearArg(HEAP_STATE *root){
+    free(root->arg);
+    root->arg = NULL;
+    if(root->left)HEAP_STATE_clearArg(root->left);
+    if(root->right)HEAP_STATE_clearArg(root->right);
 }
 
 
@@ -149,6 +148,13 @@ void json_printGraph(
     void *root, 
     void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
 );
+// requirement:
+    // TYPE {void * arg}
+    // TYPE *TYPE_getChild(TYPE *node, int index);
+    // int TYPE_getChildCount(TYPE *node);
+    // void TYPE_fprintNodeD(FILE *outFile,TYPE *node);
+    // void TYPE_fprintLinkD(FILE *outFile, TYPE *parentNode, TYPE *childNode);
+    // void TYPE_clearArg();
 #define __json_printSpannigTree_generic(TYPE) \
 void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){\
     \
@@ -230,7 +236,7 @@ void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int 
 \
 \
     \
-    TYPE##_clearArg();\
+    TYPE##_clearArg(root);\
 }
 __json_printSpannigTree_generic(STATE)
 
@@ -251,18 +257,17 @@ int main(){
     // memcpy(&chance2,&chance,sizeof(struct CHANCE));
 
     
-    graph_init_test();
-
-
-
-    JSON *mainGraphJson = json_init("mydata.json");
-    json_printGraph(
-        mainGraphJson,
-        (void *)graph.root.ptr,
-        (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
-    );
+    // //drawing a STATE graph
+    // graph_init_test();
+    // JSON *mainGraphJson = json_init("mydata.json");
+    // json_printGraph(
+    //     mainGraphJson,
+    //     (void *)graph.root.ptr,
+    //     (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
+    // );
+    // json_close(mainGraphJson);
     
-    json_close(mainGraphJson);
+
     
     
 
@@ -386,7 +391,7 @@ void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
         ,childNode->parentChance[parentNode - childNode->parent]
     );
 }
-void STATE_clearArg(){
+void STATE_clearArg(STATE *root){
     for(int i = 0 ; i < graph.root.len ; i++){
         STATE *currentNode = graph.root.ptr+i;
         if(currentNode->arg){
@@ -628,7 +633,7 @@ void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeC
 
 
     //clean up
-    NODE_clearArg();
+    NODE_clearArg(_root);
     #undef NODE
     #undef NODE_getChild
     #undef NODE_getChildCount
@@ -636,4 +641,40 @@ void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeC
     #undef NODE_fprintLinkD
     #undef NODE_clearArg
 }
+
+
+
+//for min HEAP
+/* 
+return binary representation. Exp: 6 = 1,1,0
+reminder: free out_binary
+*/
+void int2binary(int number, char **out_binary, int *out_length){
+    if(number == 0){
+        *out_length = 1;
+        *out_binary = calloc(1,sizeof(char));
+        return;
+    }
+
+    int length = 0;
+    for(int _number = number; _number > 0 ; _number >>= 1) length++;
+
+    char *binary = (char *)malloc(length*sizeof(char));
+    for(int _number = number, idx = length-1; idx >= 0; idx--){
+        binary[idx] = _number % 2;
+        _number >>= 1;
+    }
+
+    *out_length = length;
+    *out_binary = binary;
+}
+HEAP_STATE* HEAP_STATE_init(STATE * data){
+    HEAP_STATE *result = calloc(1,sizeof(HEAP_STATE));
+    result->length = 1;
+    result->data = data;
+    return result;
+}
+
+
+
 

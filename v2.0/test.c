@@ -111,7 +111,9 @@ void say_##MSG(){\
 say_generic(hello)
 int main(){
 
-    printf("%d",32>>1);
+    free(NULL);
+
+
     printf("\ndone");
     return 0;
 }
