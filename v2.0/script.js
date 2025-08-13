@@ -1,3 +1,4 @@
+
 import * as d3Raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
 
 /** @type {import ("d3")} */  
@@ -54,7 +55,7 @@ drawGraphD3(await (await fetch("heapData.json")).json());
 
 /**
  * 
- * @param {{treeLinks:TreeLink<any,any>[],outerLinks:OuterLink<any>[]}[]} jsondata 
+ * @param {{treeLinks:TreeLink<any,any>[],outerLinks:OuterLink<any>[],msg:string}[]} jsondata 
  * @param {{width:number,height:number,padding:number}} nodeSetting 
  */
 function drawGraphD3(jsondata,_nodeSetting = null){
@@ -62,6 +63,10 @@ function drawGraphD3(jsondata,_nodeSetting = null){
   //common element
   const all = d3.select('body').append('div');
   const backButton = all.append('button').text('back').attr('class','back');
+  const msgBox = all.append('p').attr('class','msgBox')
+    .style('display','inline')
+    .style('padding','0 10px')
+  ;
   const nextButton = all.append('button').text('next').attr('class','next');
   all.append('br');
   const svg = all.append('svg');
@@ -320,19 +325,27 @@ function drawGraphD3(jsondata,_nodeSetting = null){
   function nextGraph(increment){
     
     currentGraph += increment;
+    currentGraph = Math.min(Math.max(currentGraph, 0), jsonDataLength-1);
 
-    if(currentGraph >= jsonDataLength-1) nextButton.style('visibility','hidden');
-    else nextButton.style('visibility','visible');
-    if(currentGraph <= 0) backButton.style('visibility','hidden');
-    else backButton.style('visibility','visible');
+    //update appearance
+    nextButton.style('visibility',()=>{
+      if(currentGraph == jsonDataLength-1) return 'hidden';
+      else return 'visible';
+    });
+    backButton.style('visibility',()=>{
+      if(currentGraph == 0) return 'hidden';
+      else return 'visible';
+    });
+    msgBox.text(jsondata[currentGraph].msg);
     
+    //update the actuall graph
     getGraphData();
     resizeSVG();
     
-    //normal: black, enter:green
+    
     linkElements = linkElements.data(treeLinks, function (d){
       return d.source.id+','+d.target.id;
-    } ).join(
+    } ).join(//normal: black, enter:green
       enter =>{
         return enter
         .append('g').attr('class','link') 
@@ -349,8 +362,9 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     );
     
 
-    //normal:black, new:lime, updated:aqua
-    nodeElements = nodeElements.data(treeNodes,d=>d.id).join(
+    
+    nodeElements = nodeElements.data(treeNodes,d=>d.id)
+    .join(//normal:black, new:lime, updated:aqua
       enter => {
         return enter
         .append('g').attr('class','node')
@@ -367,9 +381,13 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     )
     
   }
-  nextButton.on('click',()=>nextGraph(1));
-  backButton.on('click',()=>nextGraph(-1));
-  backButton.style('visibility','hidden');
+  nextButton.on('click',()=>nextGraph(1))
+    .style('visibility',()=>{
+      if(jsonDataLength < 2) return 'hidden';
+    });
+  backButton.on('click',()=>nextGraph(-1))
+    .style('visibility','hidden');
+  msgBox.text(jsondata[currentGraph].msg);
 
 }
 // drawGraphD3_relic();

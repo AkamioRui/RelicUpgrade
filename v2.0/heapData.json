@@ -1,5 +1,6 @@
 [
     {
+        "msg":"create",
         "treeLinks":[
             { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
             { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
@@ -12,6 +13,7 @@
         ]
     },
     {
+        "msg":"normalize d",
         "treeLinks":[
             { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
             { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
@@ -24,6 +26,7 @@
         ]
     },
     {
+        "msg":"modifiy e",
         "treeLinks":[
             { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"e","price":100.00,"succesR":0.10,"accept":0}},
             { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
@@ -36,6 +39,7 @@
         ]
     },
     {
+        "msg":"normalize a",
         "treeLinks":[
             { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
             { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},

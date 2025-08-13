@@ -46,19 +46,19 @@ int main(){
     HEAP_add(root,&d,(Compare *)isMoreEfficient);
     HEAP_add(root,&c,(Compare *)isMoreEfficient);
     //create
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"create");
 
     HEAP_normalizeDown(root->left->left,(int (*)(void *, void *))isMoreEfficient);
     //normalize d
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize d");
     
     //modifiy e
     e.successChance = 0.1f;
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"modifiy e");
 
     //normalize a
     HEAP_normalizeDown(root,(int (*)(void *, void *))isMoreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize a");
     
 
     HEAP_free(&root);

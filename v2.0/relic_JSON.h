@@ -16,6 +16,7 @@ void json_printGraph(
     JSON *json, 
     void *root, 
     void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
+    ,char *msg
 );
 
 
@@ -142,13 +143,15 @@ void json_printGraph(
     JSON *json, 
     void *root, 
     void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
+    ,char * msg
 ){
     FILE *outFile = json->outFile;
     fprintf(outFile,"    {\n");
-
+    
     
     //for each object property open array (create new file for buffer)
     FILE *treeLinkFile = outFile;
+    fprintf(treeLinkFile,"        \"msg\":\"%s\",\n",msg);
     fprintf(treeLinkFile,"        \"treeLinks\":[\n");
     int availableId = 0;
     FILE *outerLinkFile = tmpfile();
