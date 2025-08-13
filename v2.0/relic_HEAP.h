@@ -5,6 +5,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include "relic_JSON.h"
+#include<assert.h>
 
 //for min HEAP
 typedef struct HEAP{
@@ -12,12 +13,13 @@ typedef struct HEAP{
     void *data;//for now it is int
     struct HEAP *left;
     struct HEAP *right;
+    struct HEAP *parent;
 
     //for printing
     void * arg;
 } HEAP;
 
-//for printing
+/* done *///for printing
 HEAP *HEAP_getChild(HEAP *node, int index){return index? node->right: node->left;}
 int HEAP_getChildCount(HEAP *node){return (node->left != NULL) + (node->right != NULL);}
 void HEAP_fprintNodeD(FILE *outFile,HEAP *_node){
@@ -48,7 +50,6 @@ void HEAP_clearArg(HEAP *root){
     
 
     //loop
-    HEAP *nextNode;
     do{
         
         HEAP *theNode = baseStack->param;
@@ -120,7 +121,7 @@ __json_printSpannigTree_generic(HEAP)
 return binary representation. Exp: 6 = 1,1,0
 reminder: free out_binary
 */
-void int2binary(int number, char **out_binary, int *out_length){
+/* done */void int2binary(int number, char **out_binary, int *out_length){
     if(number == 0){
         *out_length = 1;
         *out_binary = (char *)calloc(1,sizeof(char));
@@ -139,80 +140,170 @@ void int2binary(int number, char **out_binary, int *out_length){
     *out_length = length;
     *out_binary = binary;
 }
-HEAP* HEAP_init(void * data){
+/* done */HEAP* HEAP_init(void * data){
     HEAP *result = (HEAP *)calloc(1,sizeof(HEAP));
     result->length = 1;
     result->data = data;
+    result->parent = NULL;
     return result;
 }
-void HEAP_free(HEAP * root);
-void HEAP_add(HEAP * root, void * data, int (*cmp)(void *, void*)){
+/* done */void HEAP_free(HEAP ** root){
+    typedef struct CONTEXT{
+        struct CONTEXT *next;
+        int position;
+        HEAP **param;
+
+    }CONTEXT;
+    CONTEXT *context, *tmpContext;
+    #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
+    
+    
+    
+    //create first context
+    context = (CONTEXT *)malloc(sizeof(CONTEXT));
+    context->next = NULL;
+    context->param = root;
+    context->position = 0;
+
+
+    while(context){
+        //recover parameter 
+        HEAP **heapPtr = context->param;
+        
+        
+
+        //recover position
+        switch(context->position){
+            case 0://if((*root)->left)HEAP_free((*root)->left);
+                if((*heapPtr)->left){
+                    //context management
+                    context->position = 1;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->next = context;
+                    tmpContext->param = &(*heapPtr)->left;
+                    tmpContext->position = 0;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
+
+
+            case 1://if((*root)->right)HEAP_free((*root)->right);
+                if((*heapPtr)->right){
+                    //context management
+                    context->position = 2;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->param = &(*heapPtr)->right;
+                    tmpContext->position = 0;
+                    tmpContext->next = context;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
+            case 2:
+                free(*heapPtr);
+                *heapPtr = NULL;
+
+                //delete context
+                tmpContext = context;
+                context = context->next;
+                free(tmpContext);
+                tmpContext = NULL;
+            break;
+            default: printf("error occured"); break;
+        }
+        
+
+    }
+
+    #undef printStack
+}
+
+/* done */void HEAP_add(HEAP * root, void * data, int (*cmp)(void *, void*)){
     //index changed from starting at 0 to 1
     int newnodeID = ++(root->length);
-
-
-    
-    typedef struct STACK{
-        HEAP *heap;
-        struct STACK *next;//basically parent
-    }STACK;
-    STACK *baseStack = NULL, *tmpStack;
-    // #define printStack() for(STACK *ptr = baseStack; ptr; ptr = ptr->next) printf("[%d] ",*(int *)ptr->heap->data);printf("\n");
 
     //get path
     int pathLen;
     char *path;//1 = left, 0 = rigth
     int2binary(newnodeID,&path,&pathLen);
 
-    //create path stack
+    //navigate to new node
     HEAP *heapPtr = root;
-    baseStack = (STACK *)malloc(sizeof(STACK));
-    baseStack->next = NULL;
-    baseStack->heap = heapPtr;
     for(int i = 1; i<pathLen-1; i++){
-        heapPtr = path[i]? heapPtr->right : heapPtr->left ;
-
-        
-        tmpStack = (STACK *)malloc(sizeof(STACK));
-        tmpStack->heap = heapPtr;
-        tmpStack->next = baseStack;
-        baseStack = tmpStack;
-        tmpStack = NULL;
-        
+        heapPtr = path[i]? heapPtr->right : heapPtr->left ; 
     }
-    if(path[pathLen-1] == 0)heapPtr = heapPtr->left = (HEAP *)calloc(1,sizeof(HEAP));
-    else heapPtr = heapPtr->right = (HEAP *)calloc(1,sizeof(HEAP));
-    heapPtr->data = data;
+
+    //create the new node
+    HEAP *tmpHeap;
+    if(path[pathLen-1] == 0)tmpHeap = heapPtr->left = (HEAP *)calloc(1,sizeof(HEAP));
+    else                    tmpHeap = heapPtr->right = (HEAP *)calloc(1,sizeof(HEAP));
+    tmpHeap->parent = heapPtr;
+    tmpHeap->data = data;
+    heapPtr = tmpHeap;
+
     free(path);
     path = NULL;
 
 
     //from newly added node, make sure the heap is valid
-    void *tmpdata;
-    while(baseStack){
-        if(cmp((void*)baseStack->heap->data,(void*)heapPtr->data)) break;
-        tmpdata = baseStack->heap->data ;
-        baseStack->heap->data = heapPtr->data;
-        heapPtr->data = tmpdata;
-
-        heapPtr = baseStack->heap;
-        tmpStack = baseStack;
-        baseStack = baseStack->next;
-        free(tmpStack);
-        tmpStack = NULL;
-    }
+    // HEAP_normalizeUp(heapPtr,cmp);
+    // while(heapPtr->parent){
+    //     void *parentData = heapPtr->parent->data;
+    //     void *currentData = heapPtr->data;
+    //     if(cmp(parentData,currentData)) break;
+    //     heapPtr->parent->data = currentData;
+    //     heapPtr->data = parentData;
+    // }
     
-    // JSON *file = json_init("heapData.json");
-    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
-    // json_close(file);
-
-    
-    
-    
-    return;
-    #undef printStack()
 }
-HEAP* HEAP_pop(HEAP * root);
+//starting at node going up, making sure cmp(parent,child) is true 
+typedef int(Compare)(void *, void*); 
+void HEAP_normalizeUp(HEAP *node,int (*cmp)(void *, void*)){
+
+}
+//starting at node going down, making sure cmp(parent,child) is true
+/* done */void HEAP_normalizeDown(HEAP *node,Compare *cmp){
+
+    HEAP *current = node;
+    while(1){
+
+        HEAP *candidate;
+        switch (2*(current->left != 0) + (current->right !=0 )){
+            case 0b00:
+                return;
+            break;
+            case 0b01:
+                assert("left child empty, but right is not");
+                // candidate = current->right;
+            break;
+            case 0b10:
+                candidate = current->left;
+            break;
+            case 0b11:
+                candidate = cmp(current->left->data,current->right->data)?
+                current->left : current->right;
+            break;
+            default:
+                assert("invalid code");
+            break;
+        }
+
+
+        if(cmp(current->data,candidate->data))return;
+        void *tmpData =  candidate->data;
+        candidate->data = current->data ;
+        current->data = tmpData;
+
+        //next loop
+        current = candidate;
+    }
+
+    
+    
+}
+//return data
+void* HEAP_pop(HEAP * root);
 
 
 

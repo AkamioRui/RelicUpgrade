@@ -30,10 +30,10 @@ void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
 void STATE_clearArg(STATE *root);
 
 //for computation
-int moreEfficient(STATE *a,STATE *b){
+int isMoreEfficient(STATE *a,STATE *b){
     STATE *ap = (STATE *)a;
     STATE *bp = (STATE *)b;
-    return (ap->successChance/ap->price) < (bp->successChance/bp->price);
+    return (ap->successChance/ap->price) > (bp->successChance/bp->price);
 }
 
 //for global graph

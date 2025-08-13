@@ -11,14 +11,14 @@
 
 
 int main(){
-
+    JSON *file = json_init("heapData.json");
    
     STATE a,b,c,d,e;
-    a.successChance = .1f;
-    b.successChance = .2f;
-    c.successChance = .3f;
-    d.successChance = .4f;
-    e.successChance = .5f;
+    a.successChance = 1;
+    b.successChance = 2;
+    c.successChance = 3;
+    d.successChance = 4;
+    e.successChance = 5;
 
     a.price = 100;
     b.price = 100;
@@ -37,38 +37,35 @@ int main(){
     sprintf(c.msg,"c");
     sprintf(d.msg,"d");
     sprintf(e.msg,"e");
-
-
-
-
-
-    
-
-    
-
    
-    JSON *file = json_init("heapData.json");
+    
 
     HEAP *root = HEAP_init(&e);
+    HEAP_add(root,&b,(Compare *)isMoreEfficient);
+    HEAP_add(root,&a,(Compare *)isMoreEfficient);
+    HEAP_add(root,&d,(Compare *)isMoreEfficient);
+    HEAP_add(root,&c,(Compare *)isMoreEfficient);
+    //create
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
 
-    HEAP_add(root,&b,(int (*)(void *, void *))moreEfficient);
+    HEAP_normalizeDown(root->left->left,(int (*)(void *, void *))isMoreEfficient);
+    //normalize d
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    
+    //modifiy e
+    e.successChance = 0.1f;
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
 
-    HEAP_add(root,&a,(int (*)(void *, void *))moreEfficient);
+    //normalize a
+    HEAP_normalizeDown(root,(int (*)(void *, void *))isMoreEfficient);
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    
 
-    HEAP_add(root,&d,(int (*)(void *, void *))moreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
-
-    HEAP_add(root,&c,(int (*)(void *, void *))moreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP);
+    HEAP_free(&root);
     
     
     
     
-    
-    json_close(file);
 
 
 
@@ -77,7 +74,8 @@ int main(){
 
     
 
-    
+    json_close(file);
+
     printf("\ndone\n");
     return 0;
 }
