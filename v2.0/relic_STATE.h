@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include "relic_JSON.h"
 
 
 typedef struct STATE{
@@ -27,6 +28,13 @@ int STATE_getChildCount(STATE *node);
 void STATE_fprintNodeD(FILE *outFile,STATE *node);
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
 void STATE_clearArg(STATE *root);
+
+//for computation
+int moreEfficient(STATE *a,STATE *b){
+    STATE *ap = (STATE *)a;
+    STATE *bp = (STATE *)b;
+    return (ap->successChance/ap->price) < (bp->successChance/bp->price);
+}
 
 //for global graph
 typedef struct STATE_array{
@@ -145,7 +153,18 @@ void STATE_clearArg(STATE *root){
     }
 }
 
-#include "relic_JSON.h"
+
 __json_printSpannigTree_generic(STATE)
+
+
+//drawing a STATE graph
+// graph_init_test();
+// JSON *mainGraphJson = json_init("mydata.json");
+// json_printGraph(
+//     mainGraphJson,
+//     (void *)graph.root.ptr,
+//     (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
+// );
+// json_close(mainGraphJson);
 
 #endif

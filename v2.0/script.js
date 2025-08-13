@@ -22,10 +22,14 @@ const d3 =d3Raw;
 
 
 
-// test();
+// drawGraphD3(jsondata,{width:20,height:20,padding:20});
+drawGraphD3(await (await fetch("heapData.json")).json());
+// drawGraphD3(await (await fetch("mydata.json")).json());
 
-const jsondata = await (await fetch("mydata.json")).json();
-drawGraphD3(jsondata);
+
+
+//--------------code---------------------------------------------------------//
+
 
 /**
  * @template _LinkData,_NodeData
@@ -43,6 +47,11 @@ drawGraphD3(jsondata);
  * @property {_LinkData} linkData
  */ 
 
+// /**
+//  * @typedef {{treeLinks:TreeLink<any,any>[],outerLinks:OuterLink<any>[]}[]} GraphJson
+//  * @typedef {label:string,jsonData:GraphJson} Graph
+//  */
+
 /**
  * 
  * @param {{treeLinks:TreeLink<any,any>[],outerLinks:OuterLink<any>[]}[]} jsondata 
@@ -52,8 +61,8 @@ function drawGraphD3(jsondata,_nodeSetting = null){
 
   //common element
   const all = d3.select('body').append('div');
-  const backButton = all.append('button').text('back');
-  const nextButton = all.append('button').text('next');
+  const backButton = all.append('button').text('back').attr('class','back');
+  const nextButton = all.append('button').text('next').attr('class','next');
   all.append('br');
   const svg = all.append('svg');
   const svg_g = svg.append('g');
@@ -83,18 +92,9 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     .nodeSize([nodeSetting.width+nodeSetting.padding*2,nodeSetting.height*2])
   ; 
   let currentGraph = 0;
+
   /** @type {(d3.HierarchyPointLink<TreeLink<any,any>>&{linkData:any})[]} */
   let treeLinks;
-  /* 
-  children: (2) [h, h]
-  data: {id: 0, parentId: '', data: {…}}
-  depth: 0
-  height: 2
-  id: "0"
-  parent: null
-  x: 0
-  y: 0
-  */
   /** @type {d3.HierarchyNode<TreeLink<any,any>>[]} */
   let treeNodes;
   function getGraphData(){
@@ -119,8 +119,11 @@ function drawGraphD3(jsondata,_nodeSetting = null){
       }
     )
     treeLinks.push(...treeOuterLinks);
+    
+    
   }
   getGraphData();
+  
   //#endregion
 
 
@@ -147,12 +150,10 @@ function drawGraphD3(jsondata,_nodeSetting = null){
 
 
 
-
+  const linkDataProperty = Object.entries( jsondata[0].treeLinks[0].linkData).map(v=>v[0]);
+  const nodeDataProperty = Object.entries( jsondata[0].treeLinks[0].nodeData).map(v=>v[0]);
   //drawLinks
   //#region 
-  /**
-   * @param {d3.Selection<SVGPathElement, HierarchyPointLink<treeLink>, SVGGElement, any>} myselection 
-   */
   /** @type {d3.Link< any, d3.HierarchyPointLink<TreeLink<any,any>, d3.HierarchyNode<TreeLink<any,any> >} */
   const linkGenerator = d3.linkVertical()
     .source(d=>d.source)
@@ -160,8 +161,6 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     .x(d=>d.x)
     .y(d=>d.y)
   ;
-  const linkDataProperty = Object.entries( jsondata[0].treeLinks[0].linkData).map(v=>v[0]);
-  const nodeDataProperty = Object.entries( jsondata[0].treeLinks[0].nodeData).map(v=>v[0]);
   /**
    * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<any,any>>, SVGGElement, any>} myselection 
    */
@@ -208,8 +207,9 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     });
     
   }
+  
 
-  const linkElements = svg_g
+  let linkElements = svg_g
     .append('g').attr('class','links')
     .selectAll('linkElement')
     .data(treeLinks).enter()
@@ -217,7 +217,7 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     .call(initLink)
     .call(updateLink,'black')
   ;
-
+  
   ///*  */3 gone, 5 edited, 6 added
   
 
@@ -232,6 +232,7 @@ function drawGraphD3(jsondata,_nodeSetting = null){
 
   //draw node;
   //#region 
+  /** @typedef {SVGGElement & {oldNodeData:any,modified:number}} SVGNodeElement */
   /**
    * @param { d3.Selection<SVGGElement, d3.HierarchyNode<TreeLink<any,any>>, SVGGElement, any>} selection 
    */
@@ -239,7 +240,7 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     // selection
       // .attr('transform', d => 'translate('+d.x+','+d.y+')')
       // .each(function (d){
-      //   this.oldData = d.data.nodeData;
+      //   this.oldNodeData = d.data.nodeData;
       // })
     selection.append('rect')
       .attr('x'       ,-nodeSetting.width/2)
@@ -261,7 +262,7 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     });
   }
   /**
-     * @param { d3.Selection<SVGGElement , d3.HierarchyNode<TreeLink<any,any>>, SVGGElement, any> } selection 
+     * @param { d3.Selection<SVGNodeElement , d3.HierarchyNode<TreeLink<any,any>>, SVGGElement, any> } selection 
      * @param {string} colorModiefied 
      * @param {string} colorStable 
      */
@@ -271,18 +272,19 @@ function drawGraphD3(jsondata,_nodeSetting = null){
       .each(function (d){
         this.modified = 0;
         let newNodeData = d.data.nodeData;
-        if(this.oldData !== undefined){
-          for(let v of Object.entries(this.oldData)){
+        if(this.oldNodeData !== undefined){
+          for(let v of Object.entries(this.oldNodeData)){
             if( v[1] === newNodeData[v[0]]) continue;
             this.modified = 1;
             break;
           }
         }
-        this.oldData = newNodeData;
+        this.oldNodeData = newNodeData;
       })
     ;
     selection.select('rect')
       .attr('stroke',function (){
+        
         if(this.parentNode.modified)return colorModiefied;
         else return colorStable;
       })
@@ -298,12 +300,13 @@ function drawGraphD3(jsondata,_nodeSetting = null){
 
   //first time creating node G and its element
   //#region 
-  const nodeElements = svg_g.append('g').attr('class','nodes')
+  let nodeElements = svg_g.append('g').attr('class','nodes')
     .selectAll('nodeElement')
     .data(treeNodes).enter()
     .append('g').attr('class','node')
     .call(initNode,'black')
     .call(updateNode,'black','black')
+  ;
   //#endregion
 
   //protocol to responding to new data;  
@@ -315,7 +318,9 @@ function drawGraphD3(jsondata,_nodeSetting = null){
   //appending function to the button
   const jsonDataLength = jsondata.length;
   function nextGraph(increment){
+    
     currentGraph += increment;
+
     if(currentGraph >= jsonDataLength-1) nextButton.style('visibility','hidden');
     else nextButton.style('visibility','visible');
     if(currentGraph <= 0) backButton.style('visibility','hidden');
@@ -323,31 +328,44 @@ function drawGraphD3(jsondata,_nodeSetting = null){
     
     getGraphData();
     resizeSVG();
+    
     //normal: black, enter:green
-    linkElements.data(treeLinks, d=>d.source.id+','+d.target.id ).join(
-      enter => enter
+    linkElements = linkElements.data(treeLinks, function (d){
+      return d.source.id+','+d.target.id;
+    } ).join(
+      enter =>{
+        return enter
         .append('g').attr('class','link') 
         .call(initLink)
-        .call(updateLink,'lime')
-      ,
-      update => update
-        .call(updateLink,'black')
-      ,
-      exit => exit.remove()
+        .call(updateLink,'lime');
+      },
+      update => {
+        return update
+        .call(updateLink,'black');
+      },
+      exit => {
+        return exit.remove();
+      }
     );
+    
 
     //normal:black, new:lime, updated:aqua
-    nodeElements.data(treeNodes,d=>d.id).join(
-      enter => enter
+    nodeElements = nodeElements.data(treeNodes,d=>d.id).join(
+      enter => {
+        return enter
         .append('g').attr('class','node')
         .call(initNode)
         .call(updateNode,'lime','lime')
-      ,
-      update => update
+      },
+      update => {
+        return update
         .call(updateNode,'aqua','black')
-      ,
-      exit => exit.remove()
+      },
+      exit => {
+        return exit.remove();
+      }
     )
+    
   }
   nextButton.on('click',()=>nextGraph(1));
   backButton.on('click',()=>nextGraph(-1));
@@ -508,7 +526,7 @@ async function drawGraphD3_relic(){
     
   }
 
-  const linkElements = svg_g
+  let linkElements = svg_g
     .append('g').attr('class','links')
     .selectAll('linkElement')
     .data(treeLinks).enter()
@@ -592,7 +610,7 @@ async function drawGraphD3_relic(){
 
   //first time creating node G and its element
   //#region 
-  const nodeElements = svg_g.append('g').attr('class','nodes')
+  let nodeElements = svg_g.append('g').attr('class','nodes')
     .selectAll('nodeElement')
     .data(treeNodes).enter()
     .append('g').attr('class','node')
@@ -618,7 +636,7 @@ async function drawGraphD3_relic(){
     getGraphData();
     resizeSVG();
     //normal: black, enter:green
-    linkElements.data(treeLinks, d=>d.source.id+','+d.target.id ).join(
+    linkElements = linkElements.data(treeLinks, d=>d.source.id+','+d.target.id ).join(
       enter => enter
         .append('g').attr('class','link') 
         .call(initLink)
@@ -631,7 +649,7 @@ async function drawGraphD3_relic(){
     );
 
     //normal:black, new:lime, updated:aqua
-    nodeElements.data(treeNodes,d=>d.id).join(
+    nodeElements = nodeElements.data(treeNodes,d=>d.id).join(
       enter => enter
         .append('g').attr('class','node')
         .call(initNode)

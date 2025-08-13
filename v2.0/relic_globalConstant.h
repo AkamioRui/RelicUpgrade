@@ -136,4 +136,11 @@ void iniGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_le
 }
 
 
+// // initialize constant variable
+// STAT substat[] = {STAT_CD,STAT_ATKP};
+// iniGlobalVariable(PIECE_BODY,STAT_CR,substat,sizeof(substat)/sizeof(int)); 
+// struct COST cost2;
+// struct CHANCE chance2;
+// memcpy(&cost2,&cost,sizeof(struct COST));
+// memcpy(&chance2,&chance,sizeof(struct CHANCE));
 #endif
