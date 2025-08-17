@@ -278,16 +278,124 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
 
 }
 
+//input must be either &root(not a copy of the root) or &(heap.left/right)
+/* done */void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
+    assert(rootPtr);
+    assert(node1);
+    assert(node2);
+
+    //based on node1, node2, determine their pointer
+    HEAP **node1_ptr, **node2_ptr;
+    HEAP_SIDE node1_side, node2_side;
+    if(node1->parent){
+        if(node1->parent->left == node1){
+            node1_ptr = &(node1->parent->left);
+            node1_side = HEAP_left;
+        } else {
+            node1_ptr = &(node1->parent->right);
+            node1_side = HEAP_right;
+        }
+    } else {
+        node1_ptr = rootPtr;
+        node1_side = HEAP_none;
+    }
+    if(node2->parent){
+        if(node2->parent->left == node2){
+            node2_ptr = &(node2->parent->left);
+            node2_side = HEAP_left;
+        } else {
+            node2_ptr = &(node2->parent->right);
+            node2_side = HEAP_right;
+        }
+    } else {
+        node2_ptr = rootPtr;
+        node2_side = HEAP_none;
+    }
+    
+
+    
+
+
+    //if node 1 & node 2 are not directly linked
+
+    HEAP *node1_parent = node1->parent;
+    HEAP *node2_parent = node2->parent;
+    // switch (parent_node2){
+    //     case HEAP_right: node2_parent = 
+    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,right)); 
+    //     break;
+    //     case HEAP_left: node2_parent = 
+    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,left)); 
+    //     break;
+    //     case HEAP_none: node2_parent = NULL; 
+    //     break;
+    // }
+
+    HEAP *node1_left = node1->left;
+    HEAP *node1_right = node1->right;
+    HEAP *node2_left = node2->left;
+    HEAP *node2_right = node2->right;
+
+    int code = ((node1->left  == node2)<<3)
+              +((node1->right == node2)<<2)
+              +((node2->left  == node1)<<1)
+              +((node2->right == node1))
+    ;
+
+    //node 1 environment
+    *node1_ptr = node2;
+    if(node1_left)node1_left->parent = node2;
+    if(node1_right)node1_right->parent = node2;
+
+    //node 2 environment
+    *node2_ptr = node1;
+    if(node2_left)node2_left->parent = node1;
+    if(node2_right)node2_right->parent = node1;
+
+
+    //node 1 itself
+    node1->parent = node2_parent;
+    node1->left = node2_left;
+    node1->right = node2_right;
+
+    //node 2 itself
+    node2->parent = node1_parent;
+    node2->left = node1_left;
+    node2->right = node1_right;
+
+    switch(code){
+        case 0b0000: break;
+        case 0b1000: 
+            node1->left = node2;
+            node2->parent = node1;
+        break;
+        case 0b0100: 
+            node1->right = node2;
+            node2->parent = node1;
+        break;
+        case 0b0010: 
+            node2->left = node1;
+            node1->parent = node2;
+        break;  
+        case 0b0001: 
+            node2->right = node1;
+            node1->parent = node2;
+        break;
+        default: 
+            assert(code); 
+        return;
+    }
+
+}
+   
+
 //starting at node going up, making sure cmp(parent,child) is true 
-/* done */void HEAP_normalizeUp(HEAP *node,Compare *cmp){
+/* ---from swapping only data to swapping the node */
+void HEAP_normalizeUp(HEAP **rootPtr,HEAP *node,Compare *cmp){
     printf("normalizing\n");
     while(node->parent){
-        void **parentData = &node->parent->data;
-        void **currentData = &node->data;
-        if(cmp(*parentData,*currentData)) break;
-        void *tempData = *parentData;
-        *parentData = *currentData;
-        *currentData = tempData;
+        if(cmp(node->parent->data,node->data)) break;
+        HEAP_swap(rootPtr,node->parent,node);
 
         //next iter
         node = node->parent;
@@ -295,6 +403,22 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
 
     printf("normalizing done\n");
 }
+// void HEAP_normalizeUp(HEAP *node,Compare *cmp){
+//     printf("normalizing\n");
+//     while(node->parent){
+//         void **parentData = &node->parent->data;
+//         void **currentData = &node->data;
+//         if(cmp(*parentData,*currentData)) break;
+//         void *tempData = *parentData;
+//         *parentData = *currentData;
+//         *currentData = tempData;
+
+//         //next iter
+//         node = node->parent;
+//     }
+
+//     printf("normalizing done\n");
+// }
 
 //starting at node going down, making sure cmp(parent,child) is true
 /* ---waiting swap function that actually swap the node, not only swap the data */
@@ -347,84 +471,7 @@ void HEAP_normalizeDown(HEAP *node,Compare *cmp){
     
     
  }
-//input must be either &root(not a copy of the root) or &(heap.left/right)
-void HEAP_swap(HEAP **node1Ptr, HEAP_SIDE parent_node1, HEAP **node2Ptr, HEAP_SIDE parent_node2){
-    //if node 1 & node 2 are not directly linked
-    HEAP *node1 = *node1Ptr;
-    HEAP *node2 = *node2Ptr;
-
-    HEAP *node1_parent = node1->parent;
-    HEAP *node2_parent = node2->parent;
-    // switch (parent_node2){
-    //     case HEAP_right: node2_parent = 
-    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,right)); 
-    //     break;
-    //     case HEAP_left: node2_parent = 
-    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,left)); 
-    //     break;
-    //     case HEAP_none: node2_parent = NULL; 
-    //     break;
-    // }
-
-    HEAP *node1_left = node1->left;
-    HEAP *node1_right = node1->right;
-    HEAP *node2_left = node2->left;
-    HEAP *node2_right = node2->right;
-
-    int code = ((node1->left  == node2)<<3)
-              +((node1->right == node2)<<2)
-              +((node2->left  == node1)<<1)
-              +((node2->right == node1))
-    ;
-
-    //node 1 environment
-    *node1Ptr = node2;
-    if(node1_left)node1_left->parent = node2;
-    if(node1_right)node1_right->parent = node2;
-
-    //node 2 environment
-    *node2Ptr = node1;
-    if(node2_left)node2_left->parent = node1;
-    if(node2_right)node2_right->parent = node1;
-
-
-    //node 1 itself
-    node1->parent = node2_parent;
-    node1->left = node2_left;
-    node1->right = node2_right;
-
-    //node 2 itself
-    node2->parent = node1_parent;
-    node2->left = node1_left;
-    node2->right = node1_right;
-
-    switch(code){
-        case 0b0000: break;
-        case 0b1000: 
-            node1->left = node2;
-            node2->parent = node1;
-        break;
-        case 0b0100: 
-            node1->right = node2;
-            node2->parent = node1;
-        break;
-        case 0b0010: 
-            node2->left = node1;
-            node1->parent = node2;
-        break;  
-        case 0b0001: 
-            node2->right = node1;
-            node1->parent = node2;
-        break;
-        default: 
-            assert(code); 
-        return;
-    }
-
-}
-    
-    
-// }
+ 
 
 //return data
 void* HEAP_pop(HEAP * root);

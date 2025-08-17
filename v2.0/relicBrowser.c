@@ -68,26 +68,26 @@ int main(){
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"created");
     
     //swap a and c
-    HEAP_swap(&(root->right),HEAP_right,&(root->left->right),HEAP_right);
+    HEAP_swap(&root,root->right,root->left->right);
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap a and c");
 
     //swap a and e
-    HEAP_swap(&(root->left->right),HEAP_right,&(root),HEAP_none);
+    HEAP_swap(&root,root->left->right,root);
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap a and e");
     
     
 
     // //normalize d
     // HEAP_normalizeDown(root->left->left,(int (*)(void *, void *))isMoreEfficient);
-    //// json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize d");
+    // // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize d");
     
     // //modifiy e
     // e.successChance = 0.1f;
-    //// json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"modifiy e");
+    // // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"modifiy e");
 
     // //normalize a
     // HEAP_normalizeDown(root,(int (*)(void *, void *))isMoreEfficient);
-    //// json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize a");
+    // // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize a");
     
 
     HEAP_free(&root);
