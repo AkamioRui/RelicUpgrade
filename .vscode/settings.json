@@ -5,7 +5,8 @@
         "string": "c",
         "string_view": "c",
         "iosfwd": "cpp",
-        "varargs.h": "c"
+        "varargs.h": "c",
+        "stdint.h": "c"
     },
     "code-runner.executorMap": {
 

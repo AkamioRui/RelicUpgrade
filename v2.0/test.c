@@ -1,9 +1,10 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<stddef.h>
 
 //note
-#pragma region
+
 //destructor atexit
     void a_close(){printf("a closed\n");}
     void a_init(){atexit(a_close);}
@@ -14,7 +15,7 @@
 struct aaa{
     int a[16];
 };
-#pragma endregion
+
 
 void printGraphPrinting(){
     FILE *inFile = fopen("mydata.json","r");
@@ -109,11 +110,40 @@ void say_##MSG(){\
     printf(#MSG);\
 }
 say_generic(hello)
+void usingOffsetOf(){
+    struct mytype{
+        int m;
+        int mm;
+        int mmm;
+    }a,b;
+
+    
+    printf("a       :%llu\n",&a);
+    printf("a.m     :%llu\n",&a.m);
+    printf("a.mm    :%llu\n",&a.mm);
+    printf("a.mmm   :%llu\n",&a.mmm);
+    printf("a - a.m     :%lld\n",(ptrdiff_t)&a - (ptrdiff_t)&a.m);
+    printf("a - a.mm    :%lld\n",(ptrdiff_t)&a - (ptrdiff_t)&a.mm);
+    printf("a - a.mmm   :%lld\n",(ptrdiff_t)&a - (ptrdiff_t)&a.mmm);
+    printf("offsetof(a.m)  :%lld\n",offsetof(struct mytype,m));
+    printf("offsetof(a.mm) :%lld\n",offsetof(struct mytype,mm));
+    printf("offsetof(a.mmm):%lld\n",offsetof(struct mytype,mmm));
+    printf("b       :%llu\n",&b);
+    printf("b.m     :%llu\n",&b.m);
+    printf("b.mm    :%llu\n",&b.mm);
+    printf("b.mmm   :%llu\n",&b.mmm);
+}
 int main(){
 
-    free(NULL);
+    printf("%d,",(11>>3)&1);
+    printf("%d,",(11>>2)&1);
+    printf("%d,",(11>>1)&1);
+    printf("%d,",11&1);
+
+    
 
 
-    printf("\ndone");
+    printf("\ndone\n");
     return 0;
 }
+
