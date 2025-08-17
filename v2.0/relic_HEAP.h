@@ -8,6 +8,9 @@
 #include<assert.h>
 #include "relic_JSON.h"
 
+/* test */
+#include"relic_STATE.h"
+
 
 typedef struct HEAP{
     int length;
@@ -40,7 +43,10 @@ void HEAP_fprintNodeD(FILE *outFile,HEAP *_node){
     fprintf(outFile,",\"accept\":%d"    ,node->whitelisted);
     fprintf(outFile,"}");
 }
-void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode){fprintf(outFile,"{}");}
+void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode){
+    if(childNode->parent)fprintf(outFile,"{\"msg\":\"%s\"}",((STATE*)childNode->parent->data)->msg);
+    else fprintf(outFile,"{\"msg\":\"_\"}");
+}
 void HEAP_clearArg(HEAP *root){
     typedef struct STACK {
         HEAP *param;
@@ -256,7 +262,7 @@ reminder: free out_binary
 
 //append new node, still keeping the relation
 //return new node
-/* --normalize is currently dissabled, because only shallow swap*/
+/* ---normalize is currently dissabled, because only shallow swap*/
 HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
 
     HEAP **heapPtr = HEAP_pointer_to(root, (root->length)++);
@@ -291,7 +297,7 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
 }
 
 //starting at node going down, making sure cmp(parent,child) is true
-/* waiting swap function that actually swap the node, not only swap the data */
+/* ---waiting swap function that actually swap the node, not only swap the data */
 void HEAP_normalizeDown(HEAP *node,Compare *cmp){
 
     HEAP *current = node;

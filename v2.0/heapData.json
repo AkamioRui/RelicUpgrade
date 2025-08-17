@@ -2,11 +2,11 @@
     {
         "msg":"created",
         "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}}
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
+            { "id":3,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
+            { "id":4,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}}
         ],
         "outerLinks":[
 
@@ -15,11 +15,11 @@
     {
         "msg":"swap a and c",
         "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}}
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
+            { "id":3,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
+            { "id":4,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}}
         ],
         "outerLinks":[
 
@@ -28,11 +28,11 @@
     {
         "msg":"swap a and e",
         "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"chance":100},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}}
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"a"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"a"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
+            { "id":3,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
+            { "id":4,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}}
         ],
         "outerLinks":[
 

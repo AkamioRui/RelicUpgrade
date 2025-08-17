@@ -53,7 +53,7 @@ void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int 
     fprintf(treeF,"            {");\
     fprintf(treeF," \"id\":%d",*(int *)root->arg);\
     fprintf(treeF,",\"parentId\":\"\"");\
-    fprintf(treeF,",\"linkData\":{\"chance\":100}");\
+    fprintf(treeF,",\"linkData\":");TYPE##_fprintLinkD(treeF,NULL,root);\
     fprintf(treeF,",\"nodeData\":"); TYPE##_fprintNodeD(treeF,root);\
     fprintf(treeF,"},\n");\
     \

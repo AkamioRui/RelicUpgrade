@@ -137,6 +137,10 @@ void STATE_fprintNodeD(FILE *outFile,STATE *node){
     fprintf(outFile,"}");
 }
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
+    if(!parentNode ){
+        fprintf(outFile,"{\"chance\":0}");
+        return;
+    }
     fprintf(
         outFile,
         "{\"chance\":%.2lf}"
