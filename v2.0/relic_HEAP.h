@@ -8,13 +8,30 @@
 #include<assert.h>
 #include "relic_JSON.h"
 
-/* test */
-#include"relic_STATE.h"
+
 
 
 typedef struct HEAP{
     int length;
-    void *data;//for now it is int
+    // void *data;//for now it is int
+    /* testing */struct {
+        double price;//the average price
+        double successChance;
+        char msg[16];
+        char whitelisted;//1 if true
+    
+        void *arg;//for printing
+        struct STATE *child;//the address in root array where this.children start
+        int childCount;
+    
+        //for processing
+        struct STATE *parent;//what actually being used
+        int parentCount;
+        double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
+        struct HEAP *heap;
+    
+    } * data;
+    // [copy state definition] *data;
     struct HEAP *left;
     struct HEAP *right;
     struct HEAP *parent;
@@ -23,30 +40,23 @@ typedef struct HEAP{
     void * arg;
 } HEAP;
 
+//none is to descript &root and root relationship
 typedef enum HEAP_SIDE {HEAP_none, HEAP_left, HEAP_right}HEAP_SIDE;
 
-//none is to descript &root and root relationship
-typedef int(Compare)(void *parent, void*child); 
+typedef int(HEAP_Compare)(void *parent, void*child); 
 
+
+
+//global variable
+void (*HEAP_fprintNodeD_printer)(FILE *outFile,void *node);
+void (*HEAP_fprintLinkD_printer)(FILE *outFile, void *parentNode, void *childNode);
 
 
 /* done *///for printing
 HEAP *HEAP_getChild(HEAP *node, int index){return index? node->right: node->left;}
 int HEAP_getChildCount(HEAP *node){return (node->left != NULL) + (node->right != NULL);}
-void HEAP_fprintNodeD(FILE *outFile,HEAP *_node){
-    STATE * node = _node->data;
-
-    fprintf(outFile,"{");
-    fprintf(outFile," \"detail\":\"%s\"",node->msg);
-    fprintf(outFile,",\"price\":%.2lf"  ,node->price);
-    fprintf(outFile,",\"succesR\":%.2lf",node->successChance);
-    fprintf(outFile,",\"accept\":%d"    ,node->whitelisted);
-    fprintf(outFile,"}");
-}
-void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode){
-    if(childNode->parent)fprintf(outFile,"{\"msg\":\"%s\"}",((STATE*)childNode->parent->data)->msg);
-    else fprintf(outFile,"{\"msg\":\"_\"}");
-}
+void HEAP_fprintNodeD(FILE *outFile,HEAP *node);// its in relic_STATE.h
+void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode);// its in relic_STATE.h
 void HEAP_clearArg(HEAP *root){
     typedef struct STACK {
         HEAP *param;
@@ -173,7 +183,7 @@ reminder: free out_binary
 
     }CONTEXT;
     CONTEXT *context, *tmpContext;
-    #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
+    // #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
     
     
     
@@ -234,12 +244,12 @@ reminder: free out_binary
 
     }
 
-    #undef printStack
+    // #undef printStack
 }
 //return ptr pointing to the left/right element inside the parent that point to the actual node
-/* done */HEAP **HEAP_pointer_to(HEAP * root, int index){
-    if(index <1)return NULL;
-
+/* done */HEAP **HEAP_pointer_to(HEAP **rootPtr, int index){
+    //if it request for index = 0, ie the root
+    if(index < 0)return rootPtr;
     
     //get path
     index++;
@@ -248,7 +258,7 @@ reminder: free out_binary
     int2binary(index,&path,&pathLen);
 
     //navigate to new node
-    HEAP **heapPtr = &root;
+    HEAP **heapPtr = rootPtr;
     for(int i = 1; i<pathLen; i++){
         heapPtr = path[i]? &(*heapPtr)->right : &(*heapPtr)->left; 
     }
@@ -260,23 +270,7 @@ reminder: free out_binary
 
 }
 
-//append new node, still keeping the relation
-//return new node
-/* ---normalize is currently dissabled, because only shallow swap*/
-HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
 
-    HEAP **heapPtr = HEAP_pointer_to(root, (root->length)++);
-    HEAP *newNode = *heapPtr = (HEAP *)calloc(1,sizeof(HEAP));
-    int side = root->length%2;
-    //root.length = root.length +1. because I need index + 1
-    newNode->parent = (HEAP *)((char *)heapPtr 
-    - (side?offsetof(HEAP,right):offsetof(HEAP,left))
-    );
-    newNode->data = data;
-    // HEAP_normalizeUp(newNode,cmp);
-    return newNode;
-
-}
 
 //input must be either &root(not a copy of the root) or &(heap.left/right)
 /* done */void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
@@ -316,30 +310,18 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
     
 
 
-    //if node 1 & node 2 are not directly linked
-
+    //assume node 1 & node 2 are not directly linked
     HEAP *node1_parent = node1->parent;
     HEAP *node2_parent = node2->parent;
-    // switch (parent_node2){
-    //     case HEAP_right: node2_parent = 
-    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,right)); 
-    //     break;
-    //     case HEAP_left: node2_parent = 
-    //         (HEAP *)((char *)node2Ptr - offsetof(HEAP,left)); 
-    //     break;
-    //     case HEAP_none: node2_parent = NULL; 
-    //     break;
-    // }
-
     HEAP *node1_left = node1->left;
     HEAP *node1_right = node1->right;
     HEAP *node2_left = node2->left;
     HEAP *node2_right = node2->right;
 
-    int code = ((node1->left  == node2)<<3)
-              +((node1->right == node2)<<2)
-              +((node2->left  == node1)<<1)
-              +((node2->right == node1))
+    int nodePair_code = ((node1->left  == node2)<<3)
+                       +((node1->right == node2)<<2)
+                       +((node2->left  == node1)<<1)
+                       +((node2->right == node1))
     ;
 
     //node 1 environment
@@ -352,7 +334,6 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
     if(node2_left)node2_left->parent = node1;
     if(node2_right)node2_right->parent = node1;
 
-
     //node 1 itself
     node1->parent = node2_parent;
     node1->left = node2_left;
@@ -363,66 +344,49 @@ HEAP *HEAP_add(HEAP * root, void * data, Compare *cmp){
     node2->left = node1_left;
     node2->right = node1_right;
 
-    switch(code){
+    //fixing the issue caused by both node linked together
+    //it will only affect property of those 2 node
+    switch(nodePair_code){
         case 0b0000: break;
-        case 0b1000: 
+        case 0b1000: // before swap, node1.left = node2
+            node1->parent = node2;
+            node2->left = node1;
+        break;
+        case 0b0100: // before swap, node1.right = node2
+            node1->parent = node2;
+            node2->right = node1;
+        break;
+        case 0b0010: // before swap, node2.left = node1
             node1->left = node2;
             node2->parent = node1;
-        break;
-        case 0b0100: 
+        break;  
+        case 0b0001: // before swap, node2.right = node1
             node1->right = node2;
             node2->parent = node1;
         break;
-        case 0b0010: 
-            node2->left = node1;
-            node1->parent = node2;
-        break;  
-        case 0b0001: 
-            node2->right = node1;
-            node1->parent = node2;
-        break;
         default: 
-            assert(code); 
+            assert(nodePair_code); 
         return;
     }
 
 }
-   
+
 
 //starting at node going up, making sure cmp(parent,child) is true 
 /* ---from swapping only data to swapping the node */
-void HEAP_normalizeUp(HEAP **rootPtr,HEAP *node,Compare *cmp){
+void HEAP_normalizeUp(HEAP **rootPtr,HEAP *node,HEAP_Compare *cmp){
     printf("normalizing\n");
     while(node->parent){
         if(cmp(node->parent->data,node->data)) break;
         HEAP_swap(rootPtr,node->parent,node);
-
-        //next iter
-        node = node->parent;
     }
 
     printf("normalizing done\n");
-}
-// void HEAP_normalizeUp(HEAP *node,Compare *cmp){
-//     printf("normalizing\n");
-//     while(node->parent){
-//         void **parentData = &node->parent->data;
-//         void **currentData = &node->data;
-//         if(cmp(*parentData,*currentData)) break;
-//         void *tempData = *parentData;
-//         *parentData = *currentData;
-//         *currentData = tempData;
-
-//         //next iter
-//         node = node->parent;
-//     }
-
-//     printf("normalizing done\n");
-// }
+}   
 
 //starting at node going down, making sure cmp(parent,child) is true
 /* ---waiting swap function that actually swap the node, not only swap the data */
-void HEAP_normalizeDown(HEAP *node,Compare *cmp){
+void HEAP_normalizeDown(HEAP *node,HEAP_Compare *cmp){
 
     HEAP *current = node;
     while(1){
@@ -472,6 +436,28 @@ void HEAP_normalizeDown(HEAP *node,Compare *cmp){
     
  }
  
+
+//append new node, still keeping the relation
+//return new node
+/* ---normalize is currently dissabled, because only shallow swap*/
+HEAP *HEAP_add(HEAP **rootPtr, void * data, HEAP_Compare *cmp){
+
+    HEAP *root = *rootPtr;
+    HEAP **heapPtr = HEAP_pointer_to(rootPtr, (root->length)++);
+    HEAP *newNode = *heapPtr = (HEAP *)calloc(1,sizeof(HEAP));
+    int side = root->length%2;
+    //root.length = root.length +1. because I need index + 1
+    newNode->parent = (HEAP *)((char *)heapPtr 
+    - (side?offsetof(HEAP,right):offsetof(HEAP,left))
+    );
+    newNode->data = data;
+
+    // HEAP_normalizeUp(rootPtr,newNode,cmp);//still problematic
+    return newNode;
+
+}
+
+
 
 //return data
 void* HEAP_pop(HEAP * root);

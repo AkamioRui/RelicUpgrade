@@ -5,6 +5,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include "relic_JSON.h"
+#include "relic_HEAP.h"
+
 
 
 typedef struct STATE{
@@ -21,6 +23,7 @@ typedef struct STATE{
     struct STATE *parent;//what actually being used
     int parentCount;
     double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
+    HEAP *heap;
 
 } STATE ;
 STATE *STATE_getChild(STATE *node, int index);
@@ -156,11 +159,27 @@ void STATE_clearArg(STATE *root){
         }
     }
 }
-
-
 __json_printSpannigTree_generic(STATE)
 
+//HEAP section, filling the global variable
+void HEAP_fprintNodeD(FILE *outFile,HEAP *node){
+    STATE *node_data = node->data;
+    fprintf(outFile,"{");
+    fprintf(outFile," \"detail\":\"%s\"",node_data->msg);
+    fprintf(outFile,",\"price\":%.2lf"  ,node_data->price);
+    fprintf(outFile,",\"succesR\":%.2lf",node_data->successChance);
+    fprintf(outFile,",\"accept\":%d"    ,node_data->whitelisted);
+    fprintf(outFile,"}");
 
+}
+void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode){
+    if(childNode->parent)fprintf(outFile,"{\"msg\":\"%s\"}",((STATE*)childNode->parent->data)->msg);
+    else fprintf(outFile,"{\"msg\":\"_\"}");
+}
+
+
+
+#endif
 //drawing a STATE graph
 // graph_init_test();
 // JSON *mainGraphJson = json_init("mydata.json");
@@ -170,5 +189,3 @@ __json_printSpannigTree_generic(STATE)
 //     (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
 // );
 // json_close(mainGraphJson);
-
-#endif

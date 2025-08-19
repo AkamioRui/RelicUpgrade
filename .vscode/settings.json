@@ -6,7 +6,8 @@
         "string_view": "c",
         "iosfwd": "cpp",
         "varargs.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "relic_state.h": "c"
     },
     "code-runner.executorMap": {
 

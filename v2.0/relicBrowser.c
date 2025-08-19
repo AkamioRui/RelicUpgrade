@@ -48,31 +48,35 @@ int main(){
 
     //added e
     HEAP *root = HEAP_init(&e);
-    //json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added e");
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added e");
     
     //added b
-    HEAP *Hb =HEAP_add(root,&b,(Compare *)isMoreEfficient);
-    //json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added b");
+    HEAP *Hb =HEAP_add(&root,&b,(HEAP_Compare *)isMoreEfficient);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added b");
     
     //added a
-    HEAP *Ha =HEAP_add(root,&a,(Compare *)isMoreEfficient);
-    //json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added a");
+    HEAP *Ha =HEAP_add(&root,&a,(HEAP_Compare *)isMoreEfficient);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added a");
     
     //added d
-    HEAP *Hd =HEAP_add(root,&d,(Compare *)isMoreEfficient);
-    //json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added d");
+    HEAP *Hd =HEAP_add(&root,&d,(HEAP_Compare *)isMoreEfficient);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added d");
 
     //added c
-    HEAP *Hc =HEAP_add(root,&c,(Compare *)isMoreEfficient);
-    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added c");
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"created");
+    HEAP *Hc =HEAP_add(&root,&c,(HEAP_Compare *)isMoreEfficient);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added c");
+    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"created");
     
-    //swap a and c
-    HEAP_swap(&root,root->right,root->left->right);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap a and c");
+    //swap d and b
+    HEAP_swap(&root,Hd,Hb);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap d and b");
 
-    //swap a and e
-    HEAP_swap(&root,root->left->right,root);
+    //swap d and a
+    HEAP_swap(&root,Hd,Ha);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap a and e");
+
+    //swap e and a
+    HEAP_swap(&root,root,Ha);
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap a and e");
     
     
