@@ -14,7 +14,7 @@
 typedef struct HEAP{
     int length;
     // void *data;//for now it is int
-    /* testing */struct {
+    /*  */struct {
         double price;//the average price
         double successChance;
         char msg[16];
@@ -31,7 +31,6 @@ typedef struct HEAP{
         struct HEAP *heap;
     
     } * data;
-    // [copy state definition] *data;
     struct HEAP *left;
     struct HEAP *right;
     struct HEAP *parent;
@@ -52,7 +51,8 @@ void (*HEAP_fprintNodeD_printer)(FILE *outFile,void *node);
 void (*HEAP_fprintLinkD_printer)(FILE *outFile, void *parentNode, void *childNode);
 
 
-/* done *///for printing
+//for printing, 
+//for testing purposes, this currently has dependency with relic_STATE
 HEAP *HEAP_getChild(HEAP *node, int index){return index? node->right: node->left;}
 int HEAP_getChildCount(HEAP *node){return (node->left != NULL) + (node->right != NULL);}
 void HEAP_fprintNodeD(FILE *outFile,HEAP *node);// its in relic_STATE.h
@@ -145,7 +145,7 @@ __json_printSpannigTree_generic(HEAP)
 return binary representation. Exp: 6 = 1,1,0
 reminder: free out_binary
 */
-/* done */void int2binary(int number, char **out_binary, int *out_length){
+void int2binary(int number, char **out_binary, int *out_length){
     //assert
     if(number == 0){
         *out_length = 1;
@@ -168,14 +168,14 @@ reminder: free out_binary
     *out_length = length;
     *out_binary = binary;
 }
-/* done */HEAP* HEAP_init(void * data){
+HEAP* HEAP_init(void * data){
     HEAP *result = (HEAP *)calloc(1,sizeof(HEAP));
     result->length = 1;
     result->data = data;
     result->parent = NULL;
     return result;
 }
-/* done */void HEAP_free(HEAP ** root){
+void HEAP_free(HEAP ** root){
     typedef struct CONTEXT{
         struct CONTEXT *next;
         int position;
@@ -247,7 +247,7 @@ reminder: free out_binary
     // #undef printStack
 }
 //return ptr pointing to the left/right element inside the parent that point to the actual node
-/* done */HEAP **HEAP_pointer_to(HEAP **rootPtr, int index){
+HEAP **HEAP_pointer_to(HEAP **rootPtr, int index){
     //if it request for index = 0, ie the root
     if(index < 0)return rootPtr;
     
@@ -273,7 +273,7 @@ reminder: free out_binary
 
 
 //input must be either &root(not a copy of the root) or &(heap.left/right)
-/* done */void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
+void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
     assert(rootPtr);
     assert(node1);
     assert(node2);
@@ -373,20 +373,15 @@ reminder: free out_binary
 
 
 //starting at node going up, making sure cmp(parent,child) is true 
-/* ---from swapping only data to swapping the node */
 void HEAP_normalizeUp(HEAP **rootPtr,HEAP *node,HEAP_Compare *cmp){
-    printf("normalizing\n");
     while(node->parent){
         if(cmp(node->parent->data,node->data)) break;
         HEAP_swap(rootPtr,node->parent,node);
     }
-
-    printf("normalizing done\n");
 }   
 
 //starting at node going down, making sure cmp(parent,child) is true
-/* ---waiting swap function that actually swap the node, not only swap the data */
-void HEAP_normalizeDown(HEAP *node,HEAP_Compare *cmp){
+void HEAP_normalizeDown(HEAP *rootPtr ,HEAP *node,HEAP_Compare *cmp){
 
     HEAP *current = node;
     while(1){
@@ -418,18 +413,14 @@ void HEAP_normalizeDown(HEAP *node,HEAP_Compare *cmp){
 
 
         if(cmp(current->data,candidate_child->data))return;
+        HEAP_swap(rootPtr,current,candidate_child);
         
-        //switch the actual HEAP node
-        // void *tmpData =  candidate_child->data;
-        // candidate_child->data = current->data ;
-        // current->data = tmpData;
 
 
 
         
 
-        //next loop
-        current = candidate_child;
+        
     }
 
     
@@ -439,7 +430,6 @@ void HEAP_normalizeDown(HEAP *node,HEAP_Compare *cmp){
 
 //append new node, still keeping the relation
 //return new node
-/* ---normalize is currently dissabled, because only shallow swap*/
 HEAP *HEAP_add(HEAP **rootPtr, void * data, HEAP_Compare *cmp){
 
     HEAP *root = *rootPtr;
@@ -452,7 +442,7 @@ HEAP *HEAP_add(HEAP **rootPtr, void * data, HEAP_Compare *cmp){
     );
     newNode->data = data;
 
-    // HEAP_normalizeUp(rootPtr,newNode,cmp);//still problematic
+    HEAP_normalizeUp(rootPtr,newNode,cmp);//still problematic
     return newNode;
 
 }
