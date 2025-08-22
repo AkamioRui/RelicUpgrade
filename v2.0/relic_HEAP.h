@@ -61,8 +61,13 @@ typedef int(HEAP_Compare)(void *parent, void*child);
 
 //for printing, 
 //for testing purposes, this currently has dependency with relic_STATE
-HEAP_NODE *HEAP_NODE_getChild(HEAP_NODE *node, int index){return index? node->right: node->left;}
-int HEAP_NODE_getChildCount(HEAP_NODE *node){return (node->left != NULL) + (node->right != NULL);}
+HEAP_NODE *HEAP_NODE_getChild(HEAP_NODE *node, int index){
+    return index? node->right: node->left;
+}
+int HEAP_NODE_getChildCount(HEAP_NODE *node){
+    return 2;//print will iterate this many time, I set it to 2 such that it will itereate over left and right regardless if its empty
+    // return (node->left != NULL) + (node->right != NULL);
+}
 void HEAP_NODE_fprintNodeD(FILE *outFile,HEAP_NODE *node);// its in relic_STATE.h
 void HEAP_NODE_fprintLinkD(FILE *outFile, HEAP_NODE *parentNode, HEAP_NODE *childNode);// its in relic_STATE.h
 void HEAP_NODE_clearArg(HEAP_NODE *root){
@@ -149,12 +154,32 @@ void HEAP_NODE_clearArg(HEAP_NODE *root){
 __json_printSpannigTree_generic(HEAP_NODE)
 
 
+
+
+
+//debug
+void HEAP_NODE_print(HEAP_NODE *node){
+    printf("#node:{");
+    if(node) printf(" id:%s \tparent:%s \tleft:%s \trigth:%s ",
+        node->data?node->data->msg:"nD"
+        ,node->parent ? 
+            (node->parent->data?node->parent->data->msg:"nD"): "_"
+        ,node->left ? 
+            (node->left->data?node->left->data->msg:"nD"): "_"
+        ,node->right ? 
+            (node->right->data?node->right->data->msg:"nD"): "_"
+    );
+    printf("}\n");
+}
+
+
+
 //utility
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
 HEAP* HEAP_init();
-///* WIP */void HEAP_close(HEAP *heap);
-///* WIP */void HEAP_closeBranch(HEAP_NODE *root);
+// /* WIP */void HEAP_close(HEAP *heap);
+/* WIP */void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
 
 HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
 ///* WIP */void HEAP_pop(HEAP_NODE *root);
@@ -252,166 +277,189 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 
 }
 
-// HEAP_NODE *_HEAP_add(HEAP_NODE **rootPtr, void * data, HEAP_Compare *cmp){
 
-//     HEAP_NODE *root = *rootPtr;
-//     HEAP_NODE **newNodePtr = HEAP_pointer_to(rootPtr, (root->length)++);
-//     HEAP_NODE *newNode = *newNodePtr = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-//     int side = root->length%2;
-//     //root.length = root.length +1. because I need index + 1
-//     newNode->parent = (HEAP_NODE *)((char *)newNodePtr 
-//     - (side?offsetof(HEAP_NODE,right):offsetof(HEAP_NODE,left))
-//     );
-//     newNode->data = data;
-
-//     HEAP_normalizeUp(rootPtr,newNode,cmp);//still problematic
-//     return newNode;
-
-// }
 // void HEAP_close(HEAP *heap){
 //     HEAP_closeBranch(heap->root);
 //     free(heap);
 // }
-// void HEAP_closeBranch(HEAP_NODE *root){
-//     typedef struct CONTEXT{
-//         struct CONTEXT *next;
-//         int position;
-//         HEAP_NODE **param;
+//memory pointed by node and its children is deallocated
+//after execution, do node = NULL;
+void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
+    #define __testprint 
+    #define __printStack
+    #define __printDeleted
+    #define __printAdded
+    // /* test */
+    char tmp[1024];
+    sprintf(tmp,"deleted %s",node->data->msg);
+    #define __testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
 
-//     }CONTEXT;
-//     CONTEXT *context, *tmpContext;
-//     // #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
+    // #define __printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
+    // #define __printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
+    // #define __printAdded(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
     
-//     //create first context
-//     context = (CONTEXT *)malloc(sizeof(CONTEXT));
-//     context->next = NULL;
-//     context->param = root;
-//     context->position = 0;
+    //find rootPtr
+    HEAP_NODE **rootPtr;
+    if(heap->root != node){//node is not root
+        rootPtr = node->parent->left == node? 
+            &(node->parent->left): 
+            &(node->parent->right);
+    } else { //node is root
+        rootPtr = &(heap->root);
+    }
 
-
-//     while(context){
-//         //recover parameter 
-//         HEAP_NODE **newNodePtr = context->param;
-        
-        
-
-//         //recover position
-//         switch(context->position){
-//             case 0://if((*root)->left)HEAP_free((*root)->left);
-//                 if((*newNodePtr)->left){
-//                     //context management
-//                     context->position = 1;
-//                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-//                     tmpContext->next = context;
-//                     tmpContext->param = &(*newNodePtr)->left;
-//                     tmpContext->position = 0;
-//                     context = tmpContext;
-//                     tmpContext = NULL;
-//                     break;
-//                 }
-
-
-//             case 1://if((*root)->right)HEAP_free((*root)->right);
-//                 if((*newNodePtr)->right){
-//                     //context management
-//                     context->position = 2;
-//                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-//                     tmpContext->param = &(*newNodePtr)->right;
-//                     tmpContext->position = 0;
-//                     tmpContext->next = context;
-//                     context = tmpContext;
-//                     tmpContext = NULL;
-//                     break;
-//                 }
-//             case 2:
-//                 free(*newNodePtr);
-//                 *newNodePtr = NULL;
-
-//                 //delete context
-//                 tmpContext = context;
-//                 context = context->next;
-//                 free(tmpContext);
-//                 tmpContext = NULL;
-//             break;
-//             default: printf("error occured"); break;
-//         }
-        
-
-//     }
-
-//     // #undef printStack
-// }
-// /* template */void HEAP_free(HEAP_NODE ** root){
-//     typedef struct CONTEXT{
-//         struct CONTEXT *next;
-//         int position;
-//         HEAP_NODE **param;
-
-//     }CONTEXT;
-//     CONTEXT *context, *tmpContext;
-//     // #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
     
     
     
-//     //create first context
-//     context = (CONTEXT *)malloc(sizeof(CONTEXT));
-//     context->next = NULL;
-//     context->param = root;
-//     context->position = 0;
+
+    typedef struct CONTEXT{
+        struct CONTEXT *next;
+        int position;
+        HEAP_NODE **param;
+
+    }CONTEXT;
+    CONTEXT *context, *tmpContext;
+    
+
+    //create first context
+    context = (CONTEXT *)malloc(sizeof(CONTEXT));
+    context->next = NULL;
+    context->param = rootPtr;
+    context->position = 0;
 
 
-//     while(context){
-//         //recover parameter 
-//         HEAP_NODE **newNodePtr = context->param;
+    while(context){
+        __printStack;
+
+        //recover parameter 
+        HEAP_NODE **newNodePtr = context->param;
+
+        //recover position
+        switch(context->position){
+            case 0://if((*rootPtr)->left)HEAP_free((*rootPtr)->left);
+                if((*newNodePtr)->left){
+                    __printAdded((*newNodePtr)->left);
+                    //context management
+                    context->position = 1;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->next = context;
+                    tmpContext->param = &(*newNodePtr)->left;
+                    tmpContext->position = 0;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
+
+
+            case 1://if((*rootPtr)->right)HEAP_free((*rootPtr)->right);
+                if((*newNodePtr)->right){
+                    __printAdded((*newNodePtr)->right);
+                    //context management
+                    context->position = 2;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->param = &(*newNodePtr)->right;
+                    tmpContext->position = 0;
+                    tmpContext->next = context;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
+            case 2:
+                __printDeleted;
+                free(*newNodePtr);
+                *newNodePtr = NULL;
+
+                //delete context
+                tmpContext = context;
+                context = context->next;
+                free(tmpContext);
+                tmpContext = NULL;
+            break;
+            default: printf("error occured"); break;
+        }
+        
+    }
+
+    
+    
+    __testprint;
+    #undef __testprint
+    #undef __printStack
+    #undef __printDeleted
+    #undef __printAdded
+
+}
+/* template */void _HEAP_free(HEAP_NODE ** root){
+    typedef struct CONTEXT{
+        struct CONTEXT *next;
+        int position;
+        HEAP_NODE **param;
+
+    }CONTEXT;
+    CONTEXT *context, *tmpContext;
+    // #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
+    
+    
+    
+    //create first context
+    context = (CONTEXT *)malloc(sizeof(CONTEXT));
+    context->next = NULL;
+    context->param = root;
+    context->position = 0;
+
+
+    while(context){
+        //recover parameter 
+        HEAP_NODE **newNodePtr = context->param;
         
         
 
-//         //recover position
-//         switch(context->position){
-//             case 0://if((*root)->left)HEAP_free((*root)->left);
-//                 if((*newNodePtr)->left){
-//                     //context management
-//                     context->position = 1;
-//                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-//                     tmpContext->next = context;
-//                     tmpContext->param = &(*newNodePtr)->left;
-//                     tmpContext->position = 0;
-//                     context = tmpContext;
-//                     tmpContext = NULL;
-//                     break;
-//                 }
+        //recover position
+        switch(context->position){
+            case 0://if((*root)->left)HEAP_free((*root)->left);
+                if((*newNodePtr)->left){
+                    //context management
+                    context->position = 1;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->next = context;
+                    tmpContext->param = &(*newNodePtr)->left;
+                    tmpContext->position = 0;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
 
 
-//             case 1://if((*root)->right)HEAP_free((*root)->right);
-//                 if((*newNodePtr)->right){
-//                     //context management
-//                     context->position = 2;
-//                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-//                     tmpContext->param = &(*newNodePtr)->right;
-//                     tmpContext->position = 0;
-//                     tmpContext->next = context;
-//                     context = tmpContext;
-//                     tmpContext = NULL;
-//                     break;
-//                 }
-//             case 2:
-//                 free(*newNodePtr);
-//                 *newNodePtr = NULL;
+            case 1://if((*root)->right)HEAP_free((*root)->right);
+                if((*newNodePtr)->right){
+                    //context management
+                    context->position = 2;
+                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
+                    tmpContext->param = &(*newNodePtr)->right;
+                    tmpContext->position = 0;
+                    tmpContext->next = context;
+                    context = tmpContext;
+                    tmpContext = NULL;
+                    break;
+                }
+            case 2:
+                free(*newNodePtr);
+                *newNodePtr = NULL;
 
-//                 //delete context
-//                 tmpContext = context;
-//                 context = context->next;
-//                 free(tmpContext);
-//                 tmpContext = NULL;
-//             break;
-//             default: printf("error occured"); break;
-//         }
+                //delete context
+                tmpContext = context;
+                context = context->next;
+                free(tmpContext);
+                tmpContext = NULL;
+            break;
+            default: printf("error occured"); break;
+        }
         
 
-//     }
+    }
 
-//     // #undef printStack
-// }
+    // #undef printStack
+}
 
 // //return ptr pointing to the left/right element inside the parent that point to the actual node
 // HEAP_NODE **HEAP_pointer_to(HEAP_NODE **rootPtr, int index){

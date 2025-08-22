@@ -63,6 +63,7 @@ void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int 
         int theNodeChildCount = TYPE##_getChildCount(theNode);\
         for(int i = 0; i < theNodeChildCount; i++){\
             TYPE *child = TYPE##_getChild(theNode,i);\
+            if(!child) continue;/* the child array can have NULL */\
             if(!child->arg){\
                 \
                 child->arg = malloc(sizeof(int));\
@@ -233,7 +234,7 @@ void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeC
         int theNodeChildCount = NODE_getChildCount(theNode);
         for(int i = 0; i < theNodeChildCount; i++){
             NODE *child = NODE_getChild(theNode,i);
-
+            if(!child) continue;
             if(!child->arg){//if it has never been in queue,
 
                 //give id

@@ -139,9 +139,7 @@ void usingOffsetOf(){
 
 
 int main(){
-    int a = 0;
-    assert(a < 0);
-    
+   
 
 
     printf("\ndone\n");
