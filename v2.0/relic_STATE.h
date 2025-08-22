@@ -23,7 +23,7 @@ typedef struct STATE{
     struct STATE *parent;//what actually being used
     int parentCount;
     double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
-    HEAP *heap;
+    HEAP_NODE *heapNode;
 
 } STATE ;
 STATE *STATE_getChild(STATE *node, int index);
@@ -162,8 +162,8 @@ void STATE_clearArg(STATE *root){
 __json_printSpannigTree_generic(STATE)
 
 //HEAP section, filling the global variable
-void HEAP_fprintNodeD(FILE *outFile,HEAP *node){
-    STATE *node_data = node->data;
+void HEAP_NODE_fprintNodeD(FILE *outFile,HEAP_NODE *node){
+    STATE *node_data = (STATE *)node->data;
     fprintf(outFile,"{");
     fprintf(outFile," \"detail\":\"%s\"",node_data->msg);
     fprintf(outFile,",\"price\":%.2lf"  ,node_data->price);
@@ -172,7 +172,7 @@ void HEAP_fprintNodeD(FILE *outFile,HEAP *node){
     fprintf(outFile,"}");
 
 }
-void HEAP_fprintLinkD(FILE *outFile, HEAP *parentNode, HEAP *childNode){
+void HEAP_NODE_fprintLinkD(FILE *outFile, HEAP_NODE *parentNode, HEAP_NODE *childNode){
     if(childNode->parent)fprintf(outFile,"{\"msg\":\"%s\"}",((STATE*)childNode->parent->data)->msg);
     else fprintf(outFile,"{\"msg\":\"_\"}");
 }

@@ -1,51 +1,54 @@
 [
     {
-        "msg":"created",
+        "msg":"created e",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"created b",
         "treeLinks":[
             { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"created a",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"created d",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
             { "id":2,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{"msg":"d"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{"msg":"d"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}}
+            { "id":3,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}}
         ],
         "outerLinks":[
 
         ]
     },
     {
-        "msg":"normalize e=0.5",
+        "msg":"created c",
         "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{"msg":"d"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{"msg":"d"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"e","price":100.00,"succesR":0.50,"accept":0}}
-        ],
-        "outerLinks":[
-
-        ]
-    },
-    {
-        "msg":"normalize a",
-        "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{"msg":"d"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{"msg":"d"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"e","price":100.00,"succesR":0.50,"accept":0}}
-        ],
-        "outerLinks":[
-
-        ]
-    },
-    {
-        "msg":"normalize b",
-        "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"a","price":100.00,"succesR":10.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{"msg":"a"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}},
-            { "id":2,"parentId":0,"linkData":{"msg":"a"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
-            { "id":3,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
-            { "id":4,"parentId":1,"linkData":{"msg":"c"},"nodeData":{ "detail":"e","price":100.00,"succesR":0.50,"accept":0}}
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"b","price":100.00,"succesR":2.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}},
+            { "id":3,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"d","price":100.00,"succesR":4.00,"accept":0}},
+            { "id":4,"parentId":1,"linkData":{"msg":"b"},"nodeData":{ "detail":"c","price":100.00,"succesR":3.00,"accept":0}}
         ],
         "outerLinks":[
 

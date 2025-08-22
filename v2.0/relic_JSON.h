@@ -37,6 +37,7 @@ void json_printGraph(
 // return _nodeCount and _outerExist
 #define __json_printSpannigTree_generic(TYPE) \
 void __json_printSpanningTree_##TYPE(TYPE* root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist){\
+    if(!root)return;\
     \
     *outer_exist = 0;\
     *nodeCount = 0;\
@@ -201,6 +202,7 @@ void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeC
     #define NODE_clearArg STATE_clearArg
 
     //result
+    if(!_root)return;
     *outer_exist = 0;
     *nodeCount = 0;
       

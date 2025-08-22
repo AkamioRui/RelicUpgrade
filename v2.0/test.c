@@ -2,6 +2,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stddef.h>
+#include<assert.h>
 
 //note
 
@@ -138,12 +139,8 @@ void usingOffsetOf(){
 
 
 int main(){
-
-    printf("%d,",(11>>3)&1);
-    printf("%d,",(11>>2)&1);
-    printf("%d,",(11>>1)&1);
-    printf("%d,",11&1);
-
+    int a = 0;
+    assert(a < 0);
     
 
 
