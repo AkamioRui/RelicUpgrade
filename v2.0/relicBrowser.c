@@ -55,7 +55,8 @@ int main(){
     HEAP_NODE *Hc =HEAP_add(theHeap,&c,(HEAP_Compare *)isMoreEfficient);
 
     
-    HEAP_swap(theHeap,He,Hc);
+    HEAP_swap(theHeap,He,Ha);
+    HEAP_normalizeUp(theHeap,He,isMoreEfficient);
     HEAP_close(&theHeap);
 
 
