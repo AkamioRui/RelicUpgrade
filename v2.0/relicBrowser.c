@@ -17,7 +17,7 @@ heap link has the detail of the parent (to test the parent property)
 
 
 int main(){
-    JSON *file = json_init("heapData.json");
+    file = json_init("heapData.json");
    
     STATE a,b,c,d,e;
     a.successChance = 1;
@@ -68,19 +68,23 @@ int main(){
     // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added c");
     json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"created");
 
-    //normalize e
-    e.successChance = 0.5f;
-    HEAP_normalizeDown(&root,He,(int (*)(void *, void *))isMoreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize e=0.5");
+    //pop
+    HEAP_pop(&root);
+    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"pop");
 
-    //normalize a
-    HEAP_normalizeDown(&root,Ha,(int (*)(void *, void *))isMoreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize a");
+    // //normalize e
+    // e.successChance = 0.5f;
+    // HEAP_normalizeDown(&root,He,(int (*)(void *, void *))isMoreEfficient);
+    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize e=0.5");
 
-    //normalize d
-    a.successChance = 10;
-    HEAP_normalizeDown(&root,Hd,(int (*)(void *, void *))isMoreEfficient);
-    json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize b");
+    // //normalize a
+    // HEAP_normalizeDown(&root,Ha,(int (*)(void *, void *))isMoreEfficient);
+    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize a");
+
+    // //normalize d
+    // a.successChance = 10;
+    // HEAP_normalizeDown(&root,Hd,(int (*)(void *, void *))isMoreEfficient);
+    // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"normalize b");
     
     // //swap d and b
     // HEAP_swap(&root,Hd,Hb);
@@ -121,6 +125,15 @@ int main(){
     
 
     json_close(file);
+/* 
+        ],
+        "outerLinks":[
+
+        ]
+    } 
+]
+*/
+
 
     printf("\ndone\n");
     return 0;

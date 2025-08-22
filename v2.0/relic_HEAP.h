@@ -8,7 +8,15 @@
 #include<assert.h>
 #include "relic_JSON.h"
 
+/** note to self:
+ * 1. finish HEAP_pop
+ * 2. generalize this to support any TYPE of data
+ * 
+ * 
+ *  */ 
 
+/*  *///debugging
+JSON *file;
 
 
 typedef struct HEAP{
@@ -45,10 +53,6 @@ typedef enum HEAP_SIDE {HEAP_none, HEAP_left, HEAP_right}HEAP_SIDE;
 typedef int(HEAP_Compare)(void *parent, void*child); 
 
 
-
-//global variable
-void (*HEAP_fprintNodeD_printer)(FILE *outFile,void *node);
-void (*HEAP_fprintLinkD_printer)(FILE *outFile, void *parentNode, void *childNode);
 
 
 //for printing, 
@@ -271,7 +275,6 @@ HEAP **HEAP_pointer_to(HEAP **rootPtr, int index){
 }
 
 
-
 //input must be either &root(not a copy of the root) or &(heap.left/right)
 void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
     assert(rootPtr);
@@ -371,7 +374,6 @@ void HEAP_swap(HEAP **rootPtr, HEAP *node1, HEAP *node2){
 
 }
 
-
 //starting at node going up, making sure cmp(parent,child) is true 
 void HEAP_normalizeUp(HEAP **rootPtr,HEAP *node,HEAP_Compare *cmp){
     while(node->parent){
@@ -427,8 +429,7 @@ void HEAP_normalizeDown(HEAP *rootPtr ,HEAP *node,HEAP_Compare *cmp){
     
  }
  
-
-//append new node, still keeping the relation
+//append new node, while preserving cmp(parent,child)
 //return new node
 HEAP *HEAP_add(HEAP **rootPtr, void * data, HEAP_Compare *cmp){
 
@@ -449,8 +450,37 @@ HEAP *HEAP_add(HEAP **rootPtr, void * data, HEAP_Compare *cmp){
 
 
 
-//return data
-void* HEAP_pop(HEAP * root);
+//pop the root node,  return that data
+/* WIP */void* HEAP_pop(HEAP **rootPtr){
+    /*  */printf("root has %d node;\n",(*rootPtr)->length);
+    HEAP *first = *rootPtr;//point to the top most node in heap
+    void *theData = (*rootPtr)->data;
+
+    //swap root to the highest index node
+    HEAP *last = *HEAP_pointer_to(rootPtr,(*rootPtr)->length - 1);
+    HEAP_SIDE lastSide = 
+        last->parent->left == last? HEAP_left: HEAP_right;
+    HEAP_swap(rootPtr,first,last);
+    
+
+    //free root thats now is at the highest index node
+    
+    free(first);
+    first = NULL;
+    
+    
+
+    //HEAP_normalizeDown(highest index node)
+
+    
+    //is this allowed?
+    json_printGraph(file,*rootPtr,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"swap with last");
+
+    
+
+
+    return theData;
+}
 
 
 

@@ -133,6 +133,10 @@ void usingOffsetOf(){
     printf("b.mm    :%llu\n",&b.mm);
     printf("b.mmm   :%llu\n",&b.mmm);
 }
+
+
+
+
 int main(){
 
     printf("%d,",(11>>3)&1);
