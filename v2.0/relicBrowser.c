@@ -54,16 +54,13 @@ int main(){
     HEAP_NODE *Hd =HEAP_add(theHeap,&d,(HEAP_Compare *)isMoreEfficient);
     HEAP_NODE *Hc =HEAP_add(theHeap,&c,(HEAP_Compare *)isMoreEfficient);
 
-    HEAP_closeBranch(theHeap,Hb);
+    HEAP_close(&theHeap);
     
-    HEAP_NODE_print(He);
-    // HEAP_NODE_print(Hb);
-    HEAP_NODE_print(Ha);
     // HEAP_NODE_print(Hd);
     // HEAP_NODE_print(Hc);
     // HEAP *He = HEAP_add();
 
-    
+
     // json_printGraph(file,root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP,"added e");
     
     //added b

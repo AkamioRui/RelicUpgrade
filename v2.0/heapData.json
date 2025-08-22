@@ -53,15 +53,5 @@
         "outerLinks":[
 
         ]
-    },
-    {
-        "msg":"deleted b",
-        "treeLinks":[
-            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"e","price":100.00,"succesR":5.00,"accept":0}},
-            { "id":1,"parentId":0,"linkData":{"msg":"e"},"nodeData":{ "detail":"a","price":100.00,"succesR":1.00,"accept":0}}
-        ],
-        "outerLinks":[
-
-        ]
     } 
 ]

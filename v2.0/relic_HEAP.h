@@ -165,8 +165,8 @@ __json_printSpannigTree_generic(HEAP_NODE)
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
 HEAP* HEAP_init();
-// /* WIP */void HEAP_close(HEAP *heap);
-/* WIP */void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
+void HEAP_close(HEAP **heapPtr);
+void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
 
 HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
 ///* WIP */void HEAP_pop(HEAP_NODE *root);
@@ -265,12 +265,22 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 }
 
 
-// void HEAP_close(HEAP *heap){
-//     HEAP_closeBranch(heap->root);
-//     free(heap);
-// }
-//memory pointed by node and its children is deallocated
-//after execution, do node = NULL;
+void HEAP_close(HEAP **heapPtr){
+    #define __printLength
+    #define __printLength printf("delete heap with length %d\n",(*heapPtr)->length);
+    
+    //actual code
+    __printLength;
+    HEAP *heap = *heapPtr;
+    HEAP_closeBranch(heap,(heap)->root);
+    free(heap);
+    *heapPtr = NULL;
+
+    //macro clean up
+    #undef __printLength
+
+}
+// memory pointed by node and its children is deallocated
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     //for testing
     #define __testprint 
@@ -278,11 +288,11 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     #define __printDeleted
     #define __printAdded
 
-    char tmp[1024];
-    sprintf(tmp,"deleted %s",node->data->msg);
-    #define __testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+    // char tmp[1024];
+    // sprintf(tmp,"deleted %s",node->data->msg);
+    // #define __testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     // #define __printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
-    // #define __printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
+    #define __printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
     // #define __printAdded(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
     
     //find rootPtr
