@@ -8,6 +8,7 @@
 #include<assert.h>
 #include "relic_JSON.h"
 
+#define debugging
 /** note to self:
  * 1. finish HEAP_pop
  * 2. generalize this to support any TYPE of data
@@ -164,6 +165,8 @@ __json_printSpannigTree_generic(HEAP_NODE)
 //utility
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
+void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2);
+
 HEAP* HEAP_init();
 void HEAP_close(HEAP **heapPtr);
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
@@ -172,6 +175,7 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
 ///* WIP */void HEAP_pop(HEAP_NODE *root);
 ///* WIP */void HEAP_normalizeUp(HEAP_NODE **rootPtr,HEAP_NODE *node,HEAP_Compare *cmp);
 ///* WIP */void HEAP_normalizeDown(HEAP_NODE **rootPtr,HEAP_NODE *node,HEAP_Compare *cmp);
+
 
 
 /* 
@@ -201,6 +205,8 @@ void int2binary(int number, char **out_binary, int *out_length){
     *out_length = length;
     *out_binary = binary;
 }
+
+//return ptr pointing to the left/right element inside the parent that point to the actual node
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
     //if it request for index = 0, ie the root
     assert(index >= 0);
@@ -224,14 +230,54 @@ HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
     return newNodePtr;
 
 }
+
+//initialize a heap with 0 length and root = NULL
 HEAP* HEAP_init(){
+    #ifdef debugging
+        printf("HEAP initialized\n");
+    #endif
     HEAP *result = (HEAP *)calloc(1,sizeof(HEAP));
     result->length = 0;
     result->root = NULL;
+}
+
+//delete the HEAP and all of its HEAP_NODE, also set HEAP = NULL
+void HEAP_close(HEAP **heapPtr){
+    #define __close_printLength
+    #ifdef debugging
+        int __close__length = (*heapPtr)->length;
+        #define __close_printLength printf("delete heap with length %d\n",__close__length);
+    #endif
+    
+    
+    //actual code
+    
+    HEAP *heap = *heapPtr;
+    HEAP_closeBranch(heap,(heap)->root);
+    free(heap);
+    *heapPtr = NULL;
+    __close_printLength;
+
+    //macro clean up
+    #undef __close_printLength
 
 }
+
 /* ---no normalize */
+//going from the left to the right, layer by layer, add a node 
 HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
+    #define __add_printAdded 
+    #ifdef debugging
+        char tmp[100]; 
+        
+        #define __add_printAdded\
+        sprintf(tmp,"created %s",newNode->data?newNode->data->msg:"_");\
+        // printf("%s\n",tmp);\
+        // json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
+
+    #endif
+     
+
     //creating the node
     int newNodeIdx = (heap->length)++;
     HEAP_NODE **newNodePtr = HEAP_pointer_to(heap, newNodeIdx);
@@ -256,44 +302,28 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 
 
     /* test */
-    char tmp[100];
-    assert(newNode->data);
-    sprintf(tmp,"created %s",newNode->data->msg);
-    json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+    __add_printAdded;
     return newNode;
+    #undef __add_printAdded 
 
 }
 
-
-void HEAP_close(HEAP **heapPtr){
-    #define __printLength
-    #define __printLength printf("delete heap with length %d\n",(*heapPtr)->length);
-    
-    //actual code
-    __printLength;
-    HEAP *heap = *heapPtr;
-    HEAP_closeBranch(heap,(heap)->root);
-    free(heap);
-    *heapPtr = NULL;
-
-    //macro clean up
-    #undef __printLength
-
-}
 // memory pointed by node and its children is deallocated
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     //for testing
-    #define __testprint 
-    #define __printStack
-    #define __printDeleted
-    #define __printAdded
+    #define __closeBranch__testprint 
+    #define __closeBranch__printStack
+    #define __closeBranch__printDeleted
+    #define __closeBranch__printAddedtoStack
+    #ifdef debugging
+        char tmp[1024];
+        sprintf(tmp,"deleted %s",node->data->msg);
+        // #define __closeBranch__testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        // #define __closeBranch__printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
+        #define __closeBranch__printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
+        // #define __closeBranch__printAddedtoStack(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
 
-    // char tmp[1024];
-    // sprintf(tmp,"deleted %s",node->data->msg);
-    // #define __testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
-    // #define __printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
-    #define __printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
-    // #define __printAdded(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
+    #endif
     
     //find rootPtr
     HEAP_NODE **rootPtr;
@@ -326,7 +356,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 
 
     while(context){
-        __printStack;
+        __closeBranch__printStack;
 
         //recover parameter 
         HEAP_NODE **newNodePtr = context->param;
@@ -335,7 +365,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
         switch(context->position){
             case 0://if((*rootPtr)->left)HEAP_free((*rootPtr)->left);
                 if((*newNodePtr)->left){
-                    __printAdded((*newNodePtr)->left);
+                    __closeBranch__printAddedtoStack((*newNodePtr)->left);
                     //context management
                     context->position = 1;
                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
@@ -350,7 +380,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 
             case 1://if((*rootPtr)->right)HEAP_free((*rootPtr)->right);
                 if((*newNodePtr)->right){
-                    __printAdded((*newNodePtr)->right);
+                    __closeBranch__printAddedtoStack((*newNodePtr)->right);
                     //context management
                     context->position = 2;
                     tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
@@ -362,7 +392,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
                     break;
                 }
             case 2:
-                __printDeleted;
+                __closeBranch__printDeleted;
                 free(*newNodePtr);
                 *newNodePtr = NULL;
 
@@ -379,137 +409,125 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 
     
     
-    __testprint;
-    #undef __testprint
-    #undef __printStack
-    #undef __printDeleted
-    #undef __printAdded
+    __closeBranch__testprint;
+    #undef __closeBranch__testprint
+    #undef __closeBranch__printStack
+    #undef __closeBranch__printDeleted
+    #undef __closeBranch__printAddedtoStack
 
 }
 
-// //return ptr pointing to the left/right element inside the parent that point to the actual node
-// HEAP_NODE **HEAP_pointer_to(HEAP_NODE **rootPtr, int index){
-//     //if it request for index = 0, ie the root
-//     if(index < 0)return rootPtr;
+//perform a deep swap, what is modified is the left,right,parent. the data is never moved 
+void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
+    #define __swap__printHeap
+    #ifdef debugging
+        char tmp[1024];
+        sprintf(tmp,"swap %s, %s",node1->data->msg,node2->data->msg);
+        printf("%s\n",tmp);
+        #define __swap__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+    #endif
     
-//     //get path
-//     index++;
-//     int pathLen;
-//     char *path;//1 = left, 0 = rigth
-//     int2binary(index,&path,&pathLen);
+    assert(heap);
+    assert(node1);
+    assert(node2);
 
-//     //navigate to new node
-//     HEAP_NODE **newNodePtr = rootPtr;
-//     for(int i = 1; i<pathLen; i++){
-//         newNodePtr = path[i]? &(*newNodePtr)->right : &(*newNodePtr)->left; 
-//     }
-
-//     //free path
-//     free(path);
-//     path = NULL;
-//     return newNodePtr;
-
-// }
-
-
-// //input must be either &root(not a copy of the root) or &(heap.left/right)
-// void HEAP_swap(HEAP_NODE **rootPtr, HEAP_NODE *node1, HEAP_NODE *node2){
-//     assert(rootPtr);
-//     assert(node1);
-//     assert(node2);
-
-//     //based on node1, node2, determine their pointer
-//     HEAP_NODE **node1_ptr, **node2_ptr;
-//     HEAP_SIDE node1_side, node2_side;
-//     if(node1->parent){
-//         if(node1->parent->left == node1){
-//             node1_ptr = &(node1->parent->left);
-//             node1_side = HEAP_left;
-//         } else {
-//             node1_ptr = &(node1->parent->right);
-//             node1_side = HEAP_right;
-//         }
-//     } else {
-//         node1_ptr = rootPtr;
-//         node1_side = HEAP_none;
-//     }
-//     if(node2->parent){
-//         if(node2->parent->left == node2){
-//             node2_ptr = &(node2->parent->left);
-//             node2_side = HEAP_left;
-//         } else {
-//             node2_ptr = &(node2->parent->right);
-//             node2_side = HEAP_right;
-//         }
-//     } else {
-//         node2_ptr = rootPtr;
-//         node2_side = HEAP_none;
-//     }
+    //based on node1, node2, determine their pointer
+    HEAP_NODE **rootPtr = &(heap->root);
+    HEAP_NODE **node1_ptr, **node2_ptr;
+    HEAP_SIDE node1_side, node2_side;
+    if(node1->parent){
+        if(node1->parent->left == node1){
+            node1_ptr = &(node1->parent->left);
+            node1_side = HEAP_left;
+        } else {
+            node1_ptr = &(node1->parent->right);
+            node1_side = HEAP_right;
+        }
+    } else {
+        node1_ptr = rootPtr;
+        node1_side = HEAP_none;
+    }
+    if(node2->parent){
+        if(node2->parent->left == node2){
+            node2_ptr = &(node2->parent->left);
+            node2_side = HEAP_left;
+        } else {
+            node2_ptr = &(node2->parent->right);
+            node2_side = HEAP_right;
+        }
+    } else {
+        node2_ptr = rootPtr;
+        node2_side = HEAP_none;
+    }
     
 
     
 
 
-//     //assume node 1 & node 2 are not directly linked
-//     HEAP_NODE *node1_parent = node1->parent;
-//     HEAP_NODE *node2_parent = node2->parent;
-//     HEAP_NODE *node1_left = node1->left;
-//     HEAP_NODE *node1_right = node1->right;
-//     HEAP_NODE *node2_left = node2->left;
-//     HEAP_NODE *node2_right = node2->right;
+    //assume node 1 & node 2 are not directly linked
+    HEAP_NODE *node1_parent = node1->parent;
+    HEAP_NODE *node2_parent = node2->parent;
+    HEAP_NODE *node1_left = node1->left;
+    HEAP_NODE *node1_right = node1->right;
+    HEAP_NODE *node2_left = node2->left;
+    HEAP_NODE *node2_right = node2->right;
 
-//     int nodePair_code = ((node1->left  == node2)<<3)
-//                        +((node1->right == node2)<<2)
-//                        +((node2->left  == node1)<<1)
-//                        +((node2->right == node1))
-//     ;
+    int nodePair_code = ((node1->left  == node2)<<3)
+                       +((node1->right == node2)<<2)
+                       +((node2->left  == node1)<<1)
+                       +((node2->right == node1))
+    ;
 
-//     //node 1 environment
-//     *node1_ptr = node2;
-//     if(node1_left)node1_left->parent = node2;
-//     if(node1_right)node1_right->parent = node2;
+    //node 1 environment
+    *node1_ptr = node2;
+    if(node1_left)node1_left->parent = node2;
+    if(node1_right)node1_right->parent = node2;
 
-//     //node 2 environment
-//     *node2_ptr = node1;
-//     if(node2_left)node2_left->parent = node1;
-//     if(node2_right)node2_right->parent = node1;
+    //node 2 environment
+    *node2_ptr = node1;
+    if(node2_left)node2_left->parent = node1;
+    if(node2_right)node2_right->parent = node1;
 
-//     //node 1 itself
-//     node1->parent = node2_parent;
-//     node1->left = node2_left;
-//     node1->right = node2_right;
+    //node 1 itself
+    node1->parent = node2_parent;
+    node1->left = node2_left;
+    node1->right = node2_right;
 
-//     //node 2 itself
-//     node2->parent = node1_parent;
-//     node2->left = node1_left;
-//     node2->right = node1_right;
+    //node 2 itself
+    node2->parent = node1_parent;
+    node2->left = node1_left;
+    node2->right = node1_right;
 
-//     //fixing the issue caused by both node linked together
-//     //it will only affect property of those 2 node
-//     switch(nodePair_code){
-//         case 0b0000: break;
-//         case 0b1000: // before swap, node1.left = node2
-//             node1->parent = node2;
-//             node2->left = node1;
-//         break;
-//         case 0b0100: // before swap, node1.right = node2
-//             node1->parent = node2;
-//             node2->right = node1;
-//         break;
-//         case 0b0010: // before swap, node2.left = node1
-//             node1->left = node2;
-//             node2->parent = node1;
-//         break;  
-//         case 0b0001: // before swap, node2.right = node1
-//             node1->right = node2;
-//             node2->parent = node1;
-//         break;
-//         default: 
-//             assert(nodePair_code); 
-//         return;
-//     }
+    //fixing the issue caused by both node linked together
+    //it will only affect property of those 2 node
+    switch(nodePair_code){
+        case 0b0000: break;
+        case 0b1000: // before swap, node1.left = node2
+            node1->parent = node2;
+            node2->left = node1;
+        break;
+        case 0b0100: // before swap, node1.right = node2
+            node1->parent = node2;
+            node2->right = node1;
+        break;
+        case 0b0010: // before swap, node2.left = node1
+            node1->left = node2;
+            node2->parent = node1;
+        break;  
+        case 0b0001: // before swap, node2.right = node1
+            node1->right = node2;
+            node2->parent = node1;
+        break;
+        default: 
+            assert(nodePair_code); 
+        return;
+    }
 
-// }
+    //macro clean up
+    __swap__printHeap;
+    #undef __swap__printHeap
+
+}
 
 // //starting at node going up, making sure cmp(parent,child) is true 
 // void HEAP_normalizeUp(HEAP_NODE **rootPtr,HEAP_NODE *node,HEAP_Compare *cmp){
@@ -672,4 +690,5 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     free(node_g);
 
 */
+#undef debugging
 #endif
