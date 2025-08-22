@@ -157,20 +157,7 @@ __json_printSpannigTree_generic(HEAP_NODE)
 
 
 
-//debug
-void HEAP_NODE_print(HEAP_NODE *node){
-    printf("#node:{");
-    if(node) printf(" id:%s \tparent:%s \tleft:%s \trigth:%s ",
-        node->data?node->data->msg:"nD"
-        ,node->parent ? 
-            (node->parent->data?node->parent->data->msg:"nD"): "_"
-        ,node->left ? 
-            (node->left->data?node->left->data->msg:"nD"): "_"
-        ,node->right ? 
-            (node->right->data?node->right->data->msg:"nD"): "_"
-    );
-    printf("}\n");
-}
+
 
 
 
@@ -285,15 +272,15 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 //memory pointed by node and its children is deallocated
 //after execution, do node = NULL;
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
+    //for testing
     #define __testprint 
     #define __printStack
     #define __printDeleted
     #define __printAdded
-    // /* test */
+
     char tmp[1024];
     sprintf(tmp,"deleted %s",node->data->msg);
     #define __testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
-
     // #define __printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
     // #define __printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
     // #define __printAdded(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
@@ -388,77 +375,6 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     #undef __printDeleted
     #undef __printAdded
 
-}
-/* template */void _HEAP_free(HEAP_NODE ** root){
-    typedef struct CONTEXT{
-        struct CONTEXT *next;
-        int position;
-        HEAP_NODE **param;
-
-    }CONTEXT;
-    CONTEXT *context, *tmpContext;
-    // #define printStack() printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%.2lf]",((STATE *)(*i->param)->data)->successChance);
-    
-    
-    
-    //create first context
-    context = (CONTEXT *)malloc(sizeof(CONTEXT));
-    context->next = NULL;
-    context->param = root;
-    context->position = 0;
-
-
-    while(context){
-        //recover parameter 
-        HEAP_NODE **newNodePtr = context->param;
-        
-        
-
-        //recover position
-        switch(context->position){
-            case 0://if((*root)->left)HEAP_free((*root)->left);
-                if((*newNodePtr)->left){
-                    //context management
-                    context->position = 1;
-                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-                    tmpContext->next = context;
-                    tmpContext->param = &(*newNodePtr)->left;
-                    tmpContext->position = 0;
-                    context = tmpContext;
-                    tmpContext = NULL;
-                    break;
-                }
-
-
-            case 1://if((*root)->right)HEAP_free((*root)->right);
-                if((*newNodePtr)->right){
-                    //context management
-                    context->position = 2;
-                    tmpContext = (CONTEXT *)malloc(sizeof(CONTEXT));
-                    tmpContext->param = &(*newNodePtr)->right;
-                    tmpContext->position = 0;
-                    tmpContext->next = context;
-                    context = tmpContext;
-                    tmpContext = NULL;
-                    break;
-                }
-            case 2:
-                free(*newNodePtr);
-                *newNodePtr = NULL;
-
-                //delete context
-                tmpContext = context;
-                context = context->next;
-                free(tmpContext);
-                tmpContext = NULL;
-            break;
-            default: printf("error occured"); break;
-        }
-        
-
-    }
-
-    // #undef printStack
 }
 
 // //return ptr pointing to the left/right element inside the parent that point to the actual node
@@ -682,7 +598,20 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 
 
     
-   
+//debug
+#define HEAP_NODE_print(node){\
+    printf(#node":{");\
+    if(node) printf(" id:%s \tparent:%s \tleft:%s \trigth:%s ",\
+        node->data?node->data->msg:"nD"\
+        ,node->parent ? \
+            (node->parent->data?node->parent->data->msg:"nD"): "_"\
+        ,node->left ? \
+            (node->left->data?node->left->data->msg:"nD"): "_"\
+        ,node->right ? \
+            (node->right->data?node->right->data->msg:"nD"): "_"\
+    );\
+    printf("}\n");\
+}
     
     
 /* 
