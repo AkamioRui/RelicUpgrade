@@ -19,51 +19,32 @@ heap link has the detail of the parent (to test the parent property)
 int main(){
     HEAP_file = json_init("heapData.json");
    
-    STATE a,b,c,d,e;
-    STATE aa={};
-    a.successChance = 1;
-    b.successChance = 2;
-    c.successChance = 3;
-    d.successChance = 4;
-    e.successChance = 5;
-
-    a.price = 100;
-    b.price = 100;
-    c.price = 100;
-    d.price = 100;
-    e.price = 100;
-
-    a.whitelisted = 0;
-    b.whitelisted = 0;
-    c.whitelisted = 0;
-    d.whitelisted = 0;
-    e.whitelisted = 0;
-
-    sprintf(a.msg,"a");
-    sprintf(b.msg,"b");
-    sprintf(c.msg,"c");
-    sprintf(d.msg,"d");
-    sprintf(e.msg,"e");
-   
     
+    //  {price, successChance, msg[16], whitelisted}
+    STATE a={100,1,"a",0};
+    STATE b={100,2,"b",0};
+    STATE c={100,3,"c",0};
+    STATE d={100,4,"d",0};
+    STATE e={100,5,"e",0};
+   
 
     //creating 
-    HEAP *theHeap = HEAP_init();
-    HEAP_NODE *He =HEAP_add(theHeap,&e,(HEAP_Compare *)isMoreEfficient);
-    HEAP_NODE *Hb =HEAP_add(theHeap,&b,(HEAP_Compare *)isMoreEfficient);
-    HEAP_NODE *Ha =HEAP_add(theHeap,&a,(HEAP_Compare *)isMoreEfficient);
-    HEAP_NODE *Hd =HEAP_add(theHeap,&d,(HEAP_Compare *)isMoreEfficient);
-    HEAP_NODE *Hc =HEAP_add(theHeap,&c,(HEAP_Compare *)isMoreEfficient);
+    HEAP *theHeap = HEAP_init((HEAP_Compare *)isMoreEfficient);
+    HEAP_NODE *He =HEAP_add(theHeap,&e);
+    HEAP_NODE *Hb =HEAP_add(theHeap,&b);
+    HEAP_NODE *Ha =HEAP_add(theHeap,&a);
+    HEAP_NODE *Hd =HEAP_add(theHeap,&d);
+    HEAP_NODE *Hc =HEAP_add(theHeap,&c);
     json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
     
     // //normalize test
     // HEAP_swap(theHeap,He,Ha);
     // HEAP_swap(theHeap,He,Hb);
     // json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
-    // HEAP_normalizeDown(theHeap,Ha,(HEAP_Compare *)isMoreEfficient);
+    // HEAP_normalizeDown(theHeap,Ha);
     
     //pop test
-    HEAP_pop(theHeap,(HEAP_Compare *)isMoreEfficient);
+    HEAP_pop(theHeap);
 
 
 

@@ -135,12 +135,21 @@ void usingOffsetOf(){
     printf("b.mmm   :%llu\n",&b.mmm);
 }
 
+void assigningString(){
+    struct {
+        int d;
+        char h[10];
+        int e; 
+    } a = {111,"hh", 19};
 
+    char jj[10] = "aslf";
+    printf("%s\n",jj);
+    printf("%d, %s, %d",a.d, a.h, a.e);
+}
 
 
 int main(){
    
-
 
     printf("\ndone\n");
     return 0;

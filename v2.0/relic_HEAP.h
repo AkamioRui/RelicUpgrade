@@ -10,15 +10,13 @@
 
 
 /** note to self:
- * 1. finish HEAP_pop
  * 2. generalize this to support any TYPE of data
- * 3. place cmp in HEAP
  * 4. place __json_printSpanningTree_HEAP_NODE in HEAP
  * 
  * 
  *  */ 
 
-/*  *///debugging
+
 
 #define HEAP_DATA void 
 
@@ -72,6 +70,7 @@
 
   
 
+typedef int(HEAP_Compare)(void *parent, void*child); 
 typedef struct HEAP_NODE{
     struct HEAP_NODE *left;
     struct HEAP_NODE *right;
@@ -86,15 +85,16 @@ typedef struct HEAP_NODE{
 typedef struct HEAP{
     int length;
     HEAP_NODE *root;
+    HEAP_Compare *cmp;
 } HEAP;
-
-
 typedef enum HEAP_SIDE {
     HEAP_none, //&root and root relationship
     HEAP_left, //child is on the left of parent
     HEAP_right //child is on the right of parent
 }HEAP_SIDE;
-typedef int(HEAP_Compare)(void *parent, void*child); 
+
+
+
 
 
 //for printing, 
@@ -198,14 +198,14 @@ __json_printSpannigTree_generic(HEAP_NODE)
 HEAP* HEAP_init();
 void HEAP_close(HEAP **heapPtr);
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
-HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
-void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp);
+HEAP_NODE *HEAP_add(HEAP *heap, void * data);
+void *HEAP_pop(HEAP *heap);
 
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
 void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2);
-void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp);
-void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp);
+void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node);
+void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node);
 
 
 
@@ -264,13 +264,14 @@ HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
 }
 
 //initialize a heap with 0 length and root = NULL
-HEAP* HEAP_init(){
+HEAP* HEAP_init(HEAP_Compare *cmp){
     #ifdef debugging_init
         printf("HEAP initialized\n");
     #endif
     HEAP *result = (HEAP *)calloc(1,sizeof(HEAP));
     result->length = 0;
     result->root = NULL;
+    result->cmp = cmp;
     return result;
 }
 
@@ -407,7 +408,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 //going from the left to the right, layer by layer, add a node 
 //while preserving cmp(parent,child)
 //return new node
-HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
+HEAP_NODE *HEAP_add(HEAP *heap, void * data){
     #define __add_printAdded
     #ifdef debugging_add
         char tmp[100]; 
@@ -419,6 +420,7 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 
     #endif
      
+    HEAP_Compare *cmp = heap->cmp;
 
     //creating the node
     int newNodeIdx = (heap->length)++;
@@ -439,7 +441,7 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
     
 
     // validate result
-    HEAP_normalizeUp(heap,newNode,cmp);
+    HEAP_normalizeUp(heap,newNode);
 
 
 
@@ -451,7 +453,7 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
 }
 
 //return the top node's pointer to data, and delete that node;
-void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp){
+void *HEAP_pop(HEAP *heap){
     #define __pop__printHeap
     #ifdef debugging_HEAP_pop
         char tmp[1000];
@@ -460,6 +462,7 @@ void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp){
         #define __pop__printHeap json_printGraph(HEAP_file,heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
     void *peakData = heap->root->data;
+    HEAP_Compare *cmp = heap->cmp;
 
     //swap peakNode with lastNode
     HEAP_NODE *peakNode = heap->root;
@@ -474,7 +477,7 @@ void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp){
     peakNode = NULL;
     
     //normalize down the new peakNode (previously the lastNode)
-    HEAP_normalizeDown(heap,lastNode,cmp);
+    HEAP_normalizeDown(heap,lastNode);
 
     __pop__printHeap;
     return peakData;
@@ -594,7 +597,7 @@ void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
 }
 
 //starting at node going up, making sure cmp(parent,child) is true 
-void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp){
+void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node){
     #define __normalizeUp__printHeap
     #ifdef debugging_normalizeUp
         char tmp[1024];
@@ -602,6 +605,7 @@ void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp){
         printf("%s\n",tmp);
         #define __normalizeUp__printHeap json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
+    HEAP_Compare *cmp = heap->cmp;
 
     while(node->parent){
         if(cmp(node->parent->data,node->data)) break;
@@ -614,7 +618,7 @@ void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp){
 }   
 
 //starting at node going down, making sure cmp(parent,child) is true
-void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
+void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node){
     #define __normalizeDown__printHeap
     #ifdef debugging_normalizeDown
         char tmp[1024];
@@ -622,7 +626,7 @@ void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
         printf("%s\n",tmp);
         #define __normalizeDown__printHeap json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
-    
+    HEAP_Compare *cmp = heap->cmp;
 
 
     HEAP_NODE *current = node;
