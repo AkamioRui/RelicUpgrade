@@ -1,5 +1,5 @@
-#ifndef elic_HEAP
-#define elic_HEAP
+#ifndef relic_HEAP
+#define relic_HEAP
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -8,17 +8,7 @@
 #include<assert.h>
 #include "relic_JSON.h"
 
-#define debugging
-#ifdef debugging
-    #define debugging_init
-    #define debugging_close 
-    // #define debugging_closeBranch
-    // #define debugging_add 
-    // #define debugging_normalizeDown
-    // #define debugging_normalizeUp
-    // #define debugging_swap
-    #define debugging_HEAP_pop
-#endif
+
 /** note to self:
  * 1. finish HEAP_pop
  * 2. generalize this to support any TYPE of data
@@ -29,16 +19,37 @@
  *  */ 
 
 /*  *///debugging
-JSON *file;
-   
 
-typedef struct HEAP_NODE{
-    struct HEAP_NODE *left;
-    struct HEAP_NODE *right;
-    struct HEAP_NODE *parent;
+#define HEAP_DATA void 
 
-    // void *data;//for now it is int
-    /*  */struct {
+//debugging 
+#define debugging
+#ifdef debugging
+    #define debugging_init
+    #define debugging_close 
+    // #define debugging_closeBranch
+    // #define debugging_add 
+    #define debugging_normalizeDown
+    // #define debugging_normalizeUp
+    // #define debugging_swap
+    #define debugging_HEAP_pop
+
+    #define HEAP_NODE_print(node){\
+        printf(#node":{");\
+        if(node) printf(" id:%s \tparent:%s \tleft:%s \trigth:%s ",\
+            node->data?node->data->msg:"nD"\
+            ,node->parent ? \
+                (node->parent->data?node->parent->data->msg:"nD"): "_"\
+            ,node->left ? \
+                (node->left->data?node->left->data->msg:"nD"): "_"\
+            ,node->right ? \
+                (node->right->data?node->right->data->msg:"nD"): "_"\
+        );\
+        printf("}\n");\
+    }
+
+    JSON *HEAP_file;
+    typedef struct {
         double price;//the average price
         double successChance;
         char msg[16];
@@ -54,7 +65,19 @@ typedef struct HEAP_NODE{
         double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
         struct HEAP_NODE *heapNode;
     
-    }* data;
+    } HEAP_DATA_TEMP;
+    #undef HEAP_DATA
+    #define HEAP_DATA HEAP_DATA_TEMP
+#endif
+
+  
+
+typedef struct HEAP_NODE{
+    struct HEAP_NODE *left;
+    struct HEAP_NODE *right;
+    struct HEAP_NODE *parent;
+
+    HEAP_DATA* data;// if debugging is turned on, its STATE
     
 
     //for printing
@@ -171,11 +194,6 @@ __json_printSpannigTree_generic(HEAP_NODE)
 
 
 
-
-
-
-
-
 //utility
 HEAP* HEAP_init();
 void HEAP_close(HEAP **heapPtr);
@@ -287,7 +305,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     #ifdef debugging_closeBranch
         char tmp[1024];
         sprintf(tmp,"deleted %s",node->data->msg);
-        // #define __closeBranch__testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        // #define __closeBranch__testprint json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
         // #define __closeBranch__printStack printf("stack:");for(CONTEXT *i = context; i; i=i->next)printf("[%s]",(*i->param)->data->msg);
         #define __closeBranch__printDeleted printf("deleted %s\n",(*newNodePtr)->data->msg);
         // #define __closeBranch__printAddedtoStack(nodePtr) printf("added %s\n",(nodePtr)->data->msg);
@@ -396,7 +414,7 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
         
         #define __add_printAdded\
         sprintf(tmp,"created %s",newNode->data?newNode->data->msg:"_");\
-        json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
+        json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
         printf("%s\n",tmp);\
 
     #endif
@@ -439,7 +457,7 @@ void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp){
         char tmp[1000];
         sprintf(tmp,"poped %s",heap->root->data->msg);
         printf("%s\n",tmp);
-        #define __pop__printHeap json_printGraph(file,heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
+        #define __pop__printHeap json_printGraph(HEAP_file,heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
     void *peakData = heap->root->data;
 
@@ -470,7 +488,7 @@ void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
         char tmp[1024];
         sprintf(tmp,"swap %s, %s",node1->data->msg,node2->data->msg);
         printf("%s\n",tmp);
-        #define __swap__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        #define __swap__printHeap json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
     
     assert(heap);
@@ -582,7 +600,7 @@ void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp){
         char tmp[1024];
         sprintf(tmp,"normalizeUp %s",node->data->msg);
         printf("%s\n",tmp);
-        #define __normalizeUp__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        #define __normalizeUp__printHeap json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
 
     while(node->parent){
@@ -602,7 +620,7 @@ void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
         char tmp[1024];
         sprintf(tmp,"normalizeDown %s",node->data->msg);
         printf("%s\n",tmp);
-        #define __normalizeDown__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        #define __normalizeDown__printHeap json_printGraph(HEAP_file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
     
 
@@ -647,21 +665,7 @@ void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
  }
  
 
-    
-//debug
-#define HEAP_NODE_print(node){\
-    printf(#node":{");\
-    if(node) printf(" id:%s \tparent:%s \tleft:%s \trigth:%s ",\
-        node->data?node->data->msg:"nD"\
-        ,node->parent ? \
-            (node->parent->data?node->parent->data->msg:"nD"): "_"\
-        ,node->left ? \
-            (node->left->data?node->left->data->msg:"nD"): "_"\
-        ,node->right ? \
-            (node->right->data?node->right->data->msg:"nD"): "_"\
-    );\
-    printf("}\n");\
-}
+
     
     
 /* 

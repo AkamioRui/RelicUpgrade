@@ -17,10 +17,10 @@ heap link has the detail of the parent (to test the parent property)
 
 
 int main(){
-    file = json_init("heapData.json");
+    HEAP_file = json_init("heapData.json");
    
     STATE a,b,c,d,e;
-    STATE aa;
+    STATE aa={};
     a.successChance = 1;
     b.successChance = 2;
     c.successChance = 3;
@@ -47,28 +47,34 @@ int main(){
    
     
 
+    //creating 
     HEAP *theHeap = HEAP_init();
     HEAP_NODE *He =HEAP_add(theHeap,&e,(HEAP_Compare *)isMoreEfficient);
     HEAP_NODE *Hb =HEAP_add(theHeap,&b,(HEAP_Compare *)isMoreEfficient);
     HEAP_NODE *Ha =HEAP_add(theHeap,&a,(HEAP_Compare *)isMoreEfficient);
     HEAP_NODE *Hd =HEAP_add(theHeap,&d,(HEAP_Compare *)isMoreEfficient);
     HEAP_NODE *Hc =HEAP_add(theHeap,&c,(HEAP_Compare *)isMoreEfficient);
-    json_printGraph(file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
+    json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
     
+    // //normalize test
     // HEAP_swap(theHeap,He,Ha);
     // HEAP_swap(theHeap,He,Hb);
-    // json_printGraph(file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
+    // json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
     // HEAP_normalizeDown(theHeap,Ha,(HEAP_Compare *)isMoreEfficient);
-
+    
+    //pop test
     HEAP_pop(theHeap,(HEAP_Compare *)isMoreEfficient);
 
 
+
     HEAP_close(&theHeap);
+    json_close(HEAP_file);
 
 
-    
 
-    json_close(file);
+    printf("\ndone\n");
+    return 0;
+}
 /* 
         ],
         "outerLinks":[
@@ -77,11 +83,5 @@ int main(){
     } 
 ]
 */
-
-
-    printf("\ndone\n");
-    return 0;
-}
-
 
 
