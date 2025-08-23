@@ -55,10 +55,14 @@ int main(){
     HEAP_NODE *Hc =HEAP_add(theHeap,&c,(HEAP_Compare *)isMoreEfficient);
     json_printGraph(file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
     
-    HEAP_swap(theHeap,He,Ha);
-    HEAP_swap(theHeap,He,Hb);
-    json_printGraph(file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
-    HEAP_normalizeDown(theHeap,Ha,(HEAP_Compare *)isMoreEfficient);
+    // HEAP_swap(theHeap,He,Ha);
+    // HEAP_swap(theHeap,He,Hb);
+    // json_printGraph(file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
+    // HEAP_normalizeDown(theHeap,Ha,(HEAP_Compare *)isMoreEfficient);
+
+    HEAP_pop(theHeap,(HEAP_Compare *)isMoreEfficient);
+
+
     HEAP_close(&theHeap);
 
 

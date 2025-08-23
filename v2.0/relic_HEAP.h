@@ -17,10 +17,13 @@
     // #define debugging_normalizeDown
     // #define debugging_normalizeUp
     // #define debugging_swap
+    #define debugging_HEAP_pop
 #endif
 /** note to self:
  * 1. finish HEAP_pop
  * 2. generalize this to support any TYPE of data
+ * 3. place cmp in HEAP
+ * 4. place __json_printSpanningTree_HEAP_NODE in HEAP
  * 
  * 
  *  */ 
@@ -178,6 +181,7 @@ HEAP* HEAP_init();
 void HEAP_close(HEAP **heapPtr);
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node);
 HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
+void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp);
 
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
@@ -185,15 +189,13 @@ void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2);
 void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp);
 void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp);
 
-/* WIP */void HEAP_pop(HEAP_NODE *root);
 
 
 
 
-/* 
-return binary representation. Exp: 6 = 1,1,0
-reminder: free out_binary
-*/
+
+// return binary representation. Exp: 6 = 1,1,0
+// reminder: free out_binary
 void int2binary(int number, char **out_binary, int *out_length){
     //assert
     if(number == 0){
@@ -275,53 +277,6 @@ void HEAP_close(HEAP **heapPtr){
     #undef __close_printLength
 
 }
-
-//going from the left to the right, layer by layer, add a node 
-//while preserving cmp(parent,child)
-//return new node
-HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
-    #define __add_printAdded
-    #ifdef debugging_add
-        char tmp[100]; 
-        
-        #define __add_printAdded\
-        sprintf(tmp,"created %s",newNode->data?newNode->data->msg:"_");\
-        json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
-        printf("%s\n",tmp);\
-
-    #endif
-     
-
-    //creating the node
-    int newNodeIdx = (heap->length)++;
-    HEAP_NODE **newNodePtr = HEAP_pointer_to(heap, newNodeIdx);
-    HEAP_NODE *newNode = *newNodePtr = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-
-    //fill-in node data
-    
-    newNode->data = data;
-    if(newNodeIdx){
-        //if the node has odd index, then its on the left
-        newNode->parent = (HEAP_NODE *)((char *)newNodePtr 
-        - (newNodeIdx % 2 ? offsetof(HEAP_NODE,left):offsetof(HEAP_NODE,right))
-        );
-    } else { //is root
-        newNode->parent = NULL;
-    }
-    
-
-    // validate result
-    HEAP_normalizeUp(heap,newNode,cmp);
-
-
-
-    /* test */
-    __add_printAdded;
-    return newNode;
-    #undef __add_printAdded 
-
-}
-
 // memory pointed by node and its children is deallocated
 void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     //for testing
@@ -429,6 +384,83 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     #undef __closeBranch__printDeleted
     #undef __closeBranch__printAddedtoStack
 
+}
+
+//going from the left to the right, layer by layer, add a node 
+//while preserving cmp(parent,child)
+//return new node
+HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
+    #define __add_printAdded
+    #ifdef debugging_add
+        char tmp[100]; 
+        
+        #define __add_printAdded\
+        sprintf(tmp,"created %s",newNode->data?newNode->data->msg:"_");\
+        json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
+        printf("%s\n",tmp);\
+
+    #endif
+     
+
+    //creating the node
+    int newNodeIdx = (heap->length)++;
+    HEAP_NODE **newNodePtr = HEAP_pointer_to(heap, newNodeIdx);
+    HEAP_NODE *newNode = *newNodePtr = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
+
+    //fill-in node data
+    
+    newNode->data = data;
+    if(newNodeIdx){
+        //if the node has odd index, then its on the left
+        newNode->parent = (HEAP_NODE *)((char *)newNodePtr 
+        - (newNodeIdx % 2 ? offsetof(HEAP_NODE,left):offsetof(HEAP_NODE,right))
+        );
+    } else { //is root
+        newNode->parent = NULL;
+    }
+    
+
+    // validate result
+    HEAP_normalizeUp(heap,newNode,cmp);
+
+
+
+    /* test */
+    __add_printAdded;
+    return newNode;
+    #undef __add_printAdded 
+
+}
+
+//return the top node's pointer to data, and delete that node;
+void *HEAP_pop(HEAP *heap, HEAP_Compare *cmp){
+    #define __pop__printHeap
+    #ifdef debugging_HEAP_pop
+        char tmp[1000];
+        sprintf(tmp,"poped %s",heap->root->data->msg);
+        printf("%s\n",tmp);
+        #define __pop__printHeap json_printGraph(file,heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
+    #endif
+    void *peakData = heap->root->data;
+
+    //swap peakNode with lastNode
+    HEAP_NODE *peakNode = heap->root;
+    HEAP_NODE **lastNodePtr = HEAP_pointer_to(heap,heap->length - 1);
+    HEAP_NODE *lastNode = *lastNodePtr;
+    HEAP_swap(heap,peakNode,lastNode);
+
+    //delete the new lastNode (previously the peakNode)
+    heap->length--;
+    *lastNodePtr = NULL;
+    free(peakNode);
+    peakNode = NULL;
+    
+    //normalize down the new peakNode (previously the lastNode)
+    HEAP_normalizeDown(heap,lastNode,cmp);
+
+    __pop__printHeap;
+    return peakData;
+    #undef __pop__printHeap
 }
 
 //perform a deep swap, what is modified is the left,right,parent. the data is never moved 
@@ -614,44 +646,6 @@ void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
     #undef __normalizeDown__printHeap
  }
  
-
-
-
-
-// //pop the root node,  return that data
-//// /* WIP */void* HEAP_pop(HEAP_NODE **rootPtr){
-//     /*  */printf("root has %d node;\n",(*rootPtr)->length);
-//     HEAP_NODE *first = *rootPtr;//point to the top most node in heap
-//     void *theData = (*rootPtr)->data;
-
-//     //swap root to the highest index node
-//     HEAP_NODE *last = *HEAP_pointer_to(rootPtr,(*rootPtr)->length - 1);
-//     HEAP_SIDE lastSide = 
-//         last->parent->left == last? HEAP_left: HEAP_right;
-//     HEAP_swap(rootPtr,first,last);
-
-
-//     //free root thats now is at the highest index node
-    
-//     free(first);
-//     first = NULL;
-    
-    
-
-//     //HEAP_normalizeDown(highest index node)
-
-    
-//     //is this allowed?
-//     json_printGraph(file,*rootPtr,(void (*)(void*, FILE *, FILE *, int *, int *))_json_printSpanningTree_HEAP,"swap with last");
-
-    
-
-
-//     return theData;
-// }
-
-
-
 
     
 //debug
