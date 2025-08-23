@@ -9,6 +9,15 @@
 #include "relic_JSON.h"
 
 #define debugging
+#ifdef debugging
+    #define debugging_init
+    #define debugging_close 
+    // #define debugging_closeBranch
+    // #define debugging_add 
+    // #define debugging_normalizeDown
+    // #define debugging_normalizeUp
+    // #define debugging_swap
+#endif
 /** note to self:
  * 1. finish HEAP_pop
  * 2. generalize this to support any TYPE of data
@@ -53,11 +62,13 @@ typedef struct HEAP{
     HEAP_NODE *root;
 } HEAP;
 
-//none is to descript &root and root relationship
-typedef enum HEAP_SIDE {HEAP_none, HEAP_left, HEAP_right}HEAP_SIDE;
+
+typedef enum HEAP_SIDE {
+    HEAP_none, //&root and root relationship
+    HEAP_left, //child is on the left of parent
+    HEAP_right //child is on the right of parent
+}HEAP_SIDE;
 typedef int(HEAP_Compare)(void *parent, void*child); 
-
-
 
 
 //for printing, 
@@ -171,11 +182,11 @@ HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp);
 void int2binary(int number, char **out_binary, int *out_length);
 HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index);
 void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2);
-/* WIP */void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp);
+void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp);
+void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp);
 
-///* WIP */void HEAP_pop(HEAP_NODE *root);
+/* WIP */void HEAP_pop(HEAP_NODE *root);
 
-///* WIP */void HEAP_normalizeDown(HEAP_NODE **rootPtr,HEAP_NODE *node,HEAP_Compare *cmp);
 
 
 
@@ -234,18 +245,19 @@ HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
 
 //initialize a heap with 0 length and root = NULL
 HEAP* HEAP_init(){
-    #ifdef debugging
+    #ifdef debugging_init
         printf("HEAP initialized\n");
     #endif
     HEAP *result = (HEAP *)calloc(1,sizeof(HEAP));
     result->length = 0;
     result->root = NULL;
+    return result;
 }
 
 //delete the HEAP and all of its HEAP_NODE, also set HEAP = NULL
 void HEAP_close(HEAP **heapPtr){
     #define __close_printLength
-    #ifdef debugging
+    #ifdef debugging_close
         int __close__length = (*heapPtr)->length;
         #define __close_printLength printf("delete heap with length %d\n",__close__length);
     #endif
@@ -264,17 +276,18 @@ void HEAP_close(HEAP **heapPtr){
 
 }
 
-/* ---no normalize */
 //going from the left to the right, layer by layer, add a node 
+//while preserving cmp(parent,child)
+//return new node
 HEAP_NODE *HEAP_add(HEAP *heap, void * data, HEAP_Compare *cmp){
-    #define __add_printAdded 
-    #ifdef debugging
+    #define __add_printAdded
+    #ifdef debugging_add
         char tmp[100]; 
         
         #define __add_printAdded\
         sprintf(tmp,"created %s",newNode->data?newNode->data->msg:"_");\
         json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);\
-        // printf("%s\n",tmp);\
+        printf("%s\n",tmp);\
 
     #endif
      
@@ -316,7 +329,7 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
     #define __closeBranch__printStack
     #define __closeBranch__printDeleted
     #define __closeBranch__printAddedtoStack
-    #ifdef debugging
+    #ifdef debugging_closeBranch
         char tmp[1024];
         sprintf(tmp,"deleted %s",node->data->msg);
         // #define __closeBranch__testprint json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
@@ -421,11 +434,11 @@ void HEAP_closeBranch(HEAP *heap, HEAP_NODE *node){
 //perform a deep swap, what is modified is the left,right,parent. the data is never moved 
 void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
     #define __swap__printHeap
-    #ifdef debugging
+    #ifdef debugging_swap
         char tmp[1024];
         sprintf(tmp,"swap %s, %s",node1->data->msg,node2->data->msg);
         printf("%s\n",tmp);
-        // #define __swap__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+        #define __swap__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
     #endif
     
     assert(heap);
@@ -435,31 +448,31 @@ void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
     //based on node1, node2, determine their pointer
     HEAP_NODE **rootPtr = &(heap->root);
     HEAP_NODE **node1_ptr, **node2_ptr;
-    HEAP_SIDE node1_side, node2_side;
-    if(node1->parent){
-        if(node1->parent->left == node1){
-            node1_ptr = &(node1->parent->left);
-            node1_side = HEAP_left;
-        } else {
-            node1_ptr = &(node1->parent->right);
-            node1_side = HEAP_right;
-        }
-    } else {
-        node1_ptr = rootPtr;
-        node1_side = HEAP_none;
-    }
-    if(node2->parent){
-        if(node2->parent->left == node2){
-            node2_ptr = &(node2->parent->left);
-            node2_side = HEAP_left;
-        } else {
-            node2_ptr = &(node2->parent->right);
-            node2_side = HEAP_right;
-        }
-    } else {
-        node2_ptr = rootPtr;
-        node2_side = HEAP_none;
-    }
+    node1_ptr = node1->parent?
+        (node1->parent->left == node1? 
+            &(node1->parent->left)
+            : &(node1->parent->right)
+        )
+        : rootPtr;
+    node2_ptr = node2->parent?
+        (node2->parent->left == node2? 
+            &(node2->parent->left)
+            : &(node2->parent->right)
+        )
+        : rootPtr;
+
+    // if(node2->parent){
+    //     if(node2->parent->left == node2){
+    //         node2_ptr = &(node2->parent->left);
+            
+    //     } else {
+    //         node2_ptr = &(node2->parent->right);
+            
+    //     }
+    // } else {
+    //     node2_ptr = rootPtr;
+        
+    // }
     
 
     
@@ -532,61 +545,75 @@ void HEAP_swap(HEAP *heap , HEAP_NODE *node1, HEAP_NODE *node2){
 
 //starting at node going up, making sure cmp(parent,child) is true 
 void HEAP_normalizeUp(HEAP *heap,HEAP_NODE *node,HEAP_Compare *cmp){
+    #define __normalizeUp__printHeap
+    #ifdef debugging_normalizeUp
+        char tmp[1024];
+        sprintf(tmp,"normalizeUp %s",node->data->msg);
+        printf("%s\n",tmp);
+        #define __normalizeUp__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+    #endif
+
     while(node->parent){
         if(cmp(node->parent->data,node->data)) break;
         HEAP_swap(heap,node->parent,node);
     }
+    
+
+    __normalizeUp__printHeap;
+    #undef __normalizeUp__printHeap
 }   
 
-// //starting at node going down, making sure cmp(parent,child) is true
-// void HEAP_normalizeDown(HEAP_NODE *rootPtr ,HEAP_NODE *node,HEAP_Compare *cmp){
-
-//     HEAP_NODE *current = node;
-//     while(1){
-
-//         HEAP_NODE *candidate_child;
-//         switch (2*(current->left != 0) + (current->right !=0 )){
-//             case 0b00:
-//                 return;
-//             break;
-//             case 0b01:
-//                 assert("left child empty, but right is not");
-//                 return;
-//                 // candidate_child = current->right;
-//             break;
-//             case 0b10:
-//                 candidate_child = current->left;
-//             break;
-//             case 0b11:
-//                 if(cmp(current->left->data,current->right->data)){
-//                     candidate_child = current->left;
-//                 } else {
-//                     candidate_child = current->right;
-//                 }
-//             break;
-//             default:
-//                 assert("invalid code");
-//             break;
-//         }
+//starting at node going down, making sure cmp(parent,child) is true
+void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node,HEAP_Compare *cmp){
+    #define __normalizeDown__printHeap
+    #ifdef debugging_normalizeDown
+        char tmp[1024];
+        sprintf(tmp,"normalizeDown %s",node->data->msg);
+        printf("%s\n",tmp);
+        #define __normalizeDown__printHeap json_printGraph(file,heap->root,(void (*)(void*, FILE *, FILE *, int *, int *))__json_printSpanningTree_HEAP_NODE,tmp);
+    #endif
+    
 
 
-//         if(cmp(current->data,candidate_child->data))return;
-//         HEAP_swap(rootPtr,current,candidate_child);
+    HEAP_NODE *current = node;
+    while(1){
+
+        HEAP_NODE *candidate_child;
+        switch (2*(current->left != 0) + (current->right !=0 )){
+            case 0b00:
+                __normalizeDown__printHeap;
+                return;
+            break;
+            case 0b01://error
+                printf("HEAP_normalizeDown: left child empty, but right is not");
+                return;
+                // candidate_child = current->right;
+            break;
+            case 0b10:
+                candidate_child = current->left;
+            break;
+            case 0b11:
+                if(cmp(current->left->data,current->right->data)){
+                    candidate_child = current->left;
+                } else {
+                    candidate_child = current->right;
+                }
+            break;
+            default:
+                assert("invalid code");
+            break;
+        }
+
         
-
-
-
-        
-
-        
-//     }
-
+        if(cmp(current->data,candidate_child->data))break;
+        HEAP_swap(heap,current,candidate_child);   
+    }  
     
     
-//  }
+    __normalizeDown__printHeap;
+    #undef __normalizeDown__printHeap
+ }
  
-// //append new node, while preserving cmp(parent,child)
-// //return new node
 
 
 

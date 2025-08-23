@@ -8,6 +8,8 @@
 typedef struct {
     FILE *outFile;
 } JSON ;
+typedef void (JSON_PRINT_FUNC)(void*, FILE *, FILE *, int *, int *);
+
 JSON *json_init(char *filename);
 void json_close(JSON *json);
 void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeCount, int *outer_exist);
