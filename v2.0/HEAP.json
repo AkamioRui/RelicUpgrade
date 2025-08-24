@@ -1,3 +1,13 @@
 [
- 
+    {
+        "msg":"created",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 5,4","price":7800.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 5,4"},"nodeData":{ "detail":"up 5,2","price":7800.00,"succesR":1.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 5,4"},"nodeData":{ "detail":"up 5,3","price":7800.00,"succesR":1.00,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    } 
 ]

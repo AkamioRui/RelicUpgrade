@@ -34,6 +34,7 @@ print the graph (whitelisted = green, blackListed = red, unknown = red);
 */
 
 int main(){
+    /*  */printf("Hello\n");
     HEAP_file = json_init("HEAP.json");
     STATE_file = json_init("STATE.json");
 
@@ -43,17 +44,21 @@ int main(){
     /* partial */
     //initialize the graph; 
     graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
-   
+    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
+    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
     // FILE *log = fopen("log.c","w");
     // HEAP_NODE_print(graph.heap->root);
     // graph_printState(log);
     // fclose(log);
 
-
+    // if(currentNode->parentChance){
+    //     free(currentNode->parentChance);
+    //     currentNode->parentChance = NULL;
+    // }
 
     graph_close();
-    json_close(STATE_file);
     json_close(HEAP_file);
+    json_close(STATE_file);
     printf("\ndone\n");
     return 0;
 }

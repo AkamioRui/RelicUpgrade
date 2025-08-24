@@ -71,8 +71,8 @@ JSON *STATE_file;
 #define debug
 #ifdef debug
     #define debug_close
+    #define debug_init_upgrade
 
-    JSON *STATE_file;
 #endif
 
 
@@ -87,6 +87,7 @@ int STATE_getChildCount(STATE *node);
 void STATE_fprintNodeD(FILE *outFile,STATE *node);
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
 void STATE_clearArg(STATE *root);
+__json_printSpannigTree_generic(STATE)
 
 
 //utility
@@ -217,10 +218,10 @@ void graph_close();
         
         #undef giveSpaceTo
     
-        graph.root.ptr->price = 0;
+        graph.root.ptr->price = cost.create;
         graph.root.ptr->successChance = 0;
         sprintf(graph.root.ptr->msg,"root");
-        graph.root.ptr->whitelisted = 0;//always
+        graph.root.ptr->whitelisted = 0;//always 0
         
         graph.root.ptr->arg = NULL;
         graph.root.ptr->child = graph.three.start.ptr;
@@ -233,7 +234,6 @@ void graph_close();
         
 
         //modified for testing
-        graph.root.ptr->price = cost.create;
         graph.root.ptr->child = graph.three.upgrade[0].ptr;
         graph.root.ptr->childCount = 2;
         //to avoid segfault, three.good[0] = root
@@ -241,79 +241,45 @@ void graph_close();
         graph_init_upgrade(3, 0, goodSubCount/4.f);
         
 
-        atexit(graph_close);
-    }
-
-    void graph_init_test(){
+        
+        json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
+        json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
         printf("graph initialized\n");
-        // currently only for the root
-        graph.root.len = 6;
-        graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
-        
-        for(int i = 0 ; i<6; i++){
-            graph.root.ptr[i].successChance = i;
-            graph.root.ptr[i].price = i*100+10;
-            sprintf(graph.root.ptr[i].msg,"%c",'a'+i);
-            
-        }
-
-        //child 
-        int childId[] =    {1,3,4};
-        int childCount[] = {2,3,1};
-        for(int i = 0; i<3; i++){
-            graph.root.ptr[i].childCount = childCount[i];
-            graph.root.ptr[i].child = graph.root.ptr + childId[i];
-        }
-
-        //parent
-        int parentId[] =    {0,0,0,1,1,1};
-        int parentCount[] = {0,1,1,1,2,1};
-        for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
-            STATE *root = graph.root.ptr;
-            STATE *theNode = root+nodeId;
-            theNode->parentCount = parentCount[nodeId];
-            theNode->parent = root + parentId[nodeId];
-            theNode->parentChance = (double*)malloc(sizeof(double)*parentCount[nodeId]);
-            for(int parentIdx = 0; parentIdx<theNode->parentCount; parentIdx++){
-                theNode->parentChance[parentIdx] = nodeId*100 + theNode->parent+parentIdx-root;    
-            }
-        }
-        
-    
-        atexit(graph_close);
     }
+
+    
 #endif
 
 
 //branch is three or four
 void graph_init_upgrade(int branch, int index, double pwin){
-    #ifdef debug_init_upgrade
-        printf("initialize %d.upgrade[%d] ",branc,index);
-    #endif
     
-    
+
     STATE *upgrade;
     STATE *goodNode;
     int maxLayer; //layer number refers to how many node in each layer 
     switch (branch){
         case 3:
-            upgrade = graph.three.upgrade[index].ptr;
+            // assert(index < graph.three.good.len);
             goodNode = graph.three.good.ptr + index;
+            upgrade = graph.three.upgrade[index].ptr;
             maxLayer = 5; //0,1,2,3,4 upgrade
         break;
 
         case 4:
-            upgrade = graph.four.upgrade[index].ptr;
+            // assert(index < graph.four.good.len);
             goodNode = graph.four.good.ptr + index;
+            upgrade = graph.four.upgrade[index].ptr;
             maxLayer = 6; //0,1,2,3,4,5,6 upgrade
         break;
         
         default:
             printf("invalid branch");
+            assert(0);
         break;
     }
-    
-    if(!upgrade)return;
+    assert(upgrade);
+    assert(goodNode);
 
     STATE *curLayer = upgrade;
     for(int l = 2; l<=maxLayer ; l++){
@@ -329,7 +295,7 @@ void graph_init_upgrade(int branch, int index, double pwin){
 
             curNode->price = curCost;
             curNode->successChance = lastLayer*((index + 1 + up)>=threshold);
-            sprintf(curNode->msg,"up l%di%d",l,up);
+            sprintf(curNode->msg,"up %d,%d",l,up);
             curNode->whitelisted = 0;//1 if true
 
             curNode->arg = NULL;
@@ -339,25 +305,34 @@ void graph_init_upgrade(int branch, int index, double pwin){
             curNode->parentCount = parentIsGood? 1 : (0 < up)+(up < l-1);
             curNode->parent = parentIsGood? goodNode : 
                 (up==0? parentLayer: parentLayer + up - 1);
-            curNode->parentChance = (double *)
-                malloc(sizeof(double)*curNode->parentCount);
-            curNode->parentChance[0] = 
-                parentIsGood?  (!up)*(1-pwin) + (up)*pwin :
-                up == 0? (1-pwin):pwin;
-            curNode->parentChance[1] = 1 - pwin;
-
-            // if(lastLayer){
-            //     curNode->heapNode = HEAP_add(graph.heap,curNode);
-            // } else curNode->heapNode = NULL;
+            if(curNode->parentCount>0) curNode->parentChance = (double *)
+            calloc(curNode->parentCount,sizeof(double));
+            else curNode->parentChance = NULL;
+            if(parentIsGood){
+                curNode->parentChance[0] = (!up)*(1-pwin) + (up)*pwin;
+            } else if(up == 0){
+                curNode->parentChance[0] = (1-pwin);
+            } else if(up == l-1){
+                curNode->parentChance[0] = pwin;
+            } else {
+                curNode->parentChance[0] = pwin;
+                curNode->parentChance[1] = (1-pwin);
+            }
+            
+            
+            if(lastLayer && curNode->successChance){
+                curNode->heapNode = HEAP_add(graph.heap,curNode);
+            } else curNode->heapNode = NULL;
 
 
         }
         curLayer = childLayer;
     }
-    
+
+    #ifdef debug_init_upgrade
+        printf("graph.%d.upgrade[%d] initialized\n",branch,index);
+    #endif
 }
-
-
 
 
 
@@ -365,16 +340,18 @@ void graph_init_upgrade(int branch, int index, double pwin){
 void graph_close(){
     HEAP_close(&graph.heap);
 
+    STATE *node = graph.root.ptr;
     for(int i = 0 ; i < graph.root.len ; i++){
-        STATE *currentNode = graph.root.ptr+i;
-        if(currentNode->arg){
-            free(currentNode->arg);
-            currentNode->arg = NULL;
+        if(node[i].arg){
+            free(node[i].arg);
+            node[i].arg = NULL;
         }
-        if(currentNode->parentChance){
-            free(currentNode->parentChance);
-            currentNode->parentChance = NULL;
+        
+        if(node[i].parentChance){
+            free(node[i].parentChance);
+            node[i].parentChance = NULL;
         }
+        
         
     }
     free(graph.root.ptr);
@@ -428,7 +405,7 @@ void STATE_clearArg(STATE *root){
         }
     }
 }
-__json_printSpannigTree_generic(STATE)
+
 
 //HEAP section, filling the global variable
 void HEAP_NODE_fprintNodeD(FILE *outFile,HEAP_NODE *node){
@@ -458,3 +435,45 @@ void HEAP_NODE_fprintLinkD(FILE *outFile, HEAP_NODE *parentNode, HEAP_NODE *chil
 //     (void (*)(void *, FILE *, FILE *, int *, int *))__json_printSpanningTree_STATE
 // );
 // json_close(mainGraphJson);
+
+/* 
+void graph_init_test(){
+    printf("graph initialized\n");
+    // currently only for the root
+    graph.root.len = 6;
+    graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
+    
+    for(int i = 0 ; i<6; i++){
+        graph.root.ptr[i].successChance = i;
+        graph.root.ptr[i].price = i*100+10;
+        sprintf(graph.root.ptr[i].msg,"%c",'a'+i);
+        
+    }
+
+    //child 
+    int childId[] =    {1,3,4};
+    int childCount[] = {2,3,1};
+    for(int i = 0; i<3; i++){
+        graph.root.ptr[i].childCount = childCount[i];
+        graph.root.ptr[i].child = graph.root.ptr + childId[i];
+    }
+
+    //parent
+    int parentId[] =    {0,0,0,1,1,1};
+    int parentCount[] = {0,1,1,1,2,1};
+    for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
+        STATE *root = graph.root.ptr;
+        STATE *theNode = root+nodeId;
+        theNode->parentCount = parentCount[nodeId];
+        theNode->parent = root + parentId[nodeId];
+        theNode->parentChance = (double*)malloc(sizeof(double)*parentCount[nodeId]);
+        for(int parentIdx = 0; parentIdx<theNode->parentCount; parentIdx++){
+            theNode->parentChance[parentIdx] = nodeId*100 + theNode->parent+parentIdx-root;    
+        }
+    }
+    
+
+    atexit(graph_close);
+}
+
+*/

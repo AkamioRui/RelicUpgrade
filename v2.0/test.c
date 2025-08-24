@@ -150,17 +150,7 @@ void assigningString(){
 
 int main(){
    
-    int *a = NULL
-    ,*b = NULL
-    ,*c = NULL
-    ;
-
-    int bb = 10;
-    b = &bb;
-
-
-    a == NULL ? *b : *a;
-    a != NULL ? *a : *b;
+   assert(!"here");
 
 
 

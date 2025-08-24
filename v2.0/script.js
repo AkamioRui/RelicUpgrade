@@ -25,7 +25,7 @@ const d3 =d3Raw;
 
 // drawGraphD3(jsondata,{width:20,height:20,padding:20});
 drawGraphD3(await (await fetch("STATE.json")).json());
-// drawGraphD3(await (await fetch("mydata.json")).json());
+drawGraphD3(await (await fetch("HEAP.json")).json());
 
 
 
