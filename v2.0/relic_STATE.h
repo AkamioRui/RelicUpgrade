@@ -6,69 +6,365 @@
 #include<string.h>
 #include "relic_JSON.h"
 #include "relic_HEAP.h"
+#include "relic_globalConstant.h"
 
-
-
+typedef enum STATUS{
+    STATUS_BANNED = -1,
+    STATUS_UNKOWN = 0,
+    STATUS_ACCEPTED = 1
+} STATUS;
 typedef struct STATE{
     double price;//the average price
     double successChance;
     char msg[16];
-    char whitelisted;//1 if true
+    STATUS whitelisted;//1 if true
 
     void *arg;//for printing
-    struct STATE *child;//the address in root array where this.children start
+    struct STATE *child;//the address in root array where this.childrens is located contiguously 
     int childCount;
 
     //for processing
-    struct STATE *parent;//what actually being used
+    struct STATE *parent;//the address in root array, parent node are  located contiguously 
     int parentCount;
     double *parentChance;//NAN = rejected, neg = accepted, pos = undecided
-    HEAP_NODE *heapNode;
+    HEAP_NODE *heapNode;//deallocated by heap
 
 } STATE ;
+typedef struct STATE_array{
+    STATE *ptr;
+    int len;
+} STATE_array;
+struct {
+    //{
+    //     root
+    //     ,three.start //1 node
+    //     ,four.start //1 node
+    //     ,three.combination // c(#remainingSubstat,3) nodes
+    //     ,three.good // #goodSub nodes
+    //     ,four.good // #goodSub nodes
+    //     ,three.upgrade[4] // #goodSub*(5*6/2)-1 nodes //arithmatic sum
+    //     ,four.upgrade[4] // #goodSub*(6*7/2)-1 nodes //arithmatic sum
+    // }
+    STATE_array root;//len is the entire nodes
+    
+
+    //checkpoints
+    //the following are just for references, it doesnt allocate memory
+    struct {
+        STATE_array start;
+        STATE_array combination[3];//use arg to temp store substatId[]
+        STATE_array good;
+        STATE_array upgrade[4];//index = number of good substat -1, some entry might be NULL if #goodStat < 4
+    } three;
+
+    struct {
+        STATE_array start;
+        STATE_array good;
+        STATE_array upgrade[4];
+    } four;
+
+    HEAP *heap;
+} graph;
+JSON *STATE_file;
+
+
+#define debug
+#ifdef debug
+    #define debug_close
+
+    JSON *STATE_file;
+#endif
+
+
+
+
+
+
+
+//printing
 STATE *STATE_getChild(STATE *node, int index);
 int STATE_getChildCount(STATE *node);
 void STATE_fprintNodeD(FILE *outFile,STATE *node);
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode);
 void STATE_clearArg(STATE *root);
 
-//for computation
-int isMoreEfficient(STATE *a,STATE *b){
-    STATE *ap = (STATE *)a;
-    STATE *bp = (STATE *)b;
-    return (ap->successChance/ap->price) > (bp->successChance/bp->price);
+
+//utility
+int isMoreEfficient(STATE *a,STATE *b);
+// initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_len)
+
+//count the number of allocated memory needed, then allocate the graph
+//resposible only for completing all graph data, not each indiviual node
+void graph_init();
+void graph_init_root(); //fill in all detail for all node in start
+void graph_init_start(int branch); //fill in all detail for all node in start
+void graph_init_combination();
+void graph_init_good(int branch);
+void graph_init_upgrade(int branch, int index, double pwin);
+void graph_close();
+
+#ifdef debug
+    void graph_printState(FILE *file){
+        for(int i = 0 ; i<graph.root.len; i++){
+            STATE *node = graph.root.ptr + i;
+            
+            //the node
+            fprintf(file,"-%d-> {%s:%.2lf/%.2lf(%c)} -%d-> ",
+                node->parentCount,
+                node->msg, 
+                node->successChance, 
+                node->price, 
+                node->whitelisted?'v':'x',
+                node->childCount
+            );
+
+            //each parent
+            fprintf(file,"\n\t");
+            for(int pid = 0; pid<node->parentCount; pid++){
+                STATE *parent = node->parent+pid;
+                fprintf(file,"{(%.2lf)%s:%.2lf/%.2lf(%c)} ",
+                    node->parentChance[pid],
+                    parent->msg, 
+                    parent->successChance, 
+                    parent->price, 
+                    parent->whitelisted?'v':'x'
+                );
+
+            }
+
+            fprintf(file,"\n\t");
+            for(int cid = 0; cid<node->childCount; cid++){
+                STATE *child = node->child+cid;
+                fprintf(file,"{%s:%.2lf/%.2lf(%c)} ",
+                    child->msg, 
+                    child->successChance, 
+                    child->price, 
+                    child->whitelisted?'v':'x'
+                );
+
+            }
+            fprintf(file,"\n");
+
+    
+        }
+    }
+    //will deallocate itself
+    //pyramid when it can only upgrade 4 times + the goodnode pointing to i
+    void graph_init_test_pyramid4(int goodSubCount){
+        memset(&graph,0,sizeof(graph));
+
+        //assigning heap
+        graph.heap = HEAP_init((HEAP_Compare *)isMoreEfficient);
+        
+        //assigning len
+        graph.root.len = 1;
+        graph.three.start.len = 0;
+        graph.three.combination[0].len =0; 
+        graph.three.combination[1].len =0; 
+        graph.three.combination[2].len =0; 
+        graph.three.good.len = 0;
+        graph.three.upgrade[0].len =5*6/2-1; 
+        graph.three.upgrade[1].len =0; 
+        graph.three.upgrade[2].len =0; 
+        graph.three.upgrade[3].len =0; 
+        graph.four.start.len = 0;
+        graph.four.good.len = 0;
+        graph.four.upgrade[0].len =0; 
+        graph.four.upgrade[1].len =0; 
+        graph.four.upgrade[2].len =0; 
+        graph.four.upgrade[3].len =0; 
+        
+        graph.root.len += 
+          graph.three.start.len
+        + graph.three.combination[0].len
+        + graph.three.combination[1].len
+        + graph.three.combination[2].len
+        + graph.three.good.len
+        + graph.three.upgrade[0].len
+        + graph.three.upgrade[1].len
+        + graph.three.upgrade[2].len
+        + graph.three.upgrade[3].len
+        + graph.four.start.len
+        + graph.four.good.len
+        + graph.four.upgrade[0].len
+        + graph.four.upgrade[1].len
+        + graph.four.upgrade[2].len
+        + graph.four.upgrade[3].len ;
+        
+        
+        //assiging ptr
+        graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
+        STATE *availablePointer = graph.root.ptr + 1;
+        #define giveSpaceTo(checkpoint) if(checkpoint.len){\
+            checkpoint.ptr = availablePointer;\
+            availablePointer += checkpoint.len;\
+        }    
+        giveSpaceTo(graph.three.start)
+        giveSpaceTo(graph.four.start)
+        giveSpaceTo(graph.three.combination[0])
+        giveSpaceTo(graph.three.combination[1])
+        giveSpaceTo(graph.three.combination[2])
+        giveSpaceTo(graph.three.good)
+        giveSpaceTo(graph.four.good)
+        giveSpaceTo(graph.three.upgrade[0])
+        giveSpaceTo(graph.three.upgrade[1])
+        giveSpaceTo(graph.three.upgrade[2])
+        giveSpaceTo(graph.three.upgrade[3])
+        giveSpaceTo(graph.four.upgrade[0])
+        giveSpaceTo(graph.four.upgrade[1])
+        giveSpaceTo(graph.four.upgrade[2])
+        giveSpaceTo(graph.four.upgrade[3])
+        
+        #undef giveSpaceTo
+    
+        graph.root.ptr->price = 0;
+        graph.root.ptr->successChance = 0;
+        sprintf(graph.root.ptr->msg,"root");
+        graph.root.ptr->whitelisted = 0;//always
+        
+        graph.root.ptr->arg = NULL;
+        graph.root.ptr->child = graph.three.start.ptr;
+        graph.root.ptr->childCount = 2;
+        
+        graph.root.ptr->parentCount = 0;
+        graph.root.ptr->parent = NULL;
+        graph.root.ptr->parentChance = NULL;
+        graph.root.ptr->heapNode = NULL;
+        
+
+        //modified for testing
+        graph.root.ptr->price = cost.create;
+        graph.root.ptr->child = graph.three.upgrade[0].ptr;
+        graph.root.ptr->childCount = 2;
+        //to avoid segfault, three.good[0] = root
+        graph.three.good.ptr = graph.root.ptr;
+        graph_init_upgrade(3, 0, goodSubCount/4.f);
+        
+
+        atexit(graph_close);
+    }
+
+    void graph_init_test(){
+        printf("graph initialized\n");
+        // currently only for the root
+        graph.root.len = 6;
+        graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
+        
+        for(int i = 0 ; i<6; i++){
+            graph.root.ptr[i].successChance = i;
+            graph.root.ptr[i].price = i*100+10;
+            sprintf(graph.root.ptr[i].msg,"%c",'a'+i);
+            
+        }
+
+        //child 
+        int childId[] =    {1,3,4};
+        int childCount[] = {2,3,1};
+        for(int i = 0; i<3; i++){
+            graph.root.ptr[i].childCount = childCount[i];
+            graph.root.ptr[i].child = graph.root.ptr + childId[i];
+        }
+
+        //parent
+        int parentId[] =    {0,0,0,1,1,1};
+        int parentCount[] = {0,1,1,1,2,1};
+        for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
+            STATE *root = graph.root.ptr;
+            STATE *theNode = root+nodeId;
+            theNode->parentCount = parentCount[nodeId];
+            theNode->parent = root + parentId[nodeId];
+            theNode->parentChance = (double*)malloc(sizeof(double)*parentCount[nodeId]);
+            for(int parentIdx = 0; parentIdx<theNode->parentCount; parentIdx++){
+                theNode->parentChance[parentIdx] = nodeId*100 + theNode->parent+parentIdx-root;    
+            }
+        }
+        
+    
+        atexit(graph_close);
+    }
+#endif
+
+
+//branch is three or four
+void graph_init_upgrade(int branch, int index, double pwin){
+    #ifdef debug_init_upgrade
+        printf("initialize %d.upgrade[%d] ",branc,index);
+    #endif
+    
+    
+    STATE *upgrade;
+    STATE *goodNode;
+    int maxLayer; //layer number refers to how many node in each layer 
+    switch (branch){
+        case 3:
+            upgrade = graph.three.upgrade[index].ptr;
+            goodNode = graph.three.good.ptr + index;
+            maxLayer = 5; //0,1,2,3,4 upgrade
+        break;
+
+        case 4:
+            upgrade = graph.four.upgrade[index].ptr;
+            goodNode = graph.four.good.ptr + index;
+            maxLayer = 6; //0,1,2,3,4,5,6 upgrade
+        break;
+        
+        default:
+            printf("invalid branch");
+        break;
+    }
+    
+    if(!upgrade)return;
+
+    STATE *curLayer = upgrade;
+    for(int l = 2; l<=maxLayer ; l++){
+        char parentIsGood = (l==2)
+            ,lastLayer = (l==5);
+
+        int curCost = cost.upgrade[4 - (maxLayer-l)];
+        STATE *parentLayer = curLayer - (l-1);
+        STATE *childLayer = curLayer + l;
+
+        for(int up = 0; up<l; up++){
+            STATE *curNode = curLayer + up;
+
+            curNode->price = curCost;
+            curNode->successChance = lastLayer*((index + 1 + up)>=threshold);
+            sprintf(curNode->msg,"up l%di%d",l,up);
+            curNode->whitelisted = 0;//1 if true
+
+            curNode->arg = NULL;
+            curNode->child = lastLayer? NULL : childLayer + up;
+            curNode->childCount = (!lastLayer)*2;
+            
+            curNode->parentCount = parentIsGood? 1 : (0 < up)+(up < l-1);
+            curNode->parent = parentIsGood? goodNode : 
+                (up==0? parentLayer: parentLayer + up - 1);
+            curNode->parentChance = (double *)
+                malloc(sizeof(double)*curNode->parentCount);
+            curNode->parentChance[0] = 
+                parentIsGood?  (!up)*(1-pwin) + (up)*pwin :
+                up == 0? (1-pwin):pwin;
+            curNode->parentChance[1] = 1 - pwin;
+
+            // if(lastLayer){
+            //     curNode->heapNode = HEAP_add(graph.heap,curNode);
+            // } else curNode->heapNode = NULL;
+
+
+        }
+        curLayer = childLayer;
+    }
+    
 }
 
-//for global graph
-typedef struct STATE_array{
-    STATE *ptr;
-    int len;
-} STATE_array;
-struct {
-    STATE_array root;//len is the entire nodes
-
-    //the following are just for references, it doesnt allocate memory
-    struct{
-        STATE_array start;
-        STATE_array combination;
-        STATE_array good;
-        STATE_array upgrade[4];//index = number of good substat -1 
-    } three;
-
-    struct{
-        STATE_array start;
-        STATE_array good;
-        STATE_array upgrade[4];
-    } four;
-} graph;
-void graph_close();
-void graph_init_test();
-
-//----------------------------------------------------------------------------------------------------------
 
 
-//for global graph
+
+
+//deallocate all the memory allocated inside graph
 void graph_close(){
+    HEAP_close(&graph.heap);
+
     for(int i = 0 ; i < graph.root.len ; i++){
         STATE *currentNode = graph.root.ptr+i;
         if(currentNode->arg){
@@ -81,55 +377,28 @@ void graph_close(){
         }
         
     }
-   
-    
     free(graph.root.ptr);
     graph.root.ptr = NULL;
 
-    printf("graph closed\n");
-}
-/* this is still for testing, only filling in the root */
-void graph_init_test(){
-    printf("graph initialized\n");
-    // currently only for the root
-    graph.root.len = 6;
-    graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
-    
-    for(int i = 0 ; i<6; i++){
-        graph.root.ptr[i].successChance = i;
-        graph.root.ptr[i].price = i*100+10;
-        sprintf(graph.root.ptr[i].msg,"%c",'a'+i);
-        
-    }
-
-    //child 
-    int childId[] =    {1,3,4};
-    int childCount[] = {2,3,1};
-    for(int i = 0; i<3; i++){
-        graph.root.ptr[i].childCount = childCount[i];
-        graph.root.ptr[i].child = graph.root.ptr + childId[i];
-    }
-
-    //parent
-    int parentId[] =    {0,0,0,1,1,1};
-    int parentCount[] = {0,1,1,1,2,1};
-    for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
-        STATE *root = graph.root.ptr;
-        STATE *theNode = root+nodeId;
-        theNode->parentCount = parentCount[nodeId];
-        theNode->parent = root + parentId[nodeId];
-        theNode->parentChance = (double*)malloc(sizeof(double)*parentCount[nodeId]);
-        for(int parentIdx = 0; parentIdx<theNode->parentCount; parentIdx++){
-            theNode->parentChance[parentIdx] = nodeId*100 + theNode->parent+parentIdx-root;    
-        }
-    }
-    
-  
-    atexit(graph_close);
+    #ifdef debug_close
+        printf("graph closed\n");
+    #endif
 }
 
-STATE *STATE_getChild(STATE *node, int index){return node->child + index;}
-int STATE_getChildCount(STATE *node){return node->childCount;}
+
+int isMoreEfficient(STATE *a,STATE *b){
+    STATE *ap = (STATE *)a;
+    STATE *bp = (STATE *)b;
+    return (ap->successChance/ap->price) > (bp->successChance/bp->price);
+}
+
+//for printing
+STATE *STATE_getChild(STATE *node, int index){
+    return node->child + index;
+}
+int STATE_getChildCount(STATE *node){
+    return node->childCount;
+}
 void STATE_fprintNodeD(FILE *outFile,STATE *node){
     
     fprintf(outFile,"{");
@@ -178,7 +447,7 @@ void HEAP_NODE_fprintLinkD(FILE *outFile, HEAP_NODE *parentNode, HEAP_NODE *chil
 }
 
 
-
+#undef debug
 #endif
 //drawing a STATE graph
 // graph_init_test();

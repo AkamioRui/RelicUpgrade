@@ -43,8 +43,13 @@ struct CHANCE{
     int substatWeightTotal;
     int substatWeight[12];
     int substatGood[12];//1 if good, 0 if bad
+    int substatGoodCount;
 } chance;
-void iniGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_len){
+int threshold;
+
+//change setting here
+void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_len, int minimumSubstat){
+    threshold = minimumSubstat;
     //cost
         //initial
         cost.create = 100*195;// 1 remain is 195 exp
@@ -113,6 +118,7 @@ void iniGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_le
         break;
         default: printf("invalid piece"); break;
     }
+    
     //chance.substatWeight
     int substatWeight[] = {10,10,10,10,10,10,4,6,6,8,8,8};
     if(mainstat >= 0)substatWeight[mainstat] = 0;
@@ -125,9 +131,15 @@ void iniGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_le
     }
 
     //chance.substatGood
+    chance.substatGoodCount = 0;
     memset(chance.substatGood,0,sizeof(chance.substatGood));
     for(int i = 0; i < substat_len; i++){
-        chance.substatGood[substat[i]] = 1;
+        int substatIdx = substat[i];
+        if(chance.substatWeight[substatIdx]){
+            chance.substatGood[substatIdx] = 1;
+            chance.substatGoodCount++;
+        }
+        
     }
     
     

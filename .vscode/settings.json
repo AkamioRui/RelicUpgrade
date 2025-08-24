@@ -7,7 +7,8 @@
         "iosfwd": "cpp",
         "varargs.h": "c",
         "stdint.h": "c",
-        "relic_state.h": "c"
+        "relic_state.h": "c",
+        "relic_globalconstant.h": "c"
     },
     "code-runner.executorMap": {
 

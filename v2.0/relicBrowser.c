@@ -9,50 +9,46 @@
 
 /* 
 note
-
-heap link has the detail of the parent (to test the parent property)
-
+1. relic STATE add print node to console
 
 */
 
+/* 
+high level operation
+initialize the graph;
+add all node that has steap > 0 into heap;
+while (heap){
+    until root is modified{
+        pop the steapest from heap, and whitelist it (its data is forwarded to all of its parent)
+
+        //print the graph
+        //print the heap
+    }
+    remove all node less steap than the root, blacklist them
+
+    //print the graph
+    //print the heap
+}
+print the graph (whitelisted = green, blackListed = red, unknown = red);
+
+*/
 
 int main(){
-    HEAP_file = json_init("heapData.json");
-   
-    
-    //  {price, successChance, msg[16], whitelisted}
-    STATE a={100,1,"a",0};
-    STATE b={100,2,"b",0};
-    STATE c={100,3,"c",0};
-    STATE d={100,4,"d",0};
-    STATE e={100,5,"e",0};
-   
+    HEAP_file = json_init("HEAP.json");
+    STATE_file = json_init("STATE.json");
 
-    //creating 
-    HEAP *theHeap = HEAP_init((HEAP_Compare *)isMoreEfficient);
-    HEAP_NODE *He =HEAP_add(theHeap,&e);
-    HEAP_NODE *Hb =HEAP_add(theHeap,&b);
-    HEAP_NODE *Ha =HEAP_add(theHeap,&a);
-    HEAP_NODE *Hd =HEAP_add(theHeap,&d);
-    HEAP_NODE *Hc =HEAP_add(theHeap,&c);
-    json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
-    
-    // //normalize test
-    // HEAP_swap(theHeap,He,Ha);
-    // HEAP_swap(theHeap,He,Hb);
-    // json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
-    // HEAP_normalizeDown(theHeap,Ha);
-    
-    //pop test
-    HEAP_pop(theHeap);
+    STAT substat[] = {STAT_CD};
+    initGlobalVariable(PIECE_BODY,STAT_CR,substat,sizeof(substat)/sizeof(STAT),3);
+    graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
+    // FILE *log = fopen("log.c","w");
+    // graph_printState(log);
+    // fclose(log);
+
+    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
 
 
-
-    HEAP_close(&theHeap);
     json_close(HEAP_file);
-
-
-
+    json_close(STATE_file);
     printf("\ndone\n");
     return 0;
 }

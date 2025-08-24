@@ -17,8 +17,8 @@ void __json_printSpanningTree(void* _root, FILE *treeF, FILE *outerF, int *nodeC
 void json_printGraph(
     JSON *json, 
     void *root, 
-    void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
-    ,char *msg
+    JSON_PRINT_FUNC* json_printSpanningTree,
+    char *msg
 );
 
 
@@ -146,8 +146,8 @@ void json_close(JSON *json){
 void json_printGraph(
     JSON *json, 
     void *root, 
-    void (*json_printSpanningTree)(void*, FILE *, FILE *, int *, int *)
-    ,char * msg
+    JSON_PRINT_FUNC* json_printSpanningTree,
+    char * msg
 ){
     FILE *outFile = json->outFile;
     fprintf(outFile,"    {\n");

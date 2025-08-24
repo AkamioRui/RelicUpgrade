@@ -287,7 +287,8 @@ void HEAP_close(HEAP **heapPtr){
     //actual code
     
     HEAP *heap = *heapPtr;
-    HEAP_closeBranch(heap,(heap)->root);
+    
+    if((heap)->root) HEAP_closeBranch(heap,(heap)->root);
     free(heap);
     *heapPtr = NULL;
     __close_printLength;
@@ -669,56 +670,44 @@ void HEAP_normalizeDown(HEAP *heap ,HEAP_NODE *node){
  }
  
 
-
-    
-    
-/* 
-    int 
-    a = 0, 
-    b = 1, 
-    c = 2, 
-    d = 3, 
-    e = 4, 
-    f = 5, 
-    g = 6
-    ;
-    
-    HEAP_NODE *root_a = HEAP_init(&a);
-    HEAP_NODE *node_b = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-    HEAP_NODE *node_c = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-    HEAP_NODE *node_d = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-    HEAP_NODE *node_e = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-    HEAP_NODE *node_f = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-    HEAP_NODE *node_g = (HEAP_NODE *)calloc(1,sizeof(HEAP_NODE));
-
-    node_b->data = &b;
-    node_c->data = &c;
-    node_d->data = &d;
-    node_e->data = &e;
-    node_f->data = &f;
-    node_g->data = &g;
-   
-    root_a->left = node_b;
-    root_a->right = node_c;
-    node_b->left = node_d;
-    node_b->right = node_e;
-    node_c->left = node_f;
-    node_c->right = node_g;
-
-    root_a->length = 7;
-
-
-    int h = 2;
-    HEAP_add(root_a,&h,lessThan);
-
-    free(root_a);
-    free(node_b);
-    free(node_c);
-    free(node_d);
-    free(node_e);
-    free(node_f);
-    free(node_g);
-
-*/
 #undef debugging
 #endif
+
+/* 
+    HEAP_file = json_init("heapData.json");
+   
+    
+    //  {price, successChance, msg[16], whitelisted}
+    STATE a={100,1,"a",0};
+    STATE b={100,2,"b",0};
+    STATE c={100,3,"c",0};
+    STATE d={100,4,"d",0};
+    STATE e={100,5,"e",0};
+   
+
+    //creating 
+    HEAP *theHeap = HEAP_init((HEAP_Compare *)isMoreEfficient);
+    HEAP_NODE *He =HEAP_add(theHeap,&e);
+    HEAP_NODE *Hb =HEAP_add(theHeap,&b);
+    HEAP_NODE *Ha =HEAP_add(theHeap,&a);
+    HEAP_NODE *Hd =HEAP_add(theHeap,&d);
+    HEAP_NODE *Hc =HEAP_add(theHeap,&c);
+    json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
+    
+    // //normalize test
+    // HEAP_swap(theHeap,He,Ha);
+    // HEAP_swap(theHeap,He,Hb);
+    // json_printGraph(HEAP_file,theHeap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"swap");
+    // HEAP_normalizeDown(theHeap,Ha);
+    
+    //pop test
+    HEAP_pop(theHeap);
+
+
+
+    HEAP_close(&theHeap);
+    json_close(HEAP_file);
+
+
+
+*/
