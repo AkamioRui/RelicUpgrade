@@ -24,8 +24,8 @@ const d3 =d3Raw;
 
 
 // drawGraphD3(jsondata,{width:20,height:20,padding:20});
-drawGraphD3(await (await fetch("STATE.json")).json());
-drawGraphD3(await (await fetch("HEAP.json")).json());
+drawGraphD3_STATE(await (await fetch("result/STATE.json")).json());
+drawGraphD3(await (await fetch("result/HEAP.json")).json());
 let backButton = d3.select("div > button.back");
 let backButtons = d3.selectAll("div > button.back");
 let backfuncs = [];
@@ -414,12 +414,25 @@ function drawGraphD3(jsondata,_nodeSetting = null){
 
 }
 
+
+/**  
+ * @typedef {object} STATENODE
+ * @property {string} detail
+ * @property {number} price
+ * @property {number} succesR
+ * @property {number} accept
+ * @property {number} inHeap
+ * */ 
+/**  
+ * @typedef {object} STATELINK
+ * @property {number} chance
+ * */ 
 /**
  * 
- * @param {{treeLinks:TreeLink<any,any>[],outerLinks:OuterLink<any>[],msg:string}[]} jsondata 
+ * @param {{treeLinks:TreeLink<STATELINK,STATENODE>[],outerLinks:OuterLink<any>[],msg:string}[]} jsondata 
  * @param {{width:number,height:number,padding:number}} nodeSetting 
  */
-function drawGraphD3_STATE(jsondata,_nodeSetting = null){
+function drawGraphD3_STATE(jsondata){
 
   //common element
   const all = d3.select('body').append('div');
@@ -437,31 +450,31 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
 
   //create some constant variable
   //#region 
-  /** @type {{width:number,height:number,padding:number}} */
+  /** @type {{width:number,height:number,padding:number,fill:string[]}} */
   let nodeSetting;
-  if(!_nodeSetting){
-    nodeSetting = {
-      width : 110,
-      height : Object.entries( jsondata[0].treeLinks[0].nodeData).length * 17,
-      padding : 20,
-    }
-  } else nodeSetting = _nodeSetting;
+  nodeSetting = {
+    width : 110,
+    height : 4 * 17,
+    padding : 20,
+    fill: ["white","yellow","lime"]
+  }
   
-  /** @type {d3.StratifyOperator<TreeLink<any,any>>} */
+  
+  /** @type {d3.StratifyOperator<TreeLink<STATELINK,STATENODE>>} */
   const json2heirarchy = d3.stratify();
     json2heirarchy
     .id(d=>d.id)
     .parentId(d=>d.parentId)
   ;
-  /** @type {d3.TreeLayout<TreeLink<any,any>>} */
+  /** @type {d3.TreeLayout<TreeLink<STATELINK,STATENODE>>} */
   const treelayout = d3.tree()
     .nodeSize([nodeSetting.width+nodeSetting.padding*2,nodeSetting.height*2])
   ; 
   let currentGraph = 0;
 
-  /** @type {(d3.HierarchyPointLink<TreeLink<any,any>>&{linkData:any})[]} */
+  /** @type {(d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>>&{linkData:any})[]} */
   let treeLinks;
-  /** @type {d3.HierarchyNode<TreeLink<any,any>>[]} */
+  /** @type {d3.HierarchyNode<TreeLink<STATELINK,STATENODE>>[]} */
   let treeNodes;
   function getGraphData(){
     let root = json2heirarchy(jsondata[currentGraph].treeLinks);
@@ -517,10 +530,11 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
 
 
   const linkDataProperty = Object.entries( jsondata[0].treeLinks[0].linkData).map(v=>v[0]);
-  const nodeDataProperty = Object.entries( jsondata[0].treeLinks[0].nodeData).map(v=>v[0]);
+  // const nodeDataProperty = Object.entries( jsondata[0].treeLinks[0].nodeData).map(v=>v[0]);
+  const nodeDataProperty = ["detail","price","succesR","accept"];
   //drawLinks
   //#region 
-  /** @type {d3.Link< any, d3.HierarchyPointLink<TreeLink<any,any>, d3.HierarchyNode<TreeLink<any,any> >} */
+  /** @type {d3.Link< any, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>, d3.HierarchyNode<TreeLink<STATELINK,STATENODE> >} */
   const linkGenerator = d3.linkVertical()
     .source(d=>d.source)
     .target(d=>d.target)
@@ -528,7 +542,7 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
     .y(d=>d.y)
   ;
   /**
-   * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<any,any>>, SVGGElement, any>} myselection 
+   * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>>, SVGGElement, any>} myselection 
    */
   function initLink(myselection){
     let path = myselection.append('path') 
@@ -553,7 +567,7 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
     
   }
   /**
-   * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<any,any>>, SVGGElement, any>} myselection 
+   * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>>, SVGGElement, any>} myselection 
    * @param {string} color 
    */
   function updateLink(myselection,color){
@@ -600,7 +614,7 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
   //#region 
   /** @typedef {SVGGElement & {oldNodeData:any,modified:number}} SVGNodeElement */
   /**
-   * @param { d3.Selection<SVGGElement, d3.HierarchyNode<TreeLink<any,any>>, SVGGElement, any>} selection 
+   * @param { d3.Selection<SVGGElement, d3.HierarchyNode<TreeLink<STATELINK,STATENODE>>, SVGGElement, any>} selection 
    */
   function initNode(selection){
     // selection
@@ -613,8 +627,9 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
       .attr('y'       ,-nodeSetting.height/2)
       .attr('width'   ,nodeSetting.width)
       .attr('height'  ,nodeSetting.height)
-      .attr('fill','white')
+      // .attr('fill','white')
       // .attr('stroke',color)
+      .attr('stroke-width',3)
 
     let text = selection.append('text')
       .attr('dominant-baseline','middle')
@@ -628,7 +643,7 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
     });
   }
   /**
-     * @param { d3.Selection<SVGNodeElement , d3.HierarchyNode<TreeLink<any,any>>, SVGGElement, any> } selection 
+     * @param { d3.Selection<SVGNodeElement , d3.HierarchyNode<TreeLink<STATELINK,STATENODE>>, SVGGElement, any> } selection 
      * @param {string} colorModiefied 
      * @param {string} colorStable 
      */
@@ -649,6 +664,12 @@ function drawGraphD3_STATE(jsondata,_nodeSetting = null){
       })
     ;
     selection.select('rect')
+      .attr('fill',(d)=>{
+        //[unknown,inheap,whitelisted]
+        if(d.data.nodeData.accept)return nodeSetting.fill[2];
+        else if(d.data.nodeData.inHeap)return nodeSetting.fill[1];
+        else return nodeSetting.fill[0];
+      })
       .attr('stroke',function (){
         
         if(this.parentNode.modified)return colorModiefied;

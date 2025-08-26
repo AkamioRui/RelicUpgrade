@@ -515,6 +515,7 @@ void STATE_fprintNodeD(FILE *outFile,STATE *node){
     fprintf(outFile,",\"price\":%.2lf"  ,node->price);
     fprintf(outFile,",\"succesR\":%.2lf",node->successChance);
     fprintf(outFile,",\"accept\":%d"    ,node->whitelisted);
+    fprintf(outFile,",\"inHeap\":%d"    ,node->heapNode != NULL);
     fprintf(outFile,"}");
 }
 void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
@@ -547,7 +548,6 @@ void HEAP_NODE_fprintNodeD(FILE *outFile,HEAP_NODE *node){
     fprintf(outFile,",\"price\":%.2lf"  ,node_data->price);
     fprintf(outFile,",\"succesR\":%.2lf",node_data->successChance);
     fprintf(outFile,",\"accept\":%d"    ,node_data->whitelisted);
-    // fprintf(outFile,",\"inHeap\":%d"    ,node_data->heapNode != NULL);
     fprintf(outFile,"}");
 
 }

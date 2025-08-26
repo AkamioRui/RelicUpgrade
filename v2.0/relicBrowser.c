@@ -34,8 +34,8 @@ print the graph (whitelisted = green, blackListed = red, unknown = red);
 */
 
 int main(){
-    HEAP_file = json_init("HEAP.json");
-    STATE_file = json_init("STATE.json");
+    HEAP_file = json_init("result/HEAP.json");
+    STATE_file = json_init("result/STATE.json");
 
     STAT substat[] = {STAT_CD};
     initGlobalVariable(PIECE_BODY,STAT_CR,substat,sizeof(substat)/sizeof(STAT),3);
