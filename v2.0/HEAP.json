@@ -9,5 +9,82 @@
         "outerLinks":[
 
         ]
+    },
+    {
+        "msg":"propagated up 5,4",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 5,2","price":7800.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 5,2"},"nodeData":{ "detail":"up 5,3","price":7800.00,"succesR":1.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 5,2"},"nodeData":{ "detail":"up 4,3","price":5850.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 5,2",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 5,3","price":7800.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 5,3"},"nodeData":{ "detail":"up 4,2","price":9750.00,"succesR":0.75,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 5,3"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}},
+            { "id":3,"parentId":1,"linkData":{"msg":"up 4,2"},"nodeData":{ "detail":"up 4,3","price":5850.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 5,3",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 4,3","price":11700.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 4,3"},"nodeData":{ "detail":"up 4,2","price":11700.00,"succesR":1.00,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 4,3"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 4,3",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 4,2","price":11700.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 4,2"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 4,2"},"nodeData":{ "detail":"up 3,2","price":4925.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 4,2",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 3,2","price":13700.00,"succesR":1.00,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 3,2"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 3,2"},"nodeData":{ "detail":"up 3,1","price":4925.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 3,2",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 2,1","price":4445.00,"succesR":0.25,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 2,1"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}},
+            { "id":2,"parentId":0,"linkData":{"msg":"up 2,1"},"nodeData":{ "detail":"up 3,1","price":4925.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 2,1",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 3,1","price":4925.00,"succesR":0.25,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 3,1"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
     } 
 ]

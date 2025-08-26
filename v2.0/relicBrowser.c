@@ -43,6 +43,7 @@ int main(){
     /* partial */
     //initialize the graph; 
     graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
+    while(graph_forwardPeak()<1){}
    
     // FILE *log = fopen("log.c","w");
     // HEAP_NODE_print(graph.heap->root);
