@@ -34,23 +34,34 @@ print the graph (whitelisted = green, blackListed = red, unknown = red);
 */
 
 int main(){
-    HEAP_file = json_init("result/HEAP.json");
-    STATE_file = json_init("result/STATE.json");
+    // HEAP_file = json_init("result/HEAP.json");
+    // STATE_file = json_init("result/STATE.json");
 
-    STAT substat[] = {STAT_CD};
-    initGlobalVariable(PIECE_BODY,STAT_CR,substat,sizeof(substat)/sizeof(STAT),3);
+    STAT substat[] = {STAT_CD,STAT_ATKP,STAT_SPD};
+    initGlobalVariable(
+        PIECE_BODY
+        ,STAT_CR
+        ,substat
+        ,sizeof(substat)/sizeof(STAT)
+        ,6
+    );
+    
+    struct COST cost2;
+    struct CHANCE chance2;
+    memcpy(&cost2,&cost,sizeof(struct COST));
+    memcpy(&chance2,&chance,sizeof(struct CHANCE));
 
     /* partial */
     //initialize the graph; 
-    graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
-    while(1){
-        if(graph.heap->root == NULL){
-            printf("!!!heap is NULL\n");//ment all node is included, if not then there is some elimination
-            break;
-        }
-        if(isMoreEfficient(graph.root.ptr,graph.heap->root->data)) break;
-        graph_propagate_peak();
-    }
+    // graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
+    // while(1){
+    //     if(graph.heap->root == NULL){
+    //         printf("!!!heap is NULL\n");//ment all node is included, if not then there is some elimination
+    //         break;
+    //     }
+    //     if(isMoreEfficient(graph.root.ptr,graph.heap->root->data)) break;
+    //     graph_propagate_peak();
+    // }
    
     
 
@@ -58,9 +69,9 @@ int main(){
 
     
 
-    graph_close();
-    json_close(STATE_file);
-    json_close(HEAP_file);
+    // graph_close();
+    // json_close(STATE_file);
+    // json_close(HEAP_file);
     printf("\ndone\n");
     return 0;
 }

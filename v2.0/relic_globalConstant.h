@@ -39,13 +39,17 @@ struct COST{
     double accept;
 } cost;
 struct CHANCE{
-    double mainstat;
+    double mainstat;//chance for the mainstat to be correct
     int substatWeightTotal;
-    int substatWeight[12];
-    int substatGood[12];//1 if good, 0 if bad
+    int substatWeight[12];//each susbtat weight, 0 if mainstat
+    
+    int substatGood[12];//used as much as its length, I dont want to bother deallocating
     int substatGoodCount;
+    int substatBad[12];//used as much as its length, I dont want to bother deallocating
+    int substatBadCount;
 } chance;
 int threshold;
+
 
 //change setting here
 void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_len, int minimumSubstat){
@@ -58,7 +62,6 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
         cost.upgrade[2] = 10000;
         cost.upgrade[3] = 19500;
         cost.upgrade[4] = 39000;
-    
         //refund 
         cost.create -= 1500;
         cost.accept = 1500;//all sum of refund
@@ -119,27 +122,30 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
         default: printf("invalid piece"); break;
     }
     
-    //chance.substatWeight
-    int substatWeight[] = {10,10,10,10,10,10,4,6,6,8,8,8};
-    if(mainstat >= 0)substatWeight[mainstat] = 0;
-    memcpy(chance.substatWeight,substatWeight,12*sizeof(int));
-    
-    //chance.substatweightTotal 
+    //chance.substatWeight and chance.substatweightTotal 
+    const substatWeight[] = {10,10,10,10,10,10,4,6,6,8,8,8};
     chance.substatWeightTotal = 0;
     for(int i = 0; i<sizeof(substatWeight)/sizeof(int); i++){
-        chance.substatWeightTotal += substatWeight[i];
+        chance.substatWeight[i] = 
+        substatWeight[i]*(mainstat != i);
+        chance.substatWeightTotal += chance.substatWeight[i];
     }
 
-    //chance.substatGood
+    //chance.substatGood and chance.substatBad, with their count
+    //prep: foreach chance.substatGood entry, its index be treated as STAT and value is (goodsub?)
+    int *substat_is_Good = chance.substatGood;//borrowing 
+    memset(substat_is_Good,0,sizeof(chance.substatGood));
+    for(int i = 0 ; i<substat_len; i++){
+        substat_is_Good[substat[i]] = 1;
+    }
+    
     chance.substatGoodCount = 0;
-    memset(chance.substatGood,0,sizeof(chance.substatGood));
-    for(int i = 0; i < substat_len; i++){
-        int substatIdx = substat[i];
-        if(chance.substatWeight[substatIdx]){
-            chance.substatGood[substatIdx] = 1;
-            chance.substatGoodCount++;
-        }
-        
+    chance.substatBadCount = 0;
+    for(int i = 0; i < 12; i++){//for every substat
+        if(i != mainstat){
+            if(!substat_is_Good[i])chance.substatBad[chance.substatBadCount++] = i;    
+            else chance.substatGood[chance.substatGoodCount++] = i;
+        } else continue;
     }
     
     

@@ -110,7 +110,103 @@ int graph_propagate_peak();
 int graph_propagate_from(STATE *node,double price, double successChance);
 
 
-void graph_trimWhitelist();//from the top, if a whitelisted node doesnt have a whitelisted parent, then it no longer be whitelisted
+//from the top, if a whitelisted node doesnt have a whitelisted parent, then it no longer be whitelisted
+void graph_trimWhitelist();
+
+void graph_init(){
+    memset(&graph,0,sizeof(graph));
+
+    //assigning heap
+    graph.heap = HEAP_init((HEAP_Compare *)isMoreEfficient);
+    
+    //assigning len
+    graph.root.len = 1;
+    graph.three.start.len = 1;
+    graph.four.start.len = 1;
+    for(int i = 0; i<3; i++){
+        /*  */// graph.three.combination[0].len = ;
+    } 
+    graph.three.good.len = chance.substatGoodCount;
+    graph.four.good.len = chance.substatGoodCount;
+    for(int i = graph.three.good.len-1; i>=0; i++){
+        graph.three.upgrade[i].len =5*6/2-1; 
+    }
+    for(int i = graph.four.good.len-1; i>=0; i++){
+        graph.four.upgrade[i].len =6*7/2-1; 
+    }
+    
+    
+    graph.root.len += 
+        graph.three.start.len
+    + graph.three.combination[0].len
+    + graph.three.combination[1].len
+    + graph.three.combination[2].len
+    + graph.three.good.len
+    + graph.three.upgrade[0].len
+    + graph.three.upgrade[1].len
+    + graph.three.upgrade[2].len
+    + graph.three.upgrade[3].len
+    + graph.four.start.len
+    + graph.four.good.len
+    + graph.four.upgrade[0].len
+    + graph.four.upgrade[1].len
+    + graph.four.upgrade[2].len
+    + graph.four.upgrade[3].len ;
+    
+    
+    //assiging ptr
+    graph.root.ptr = (STATE *)calloc(graph.root.len,sizeof(STATE));
+    STATE *availablePointer = graph.root.ptr + 1;
+    #define giveSpaceTo(checkpoint) if(checkpoint.len){\
+        checkpoint.ptr = availablePointer;\
+        availablePointer += checkpoint.len;\
+    }    
+    giveSpaceTo(graph.three.start)
+    giveSpaceTo(graph.four.start)
+    giveSpaceTo(graph.three.combination[0])
+    giveSpaceTo(graph.three.combination[1])
+    giveSpaceTo(graph.three.combination[2])
+    giveSpaceTo(graph.three.good)
+    giveSpaceTo(graph.four.good)
+    giveSpaceTo(graph.three.upgrade[0])
+    giveSpaceTo(graph.three.upgrade[1])
+    giveSpaceTo(graph.three.upgrade[2])
+    giveSpaceTo(graph.three.upgrade[3])
+    giveSpaceTo(graph.four.upgrade[0])
+    giveSpaceTo(graph.four.upgrade[1])
+    giveSpaceTo(graph.four.upgrade[2])
+    giveSpaceTo(graph.four.upgrade[3])
+    
+    #undef giveSpaceTo
+
+    graph.root.ptr->price = cost.create;
+    graph.root.ptr->successChance = 0;
+    sprintf(graph.root.ptr->msg,"root");
+    graph.root.ptr->whitelisted = 0;//always 0
+    
+    graph.root.ptr->arg = NULL;
+    graph.root.ptr->child = graph.three.start.ptr;
+    graph.root.ptr->childCount = 2;
+    
+    graph.root.ptr->parentCount = 0;
+    graph.root.ptr->parent = NULL;
+    graph.root.ptr->parentChance = NULL;
+    graph.root.ptr->heapNode = NULL;
+    
+
+    //modified for testing
+    graph.root.ptr->child = graph.three.upgrade[0].ptr;
+    graph.root.ptr->childCount = 2;
+    //to avoid segfault, three.good[0] = root
+    graph.three.good.ptr = graph.root.ptr;
+    // graph_init_upgrade(3, 0, goodSubCount/4.f);
+    
+
+    
+    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
+    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
+    printf("graph initialized\n");
+}
 
 
 
