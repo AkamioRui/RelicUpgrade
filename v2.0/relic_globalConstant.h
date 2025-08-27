@@ -123,7 +123,7 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
     }
     
     //chance.substatWeight and chance.substatweightTotal 
-    const substatWeight[] = {10,10,10,10,10,10,4,6,6,8,8,8};
+    const int substatWeight[] = {10,10,10,10,10,10,4,6,6,8,8,8};
     chance.substatWeightTotal = 0;
     for(int i = 0; i<sizeof(substatWeight)/sizeof(int); i++){
         chance.substatWeight[i] = 

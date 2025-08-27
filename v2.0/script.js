@@ -687,7 +687,13 @@ function drawGraphD3_STATE(jsondata){
     /*  */text.select('tspan.'+'succesR')
     .text(d=>(d.data.nodeData['succesR']).toFixed(4))
     /*  */text.select('tspan.'+'accept')
-    .text(d=>(d.data.nodeData['succesR']/d.data.nodeData['price']*1000000).toFixed(2))
+    .text(d=>{
+      if(d.data.nodeData['price'] != 0){
+        return (d.data.nodeData['succesR']/d.data.nodeData['price']*1000000).toFixed(2)
+      } else {
+        return "NaN";
+      }
+    })
     
   }
 

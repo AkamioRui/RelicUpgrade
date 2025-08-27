@@ -9,28 +9,19 @@
 #include "relic_JSON.h"
 
 
-/** note to self:
- * 2. generalize this to support any TYPE of data
- * 4. place __json_printSpanningTree_HEAP_NODE in HEAP
- * 
- * 
- *  */ 
-
-
-
 #define HEAP_DATA void 
 
 //debugging 
-#define debugging
+// #define debugging
 #ifdef debugging
     #define debugging_init
     #define debugging_close 
-    #define debugging_closeBranch
-    #define debugging_add 
-    // #define debugging_normalizeDown
-    // #define debugging_normalizeUp
-    // #define debugging_swap
-    #define debugging_HEAP_pop
+    /* js */#define debugging_closeBranch
+    /* js */#define debugging_add 
+    // /* js */#define debugging_normalizeDown
+    // /* js */#define debugging_normalizeUp
+    // /* js */#define debugging_swap
+    /* js */#define debugging_HEAP_pop
 
     #define HEAP_NODE_print(node){\
         printf(#node":{");\

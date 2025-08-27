@@ -8,6 +8,25 @@
 #include "relic_HEAP.h"
 #include "relic_globalConstant.h"
 
+#define debug
+#ifdef debug
+    #define debug_close_log
+    #define debug_init
+        #define debug_init_log
+        #define debug_init_print
+    #define debug_init_root_log
+    #define debug_init_upgrade_log
+    #define debug_propagate_peak
+        #define debug_propagate_peak_log
+        #define debug_propagate_peak_print
+
+    FILE *logfile;
+    #define __printHeap
+    // #define __printHeap json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
+    #define __printGraph
+    #define __printGraph json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,tmp);
+#endif
+
 typedef enum STATUS{
     STATUS_BANNED = -1,
     STATUS_UNKOWN = 0,
@@ -34,7 +53,7 @@ typedef struct STATE_array{
     STATE *ptr;
     int len;
 } STATE_array;
-struct {
+struct GRAPH{
     //{
     //     root
     //     ,three.start //1 node
@@ -68,13 +87,6 @@ struct {
 JSON *STATE_file;
 
 
-#define debug
-#ifdef debug
-    #define debug_close
-    #define debug_init_upgrade
-    #define int_grpropagate_peak//return whether graph.root is modified
-
-#endif
 
 
 
@@ -98,7 +110,7 @@ int isMoreEfficient(void *a,void *b);
 //count the number of allocated memory needed, then allocate the graph
 //resposible only for completing all graph data, not each indiviual node
 void graph_init();
-void graph_init_root(); //fill in all detail for all node in start
+void graph_init_root(); 
 void graph_init_start(int branch); //fill in all detail for all node in start
 void graph_init_combination();
 void graph_init_good(int branch);
@@ -123,15 +135,22 @@ void graph_init(){
     graph.root.len = 1;
     graph.three.start.len = 1;
     graph.four.start.len = 1;
-    for(int i = 0; i<3; i++){
-        /*  */// graph.three.combination[0].len = ;
+    for(int i = 0, G=chance.substatGoodCount, k1 = G; i<3; i++){//k1 = c(G,1)
+        graph.three.combination[i].len = k1;
+        k1 = k1 * (G-i-1)/(i+2);// =(G-1)/2
     } 
-    graph.three.good.len = chance.substatGoodCount;
-    graph.four.good.len = chance.substatGoodCount;
-    for(int i = graph.three.good.len-1; i>=0; i++){
+    for(int i = 2, B=chance.substatBadCount, k2 = 1; i>=0; i--){//k1 = c(B,0)
+        graph.three.combination[i].len *= k2;
+        k2 = k2 * (B+i-2)/(3-i);// =B/1
+    } 
+    graph.three.good.len = chance.substatGoodCount < 4?
+    chance.substatGoodCount:4;
+    graph.four.good.len = chance.substatGoodCount < 4?
+    chance.substatGoodCount:4;
+    for(int i = graph.three.good.len-1; i>=0; i--){
         graph.three.upgrade[i].len =5*6/2-1; 
     }
-    for(int i = graph.four.good.len-1; i>=0; i++){
+    for(int i = graph.four.good.len-1; i>=0; i--){
         graph.four.upgrade[i].len =6*7/2-1; 
     }
     
@@ -176,9 +195,62 @@ void graph_init(){
     giveSpaceTo(graph.four.upgrade[1])
     giveSpaceTo(graph.four.upgrade[2])
     giveSpaceTo(graph.four.upgrade[3])
-    
     #undef giveSpaceTo
 
+    
+
+    
+    graph_init_root();
+    // graph_init_start(3); 
+    // graph_init_start(4); 
+    // graph_init_combination();
+    // graph_init_good(3);
+    // graph_init_good(4);
+    // 
+    // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
+    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
+    // }
+    // for(int index = 0, branch = 4; index < graph.four.good.len; index++){
+    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
+    // }
+    
+
+    #ifdef debug_init
+        char *tmp = "created";
+        #ifdef debug_init_print
+            __printHeap;
+            __printGraph;
+        #endif
+        #undef debug_init_print
+
+        #ifdef debug_init_log
+            #define __printData(node)\
+            printf("%3d,%14llu:"#node"\n",graph.node.len,graph.node.ptr-graph.root.ptr);
+            __printData(root);
+            __printData(three.start);
+            __printData(four.start);
+            __printData(three.combination[0]);
+            __printData(three.combination[1]);
+            __printData(three.combination[2]);
+            __printData(three.good);
+            __printData(four.good);
+            __printData(three.upgrade[0]);
+            __printData(three.upgrade[1]);
+            __printData(three.upgrade[2]);
+            __printData(three.upgrade[3]);
+            __printData(four.upgrade[0]);
+            __printData(four.upgrade[1]);
+            __printData(four.upgrade[2]);
+            __printData(four.upgrade[3]);
+            #undef __printData
+            printf("graph initialized\n");
+        #endif
+        #undef debug_init_log
+    #endif
+    #undef debug_init
+    
+}
+void graph_init_root(){
     graph.root.ptr->price = cost.create;
     graph.root.ptr->successChance = 0;
     sprintf(graph.root.ptr->msg,"root");
@@ -193,21 +265,11 @@ void graph_init(){
     graph.root.ptr->parentChance = NULL;
     graph.root.ptr->heapNode = NULL;
     
-
-    //modified for testing
-    graph.root.ptr->child = graph.three.upgrade[0].ptr;
-    graph.root.ptr->childCount = 2;
-    //to avoid segfault, three.good[0] = root
-    graph.three.good.ptr = graph.root.ptr;
-    // graph_init_upgrade(3, 0, goodSubCount/4.f);
-    
-
-    
-    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
-    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
-    printf("graph initialized\n");
-}
-
+    #ifdef debug_init_root_log
+        printf("graph root initialized\n");
+    #endif 
+    #undef debug_init_root_log
+} 
 
 
 #ifdef debug
@@ -349,7 +411,7 @@ void graph_init(){
 
         
         json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"created");
-        json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
+        // json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"created");
         printf("graph initialized\n");
     }
 
@@ -435,15 +497,20 @@ void graph_init_upgrade(int branch, int index, double pwin){
         curLayer = childLayer;
     }
 
-    #ifdef debug_init_upgrade
+    #ifdef debug_init_upgrade_log
         printf("graph.%d.upgrade[%d] initialized\n",branch,index);
     #endif
+    #undef debug_init_upgrade_log
 }
 
 //deallocate all the memory allocated inside graph
 void graph_close(){
     HEAP_close(&graph.heap);
 
+    if(!graph.root.ptr){
+        printf("graph state root empty\n");
+        return;
+    }
     STATE *node = graph.root.ptr;
     for(int i = 0 ; i < graph.root.len ; i++){
         if(node[i].arg){
@@ -461,9 +528,10 @@ void graph_close(){
     free(graph.root.ptr);
     graph.root.ptr = NULL;
 
-    #ifdef debug_close
+    #ifdef debug_close_log
         printf("graph closed\n");
     #endif
+    #undef debug_close_log
 }
 
 /* ---follow up propagation still untested */
@@ -535,13 +603,21 @@ int graph_propagate_peak(){
     rootIsModified += graph_propagate_from(peakNode,peakPrice,peakRate);
   
     
-    #ifdef int_grpropagate_peak//return whether graph.root is modified
-    char tmp[100];
-    sprintf(tmp,"propagated %s",peakNode->msg);
-    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,tmp);
-    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
-    printf("%s\n",tmp);
+    #ifdef debug_propagate_peak
+        char tmp[100];
+        sprintf(tmp,"propagated %s",peakNode->msg);
+        #ifdef debug_propagate_peak_log 
+            printf("%s\n",tmp);
+        #endif 
+        #undef debug_propagate_peak_log
+
+        #ifdef debug_propagate_peak_print 
+            __printHeap;
+            __printGraph;
+        #endif 
+        #undef debug_propagate_peak_print
     #endif 
+    #undef debug_propagate_peak
 
     
     return rootIsModified;
@@ -577,6 +653,15 @@ void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
         fprintf(outFile,"{\"chance\":0}");
         return;
     }
+    #ifdef debug
+        if(childNode->parentChance == NULL) {
+            fprintf(
+                outFile
+                ,"{\"chance\":\"TEMP\"}"
+            );
+            return;
+        }
+    #endif
     fprintf(
         outFile,
         "{\"chance\":%.2lf}"
@@ -609,7 +694,6 @@ void HEAP_NODE_fprintLinkD(FILE *outFile, HEAP_NODE *parentNode, HEAP_NODE *chil
     if(childNode->parent)fprintf(outFile,"{\"msg\":\"%s\"}",((STATE*)childNode->parent->data)->msg);
     else fprintf(outFile,"{\"msg\":\"_\"}");
 }
-
 
 #undef debug
 #endif
