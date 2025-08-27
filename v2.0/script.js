@@ -681,7 +681,13 @@ function drawGraphD3_STATE(jsondata){
       text.select('tspan.'+property)
       .text(d=>d.data.nodeData[property])
     });
-   
+    // /** @type {STATENODE} */
+    /*  */text.select('tspan.'+'price')
+    .text(d=>(d.data.nodeData['price']).toFixed(0))
+    /*  */text.select('tspan.'+'succesR')
+    .text(d=>(d.data.nodeData['succesR']).toFixed(4))
+    /*  */text.select('tspan.'+'accept')
+    .text(d=>(d.data.nodeData['succesR']/d.data.nodeData['price']*1000000).toFixed(2))
     
   }
 

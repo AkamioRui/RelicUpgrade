@@ -43,14 +43,20 @@ int main(){
     /* partial */
     //initialize the graph; 
     graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
-    while(graph_forwardPeak()<1){}
+    while(1){
+        if(graph.heap->root == NULL){
+            printf("!!!heap is NULL\n");//ment all node is included, if not then there is some elimination
+            break;
+        }
+        if(isMoreEfficient(graph.root.ptr,graph.heap->root->data)) break;
+        graph_propagate_peak();
+    }
    
-    // FILE *log = fopen("log.c","w");
-    // HEAP_NODE_print(graph.heap->root);
-    // graph_printState(log);
-    // fclose(log);
+    
 
 
+
+    
 
     graph_close();
     json_close(STATE_file);
@@ -58,6 +64,12 @@ int main(){
     printf("\ndone\n");
     return 0;
 }
+/* 
+    // FILE *log = fopen("log.c","w");
+    // HEAP_NODE_print(graph.heap->root);
+    // graph_printState(log);
+    // fclose(log);
+*/
 /* 
         ],
         "outerLinks":[

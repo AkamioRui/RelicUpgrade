@@ -86,5 +86,43 @@
         "outerLinks":[
 
         ]
+    },
+    {
+        "msg":"propagated up 3,1",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 4,1","price":5850.00,"succesR":0.25,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 4,1"},"nodeData":{ "detail":"up 2,0","price":2251.25,"succesR":0.06,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 4,1",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 2,0","price":3348.13,"succesR":0.11,"accept":0}},
+            { "id":1,"parentId":0,"linkData":{"msg":"up 2,0"},"nodeData":{ "detail":"up 3,0","price":3462.50,"succesR":0.06,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 2,0",
+        "treeLinks":[
+            { "id":0,"parentId":"","linkData":{"msg":"_"},"nodeData":{ "detail":"up 3,0","price":3462.50,"succesR":0.06,"accept":0}}
+        ],
+        "outerLinks":[
+
+        ]
+    },
+    {
+        "msg":"propagated up 3,0",
+        "treeLinks":[
+
+        ],
+        "outerLinks":[
+
+        ]
     } 
 ]

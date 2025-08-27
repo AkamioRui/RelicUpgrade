@@ -72,7 +72,7 @@ JSON *STATE_file;
 #ifdef debug
     #define debug_close
     #define debug_init_upgrade
-    #define int_graph_forwardPeak//return whether graph.root is modified
+    #define int_grpropagate_peak//return whether graph.root is modified
 
 #endif
 
@@ -106,8 +106,11 @@ void graph_init_upgrade(int branch, int index, double pwin);
 void graph_close();
 
 //return whether graph.root is modified
-int graph_forwardPeak();
-void graph_eliminateDefective();
+int graph_propagate_peak();
+int graph_propagate_from(STATE *node,double price, double successChance);
+
+
+void graph_trimWhitelist();//from the top, if a whitelisted node doesnt have a whitelisted parent, then it no longer be whitelisted
 
 
 
@@ -367,7 +370,7 @@ void graph_close(){
     #endif
 }
 
-
+/* ---follow up propagation still untested */
 //will propagate price and chance from node to its parent. note that node's price and chance is irrelevant, only its parents and their chance
 int graph_propagate_from(STATE *node,double price, double successChance){   
     int rootIsModified = 0;
@@ -416,34 +419,13 @@ int graph_propagate_from(STATE *node,double price, double successChance){
             }
         }
         
-        
-        
-        
-        // if(parent->whitelisted){//node is whitelisted, it is not and must not be in the heap 
-            
-        // } else {//node is not whitelisted, it must be placed in the heap and its position must be updated
-        //     HEAP_NODE *parentHNode = parent->heapNode;
-        //     if(parentHNode) {//parent heap node location is updated
-        //         if(parentHNode == graph.heap->root 
-        //             || isMoreEfficient((STATE *)parentHNode->parent->data,(STATE *)parentHNode->data)){
-        //             HEAP_normalizeDown(graph.heap,parentHNode);
-        //         } else {
-        //             HEAP_normalizeUp(graph.heap,parentHNode);
-        //         }
-        //     } else {//parent is not on the heap
-        //         parent->heapNode = HEAP_add(graph.heap, parent); 
-        //     }
-        // }
-
-        
-        
-        
     }
 
     return rootIsModified;
 }
+
 //return whether graph.root is modified
-int graph_forwardPeak(){
+int graph_propagate_peak(){
     int rootIsModified = 0;
 
     //pop peak
@@ -455,36 +437,9 @@ int graph_forwardPeak(){
     double peakPrice = peakNode->price;
     double peakRate = peakNode->successChance;
     rootIsModified += graph_propagate_from(peakNode,peakPrice,peakRate);
-   
-    // for(int i = 0 ; i<peakNode->parentCount; i++){
-    //     STATE *parent = peakNode->parent + i;     
-    //     double chance = peakNode->parentChance[i];
-
-    //     //forward peak into each parents
-    //     parent->price += peakPrice * chance;
-    //     parent->successChance += peakRate * chance;
-
-    //     //if not already in heap, add peak parent to heap
-    //     HEAP_NODE *parentHNode = parent->heapNode;
-    //     if(parentHNode) {//parent heap node changes
-    //         if(parentHNode == graph.heap->root 
-    //             || isMoreEfficient((STATE *)parentHNode->parent->data,(STATE *)parentHNode->data)){
-    //             HEAP_normalizeDown(graph.heap,parentHNode);
-    //         } else {
-    //             HEAP_normalizeUp(graph.heap,parentHNode);
-    //         }
-    //     } else {//parent is not on the heap
-    //         if(parent ==graph.root.ptr){
-    //             rootIsModified++;
-    //         } else {
-    //             parent->heapNode = HEAP_add(graph.heap, parent); 
-    //         } 
-    //     }
-        
-    // }
-
+  
     
-    #ifdef int_graph_forwardPeak//return whether graph.root is modified
+    #ifdef int_grpropagate_peak//return whether graph.root is modified
     char tmp[100];
     sprintf(tmp,"propagated %s",peakNode->msg);
     json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,tmp);
@@ -495,6 +450,9 @@ int graph_forwardPeak(){
     
     return rootIsModified;
 }
+
+
+//for heap, is the relation that must be kept between (parent,child)
 int isMoreEfficient(void *a,void *b){
     STATE *ap = (STATE *)a;
     STATE *bp = (STATE *)b;
@@ -512,8 +470,8 @@ void STATE_fprintNodeD(FILE *outFile,STATE *node){
     
     fprintf(outFile,"{");
     fprintf(outFile," \"detail\":\"%s\"",node->msg);
-    fprintf(outFile,",\"price\":%.2lf"  ,node->price);
-    fprintf(outFile,",\"succesR\":%.2lf",node->successChance);
+    fprintf(outFile,",\"price\":%.6lf"  ,node->price);
+    fprintf(outFile,",\"succesR\":%.6lf",node->successChance);
     fprintf(outFile,",\"accept\":%d"    ,node->whitelisted);
     fprintf(outFile,",\"inHeap\":%d"    ,node->heapNode != NULL);
     fprintf(outFile,"}");
