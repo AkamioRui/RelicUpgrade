@@ -455,7 +455,7 @@ function drawGraphD3_STATE(jsondata){
   nodeSetting = {
     width : 110,
     height : 4 * 17,
-    padding : 20,
+    padding : 2,
     fill: ["white","yellow","lime"]
   }
   
@@ -468,7 +468,7 @@ function drawGraphD3_STATE(jsondata){
   ;
   /** @type {d3.TreeLayout<TreeLink<STATELINK,STATENODE>>} */
   const treelayout = d3.tree()
-    .nodeSize([nodeSetting.width+nodeSetting.padding*2,nodeSetting.height*2])
+    .nodeSize([nodeSetting.height+nodeSetting.padding*2,nodeSetting.width*3])
   ; 
   let currentGraph = 0;
 
@@ -509,21 +509,27 @@ function drawGraphD3_STATE(jsondata){
   
   //resizeSVG
   function resizeSVG(){
-    let xArr = treeNodes.map(d=>d.x);
+    // let xArr = treeNodes.map(d=>d.x);
+    // let minX = Math.min(...xArr);
+    // let maxX = Math.max(...xArr);
+    // let yArr = treeNodes.map(d=>d.y);
+    let yArr = treeNodes.map(d=>d.x);//flipped image
+    let xArr = treeNodes.map(d=>d.y);//flipped image
     let minX = Math.min(...xArr);
     let maxX = Math.max(...xArr);
-    let yArr = treeNodes.map(d=>d.y);
+    let minY = Math.min(...yArr);
+    let maxY = Math.max(...yArr);
 
     svg_g.attr('transform','translate('
       +(minX*(-1) + nodeSetting.width/2)+
       ','
-      +(nodeSetting.height/2)+
+      +(minY*(-1) + nodeSetting.height/2)+
       ')')
     ;
 
     svg
-    .attr('width',nodeSetting.width + maxX-minX+1)
-    .attr('height',nodeSetting.height + Math.max(...yArr) + 1)
+    .attr('width',nodeSetting.width + maxX-minX+1 + 10)
+    .attr('height',nodeSetting.height + maxY-minY+1)
   }
   resizeSVG();
 
@@ -535,11 +541,11 @@ function drawGraphD3_STATE(jsondata){
   //drawLinks
   //#region 
   /** @type {d3.Link< any, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>, d3.HierarchyNode<TreeLink<STATELINK,STATENODE> >} */
-  const linkGenerator = d3.linkVertical()
+  const linkGenerator = d3.linkHorizontal()
     .source(d=>d.source)
     .target(d=>d.target)
-    .x(d=>d.x)
-    .y(d=>d.y)
+    .x(d=>d.y-nodeSetting.width/2)
+    .y(d=>d.x)
   ;
   /**
    * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>>, SVGGElement, any>} myselection 
@@ -577,8 +583,8 @@ function drawGraphD3_STATE(jsondata){
     ;
     let text = myselection.select('text')
       .attr('transform',d=> 'translate('
-        + ((d.source.x*3+d.target.x*2)/5) +','
-        + ((d.source.y*3+d.target.y*2)/5) +')'
+        + (d.target.y-nodeSetting.width) +','
+        + (d.target.x) +')'
       )
     ;
     linkDataProperty.forEach(property=>{
@@ -649,7 +655,7 @@ function drawGraphD3_STATE(jsondata){
      */
   function updateNode(selection,colorModiefied,colorStable){
     selection
-      .attr('transform', d => 'translate('+d.x+','+d.y+')')
+      .attr('transform', d => 'translate('+d.y+','+d.x+')')
       .each(function (d){
         this.modified = 0;
         let newNodeData = d.data.nodeData;
