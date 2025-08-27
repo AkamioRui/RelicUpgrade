@@ -15,6 +15,7 @@
         #define debug_init_log
         #define debug_init_print
     #define debug_init_root_log
+    #define graph_init_start_log
     #define debug_init_upgrade_log
     #define debug_propagate_peak
         #define debug_propagate_peak_log
@@ -197,32 +198,8 @@ void graph_init(){
     giveSpaceTo(graph.four.upgrade[3])
     #undef giveSpaceTo
 
-    
-
-    
-    graph_init_root();
-    // graph_init_start(3); 
-    // graph_init_start(4); 
-    // graph_init_combination();
-    // graph_init_good(3);
-    // graph_init_good(4);
-    // 
-    // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
-    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
-    // }
-    // for(int index = 0, branch = 4; index < graph.four.good.len; index++){
-    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
-    // }
-    
-
     #ifdef debug_init
         char *tmp = "created";
-        #ifdef debug_init_print
-            __printHeap;
-            __printGraph;
-        #endif
-        #undef debug_init_print
-
         #ifdef debug_init_log
             #define __printData(node)\
             printf("%3d,%14llu:"#node"\n",graph.node.len,graph.node.ptr-graph.root.ptr);
@@ -247,6 +224,29 @@ void graph_init(){
         #endif
         #undef debug_init_log
     #endif
+    
+
+    graph_init_root();
+    graph_init_start(3); 
+    graph_init_start(4); 
+    // graph_init_combination();
+    // graph_init_good(3);
+    // graph_init_good(4);
+    // 
+    // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
+    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
+    // }
+    // for(int index = 0, branch = 4; index < graph.four.good.len; index++){
+    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
+    // }
+
+    #ifdef debug_init
+        #ifdef debug_init_print
+            __printHeap;
+            __printGraph;
+        #endif
+        #undef debug_init_print
+    #endif
     #undef debug_init
     
 }
@@ -270,7 +270,65 @@ void graph_init_root(){
     #endif 
     #undef debug_init_root_log
 } 
+void graph_init_start(int branch){
+    STATE *node;
+    switch(branch){
+        case 3: 
+            node = graph.three.start.ptr;
 
+            // node->price = 0;
+            // node->successChance = 0;
+            sprintf(node->msg,"start 3");
+            // node->whitelisted = 0;
+            
+            // node->arg = NULL;
+            node->child = graph.three.combination[0].ptr;
+            node->childCount = 
+                  graph.three.combination[0].len 
+                + graph.three.combination[1].len 
+                + graph.three.combination[2].len
+            ;
+            
+            node->parentCount = 1;
+            node->parent = graph.root.ptr;
+            node->parentChance = (double *)malloc(sizeof(double));
+                node->parentChance[0]=
+                chance.mainstat *(1 - chance.startFour);
+            // node->heapNode = NULL;
+        break;
+
+        case 4: 
+            node = graph.four.start.ptr; 
+
+            // node->price = 0;
+            // node->successChance = 0;
+            sprintf(node->msg,"start 4");
+            // node->whitelisted = 0;
+            
+            // node->arg = NULL;
+            node->child = graph.four.good.ptr;
+            node->childCount = graph.four.good.len;
+            
+            node->parentCount = 1;
+            node->parent = graph.root.ptr;
+            node->parentChance = (double *)malloc(sizeof(double));
+                node->parentChance[0]=
+                chance.mainstat *chance.startFour;
+            // node->heapNode = NULL;
+
+        break;
+
+        default: assert(0); break;//invalid branch
+    }
+
+    
+
+
+    #ifdef graph_init_start_log
+        printf("graph.%d.start initialized\n",branch);
+    #endif 
+    #undef graph_init_start_log
+}
 
 #ifdef debug
     void graph_printState(FILE *file){
@@ -664,7 +722,7 @@ void STATE_fprintLinkD(FILE *outFile, STATE *parentNode, STATE *childNode){
     #endif
     fprintf(
         outFile,
-        "{\"chance\":%.2lf}"
+        "{\"chance\":%.6lf}"
         ,childNode->parentChance[parentNode - childNode->parent]
     );
 }

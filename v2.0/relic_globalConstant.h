@@ -39,6 +39,8 @@ struct COST{
     double accept;
 } cost;
 struct CHANCE{
+    double startFour;//chance for starting with 4 substat
+
     double mainstat;//chance for the mainstat to be correct
     int substatWeightTotal;
     int substatWeight[12];//each susbtat weight, 0 if mainstat
@@ -70,6 +72,9 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
             cost.accept += cost.upgrade[i]*4;
         } 
     //
+
+    //chance.startFour
+    chance.startFour = .175f;
 
     //chance.mainstat
     switch (piece){
