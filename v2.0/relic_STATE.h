@@ -55,32 +55,20 @@ typedef struct STATE_array{
     int len;
 } STATE_array;
 struct GRAPH{
-    //{
-    //     root
-    //     ,three.start //1 node
-    //     ,four.start //1 node
-    //     ,three.combination // c(#remainingSubstat,3) nodes
-    //     ,three.good // #goodSub nodes
-    //     ,four.good // #goodSub nodes
-    //     ,three.upgrade[4] // #goodSub*(5*6/2)-1 nodes //arithmatic sum
-    //     ,four.upgrade[4] // #goodSub*(6*7/2)-1 nodes //arithmatic sum
-    // }
     STATE_array root;//len is the entire nodes
     
-
-    //checkpoints
-    //the following are just for references, it doesnt allocate memory
+    //checkpoints. It doesnt allocate memory, only points to it
     struct {
         STATE_array start;
-        STATE_array combination[3];//use arg to temp store substatId[]
-        STATE_array good;
-        STATE_array upgrade[4];//index = number of good substat -1, some entry might be NULL if #goodStat < 4
+        STATE_array combination[4];//index = number of good sub. start at 0
+        STATE_array good;//index = #goodSubstat, from 0 to min(4,#goodSubstat)
+        STATE_array upgrade[5];//index = #goodSubstat, it will be null if index = 0, or index > #goodSubstat
     } three;
 
     struct {
         STATE_array start;
         STATE_array good;
-        STATE_array upgrade[4];
+        STATE_array upgrade[5];
     } four;
 
     HEAP *heap;
@@ -113,8 +101,8 @@ int isMoreEfficient(void *a,void *b);
 void graph_init();
 void graph_init_root(); 
 void graph_init_start(int branch); //fill in all detail for all node in start
-void graph_init_combination();
-void graph_init_good(int branch);
+void graph_init_combination();//use arg to store substatId[3], 
+void graph_init_good(int branch);//for threebranch, use combination.arg ot get parent chance
 void graph_init_upgrade(int branch, int index, double pwin);
 void graph_close();
 
@@ -136,13 +124,14 @@ void graph_init(){
     graph.root.len = 1;
     graph.three.start.len = 1;
     graph.four.start.len = 1;
-    for(int i = 0, G=chance.substatGoodCount, k1 = G; i<3; i++){//k1 = c(G,1)
+    int combArrLen = sizeof(graph.three.combination)/sizeof(STATE_array);
+    for(int G=chance.substatGoodCount, k1=1, i=0; i<combArrLen; i++){//k1 = c(G,0)
         graph.three.combination[i].len = k1;
-        k1 = k1 * (G-i-1)/(i+2);// =(G-1)/2
+        k1 = k1 * (G-i)/(1+i);// =G/1
     } 
-    for(int i = 2, B=chance.substatBadCount, k2 = 1; i>=0; i--){//k1 = c(B,0)
+    for(int B=chance.substatBadCount, k2=1, i=combArrLen-1; i>=0; i--){//k1 = c(B,0)
         graph.three.combination[i].len *= k2;
-        k2 = k2 * (B+i-2)/(3-i);// =B/1
+        k2 = k2 * (B-combArrLen+1+i)/(combArrLen-i);// =B/1
     } 
     graph.three.good.len = chance.substatGoodCount < 4?
     chance.substatGoodCount:4;

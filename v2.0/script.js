@@ -453,8 +453,8 @@ function drawGraphD3_STATE(jsondata){
   /** @type {{width:number,height:number,padding:number,fill:string[]}} */
   let nodeSetting;
   nodeSetting = {
-    width : 110,
-    height : 4 * 17,
+    width : 210,
+    height : 1 * 20,
     padding : 2,
     fill: ["white","yellow","lime"]
   }
@@ -583,7 +583,7 @@ function drawGraphD3_STATE(jsondata){
     ;
     let text = myselection.select('text')
       .attr('transform',d=> 'translate('
-        + (d.target.y-nodeSetting.width) +','
+        + (d.target.y-nodeSetting.width/2-40) +','
         + (d.target.x) +')'
       )
     ;
@@ -639,14 +639,24 @@ function drawGraphD3_STATE(jsondata){
 
     let text = selection.append('text')
       .attr('dominant-baseline','middle')
-      .attr('text-anchor','middle')
+      .attr('stroke','black')
+      .attr('stroke-width',0.3)
     ;
-    nodeDataProperty.forEach((property,index)=>{
-      text.append('tspan').attr('class',property)
-      .text(d=>d.data.nodeData[property])
-      .attr('y',(index - (nodeDataProperty.length-1)/2)*0.9 +'em')
-      .attr('x',0);
-    });
+      text.append('tspan').attr('class','label')
+      .attr('x'       ,-nodeSetting.width/2+5)
+      .attr('text-anchor','start')
+
+      text.append('tspan').attr('class','number')
+      .attr('x'       ,nodeSetting.width/2-5)
+      .attr('text-anchor','end')
+      // .attr('text-anchor','middle')
+    
+    // nodeDataProperty.forEach((property,index)=>{
+    //   text.append('tspan').attr('class',property)
+    //   .text(d=>d.data.nodeData[property])
+    //   .attr('y',(index - (nodeDataProperty.length-1)/2)*0.9 +'em')
+    //   .attr('x',0);
+    // });
   }
   /**
      * @param { d3.Selection<SVGNodeElement , d3.HierarchyNode<TreeLink<STATELINK,STATENODE>>, SVGGElement, any> } selection 
@@ -682,24 +692,26 @@ function drawGraphD3_STATE(jsondata){
         else return colorStable;
       })
     ;
-    let text = selection.select('text');
-    nodeDataProperty.forEach((property)=>{
-      text.select('tspan.'+property)
-      .text(d=>d.data.nodeData[property])
-    });
     // /** @type {STATENODE} */
-    /*  */text.select('tspan.'+'price')
-    .text(d=>(d.data.nodeData['price']).toFixed(0))
-    /*  */text.select('tspan.'+'succesR')
-    .text(d=>(d.data.nodeData['succesR']).toFixed(4))
-    /*  */text.select('tspan.'+'accept')
-    .text(d=>{
-      if(d.data.nodeData['price'] != 0){
-        return (d.data.nodeData['succesR']/d.data.nodeData['price']*1000000).toFixed(2)
-      } else {
-        return "NaN";
-      }
-    })
+    let text = selection.select('text');
+    text.select('tspan.label').text((d)=>'>'
+      + d.data.nodeData.detail + ':  '
+    );
+    
+    text.select('tspan.number').text((d)=>''
+      +(d.data.nodeData.succesR).toFixed(4) + '/'
+      +(d.data.nodeData.price).toFixed(0) + '='
+      +(d.data.nodeData.price!=0?
+        (d.data.nodeData.succesR/d.data.nodeData.price*1000000).toFixed(2) : "NAN")
+    );
+    // text.text((d)=>'>'
+    //   + d.data.nodeData.detail + ':  '
+    //   +(d.data.nodeData.succesR).toFixed(4) + '/'
+    //   +(d.data.nodeData.price).toFixed(0) + '='
+    //   +(d.data.nodeData.price!=0?
+    //     (d.data.nodeData.succesR/d.data.nodeData.price*1000000).toFixed(2) : "NAN")
+    // );
+
     
   }
 
