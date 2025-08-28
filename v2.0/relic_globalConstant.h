@@ -4,6 +4,7 @@
 #include<stdio.h>
 // #include<stdlib.h>
 #include<string.h>
+#include<assert.h>
 
 //enum / code 
 typedef enum PIECE{
@@ -31,6 +32,21 @@ typedef enum STAT{
     STAT_HEAL = -2,
     STAT_ER = -3
 } STAT;
+char *STATname[]={
+    "HP"
+    ,"ATK"
+    ,"DEF"
+    ,"HP%"
+    ,"ATK%"
+    ,"DEF%"
+    ,"SPD"
+    ,"CR"
+    ,"CD"
+    ,"EHR"
+    ,"ERS"
+    ,"BE"
+};
+
 
 // global variable
 struct COST{
@@ -45,10 +61,10 @@ struct CHANCE{
     int substatWeightTotal;
     int substatWeight[12];//each susbtat weight, 0 if mainstat
     
-    int substatGood[12];//used as much as its length, I dont want to bother deallocating
     int substatGoodCount;
-    int substatBad[12];//used as much as its length, I dont want to bother deallocating
+    STAT substatGood[12];//array containing all good substat
     int substatBadCount;
+    STAT substatBad[12];//array containing all bad substat
 } chance;
 int threshold;
 
@@ -137,10 +153,11 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
     }
 
     //chance.substatGood and chance.substatBad, with their count
-    //prep: foreach chance.substatGood entry, its index be treated as STAT and value is (goodsub?)
+    //prep: foreach chance.substatGood entry, its index be treated as STAT and value is (goodsub?),
     int *substat_is_Good = chance.substatGood;//borrowing 
     memset(substat_is_Good,0,sizeof(chance.substatGood));
     for(int i = 0 ; i<substat_len; i++){
+        assert(substat[i]>=0);
         substat_is_Good[substat[i]] = 1;
     }
     

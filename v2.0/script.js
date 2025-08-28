@@ -453,8 +453,8 @@ function drawGraphD3_STATE(jsondata){
   /** @type {{width:number,height:number,padding:number,fill:string[]}} */
   let nodeSetting;
   nodeSetting = {
-    width : 210,
-    height : 1 * 20,
+    width : 300,
+    height : 25,
     padding : 2,
     fill: ["white","yellow","lime"]
   }
@@ -541,10 +541,11 @@ function drawGraphD3_STATE(jsondata){
   //drawLinks
   //#region 
   /** @type {d3.Link< any, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>, d3.HierarchyNode<TreeLink<STATELINK,STATENODE> >} */
-  const linkGenerator = d3.linkHorizontal()
+  const linkGenerator = d3.linkHorizontal();
+    linkGenerator  
     .source(d=>d.source)
     .target(d=>d.target)
-    .x(d=>d.y-nodeSetting.width/2)
+    .x(d=>d.y*.680)
     .y(d=>d.x)
   ;
   /**
@@ -579,6 +580,12 @@ function drawGraphD3_STATE(jsondata){
   function updateLink(myselection,color){
     let path = myselection.select('path') 
       .attr('d',linkGenerator)
+      .attr('transform',(d)=>
+        'translate('
+        + (Math.max(d.source.y,d.target.y)*(1-.680)
+        -  Math.abs(d.source.y-d.target.y)*(1-.680)/2)
+        +',0)'
+      )
       .attr('stroke',color)
     ;
     let text = myselection.select('text')

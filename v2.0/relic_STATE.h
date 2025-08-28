@@ -16,6 +16,9 @@
         #define debug_init_print
     #define debug_init_root_log
     #define graph_init_start_log
+    #define graph_init_combination_log
+    #define graph_init_good_3_log
+    #define graph_init_good_4_log
     #define debug_init_upgrade_log
     #define debug_propagate_peak
         #define debug_propagate_peak_log
@@ -36,7 +39,7 @@ typedef enum STATUS{
 typedef struct STATE{
     double price;//the average price
     double successChance;
-    char msg[16];
+    char msg[24];
     STATUS whitelisted;//1 if true
 
     void *arg;//for printing
@@ -58,17 +61,18 @@ struct GRAPH{
     STATE_array root;//len is the entire nodes
     
     //checkpoints. It doesnt allocate memory, only points to it
+    //index = number of good sub. start at 0
     struct {
         STATE_array start;
-        STATE_array combination[4];//index = number of good sub. start at 0
-        STATE_array good;//index = #goodSubstat, from 0 to min(4,#goodSubstat)
-        STATE_array upgrade[5];//index = #goodSubstat, it will be null if index = 0, or index > #goodSubstat
+        STATE_array combination[4];
+        STATE_array good;//len = 5
+        STATE_array upgrade[5];//the [0].len always 0;
     } three;
 
     struct {
         STATE_array start;
-        STATE_array good;
-        STATE_array upgrade[5];
+        STATE_array good;//len = 5
+        STATE_array upgrade[5];//the [0].len always 0;
     } four;
 
     HEAP *heap;
@@ -102,7 +106,8 @@ void graph_init();
 void graph_init_root(); 
 void graph_init_start(int branch); //fill in all detail for all node in start
 void graph_init_combination();//use arg to store substatId[3], 
-void graph_init_good(int branch);//for threebranch, use combination.arg ot get parent chance
+void graph_init_good_3();//for threebranch, use combination.arg to get parent chance and deallocate it
+void graph_init_good_4();
 void graph_init_upgrade(int branch, int index, double pwin);
 void graph_close();
 
@@ -116,51 +121,51 @@ void graph_trimWhitelist();
 
 void graph_init(){
     memset(&graph,0,sizeof(graph));
-
-    //assigning heap
-    graph.heap = HEAP_init((HEAP_Compare *)isMoreEfficient);
     
     //assigning len
     graph.root.len = 1;
     graph.three.start.len = 1;
     graph.four.start.len = 1;
-    int combArrLen = sizeof(graph.three.combination)/sizeof(STATE_array);
-    for(int G=chance.substatGoodCount, k1=1, i=0; i<combArrLen; i++){//k1 = c(G,0)
+
+    for(int G=chance.substatGoodCount, k1=1, i=0; i<4; i++){//k1 = c(G,0)
         graph.three.combination[i].len = k1;
         k1 = k1 * (G-i)/(1+i);// =G/1
     } 
-    for(int B=chance.substatBadCount, k2=1, i=combArrLen-1; i>=0; i--){//k1 = c(B,0)
+    for(int B=chance.substatBadCount, k2=1, i=4-1; i>=0; i--){//k1 = c(B,0)
         graph.three.combination[i].len *= k2;
-        k2 = k2 * (B-combArrLen+1+i)/(combArrLen-i);// =B/1
-    } 
-    graph.three.good.len = chance.substatGoodCount < 4?
-    chance.substatGoodCount:4;
-    graph.four.good.len = chance.substatGoodCount < 4?
-    chance.substatGoodCount:4;
-    for(int i = graph.three.good.len-1; i>=0; i--){
-        graph.three.upgrade[i].len =5*6/2-1; 
+        k2 = k2 * (B-4+1+i)/(4-i);// =B/1
     }
-    for(int i = graph.four.good.len-1; i>=0; i--){
+
+    int idxMax = 1 + chance.substatGoodCount<4?chance.substatGoodCount:4;
+    graph.three.good.len = idxMax;
+    graph.four.good.len  = idxMax;
+    
+    for(int i = chance.substatGoodCount<4?chance.substatGoodCount:4; i>=1; i--){
+        graph.three.upgrade[i].len =5*6/2-1; 
         graph.four.upgrade[i].len =6*7/2-1; 
     }
     
-    
-    graph.root.len += 
-        graph.three.start.len
-    + graph.three.combination[0].len
-    + graph.three.combination[1].len
-    + graph.three.combination[2].len
-    + graph.three.good.len
-    + graph.three.upgrade[0].len
-    + graph.three.upgrade[1].len
-    + graph.three.upgrade[2].len
-    + graph.three.upgrade[3].len
-    + graph.four.start.len
-    + graph.four.good.len
-    + graph.four.upgrade[0].len
-    + graph.four.upgrade[1].len
-    + graph.four.upgrade[2].len
-    + graph.four.upgrade[3].len ;
+    //assign Ptr
+    graph.root.len = graph.root.len
+        + graph.three.start.len
+        + graph.four.start.len
+        + graph.three.combination[0].len
+        + graph.three.combination[1].len
+        + graph.three.combination[2].len
+        + graph.three.combination[3].len
+        + graph.three.good.len
+        + graph.four.good.len
+        + graph.three.upgrade[0].len
+        + graph.three.upgrade[1].len
+        + graph.three.upgrade[2].len
+        + graph.three.upgrade[3].len
+        + graph.three.upgrade[4].len
+        + graph.four.upgrade[0].len
+        + graph.four.upgrade[1].len
+        + graph.four.upgrade[2].len
+        + graph.four.upgrade[3].len 
+        + graph.four.upgrade[4].len 
+    ;
     
     
     //assiging ptr
@@ -170,21 +175,24 @@ void graph_init(){
         checkpoint.ptr = availablePointer;\
         availablePointer += checkpoint.len;\
     }    
-    giveSpaceTo(graph.three.start)
-    giveSpaceTo(graph.four.start)
-    giveSpaceTo(graph.three.combination[0])
-    giveSpaceTo(graph.three.combination[1])
-    giveSpaceTo(graph.three.combination[2])
-    giveSpaceTo(graph.three.good)
-    giveSpaceTo(graph.four.good)
-    giveSpaceTo(graph.three.upgrade[0])
-    giveSpaceTo(graph.three.upgrade[1])
-    giveSpaceTo(graph.three.upgrade[2])
-    giveSpaceTo(graph.three.upgrade[3])
-    giveSpaceTo(graph.four.upgrade[0])
-    giveSpaceTo(graph.four.upgrade[1])
-    giveSpaceTo(graph.four.upgrade[2])
-    giveSpaceTo(graph.four.upgrade[3])
+    giveSpaceTo(graph.three.start);
+    giveSpaceTo(graph.four.start);
+    giveSpaceTo(graph.three.combination[0]);
+    giveSpaceTo(graph.three.combination[1]);
+    giveSpaceTo(graph.three.combination[2]);
+    giveSpaceTo(graph.three.combination[3]);
+    giveSpaceTo(graph.three.good);
+    giveSpaceTo(graph.four.good);
+    giveSpaceTo(graph.three.upgrade[0]);
+    giveSpaceTo(graph.three.upgrade[1]);
+    giveSpaceTo(graph.three.upgrade[2]);
+    giveSpaceTo(graph.three.upgrade[3]);
+    giveSpaceTo(graph.three.upgrade[4]);
+    giveSpaceTo(graph.four.upgrade[0]);
+    giveSpaceTo(graph.four.upgrade[1]);
+    giveSpaceTo(graph.four.upgrade[2]);
+    giveSpaceTo(graph.four.upgrade[3]);  
+    giveSpaceTo(graph.four.upgrade[4]);   
     #undef giveSpaceTo
 
     #ifdef debug_init
@@ -198,29 +206,35 @@ void graph_init(){
             __printData(three.combination[0]);
             __printData(three.combination[1]);
             __printData(three.combination[2]);
+            __printData(three.combination[3]);
             __printData(three.good);
             __printData(four.good);
             __printData(three.upgrade[0]);
             __printData(three.upgrade[1]);
             __printData(three.upgrade[2]);
             __printData(three.upgrade[3]);
+            __printData(three.upgrade[4]);
             __printData(four.upgrade[0]);
             __printData(four.upgrade[1]);
             __printData(four.upgrade[2]);
             __printData(four.upgrade[3]);
+            __printData(four.upgrade[4]);
             #undef __printData
             printf("graph initialized\n");
         #endif
         #undef debug_init_log
     #endif
     
+    //assigning heap
+    graph.heap = HEAP_init((HEAP_Compare *)isMoreEfficient);
 
     graph_init_root();
     graph_init_start(3); 
     graph_init_start(4); 
-    // graph_init_combination();
-    // graph_init_good(3);
-    // graph_init_good(4);
+    graph_init_combination();
+    graph_init_good_3();//delete comb.arg
+    // graph_init_good_4();
+    // graph_init_goo and deallocate itd(4); and deallocate it
     // 
     // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
     //     graph_init_upgrade(branch, index, (index + 1)/4.f);
@@ -276,6 +290,7 @@ void graph_init_start(int branch){
                   graph.three.combination[0].len 
                 + graph.three.combination[1].len 
                 + graph.three.combination[2].len
+                + graph.three.combination[3].len
             ;
             
             node->parentCount = 1;
@@ -317,6 +332,252 @@ void graph_init_start(int branch){
         printf("graph.%d.start initialized\n",branch);
     #endif 
     #undef graph_init_start_log
+}
+void graph_init_combination(){
+    
+
+    //for each combinaton/layer
+    for(int idx = 0; idx<=3; idx++){
+        if(!graph.three.combination[idx].len)break;
+        STATE *layerArr = graph.three.combination[idx].ptr;
+        int layerArrLen = graph.three.combination[idx].len;
+
+        //setting up the 3-loop
+        int nol = -1, *i2p, *i3p;
+        int i1, i2, i3;
+        int i1Len, i2Len, i3Len;
+        STAT *i1Src, *i2Src, *i3Src;
+        switch(idx){
+            #define assign_as_(id,quality) \
+            id##Len = chance.substat##quality##Count;\
+            id##Src = chance.substat##quality;
+            
+            case 0:// bad/bad/bad
+            assign_as_(i1,Bad);
+            assign_as_(i2,Bad);
+            assign_as_(i3,Bad);
+            i2p = &i1;
+            i3p = &i2;
+            break;
+
+            case 1:// good/bad/bad
+            assign_as_(i1,Good);
+            assign_as_(i2,Bad);
+            assign_as_(i3,Bad);
+            i2p = &nol;
+            i3p = &i2;
+            break;
+
+            case 2:// good/good/bad
+            assign_as_(i1,Good);
+            assign_as_(i2,Good);
+            assign_as_(i3,Bad);
+            i2p = &i1;
+            i3p = &nol;
+            break;
+
+            case 3:// good/good/good
+            assign_as_(i1,Good);
+            assign_as_(i2,Good);
+            assign_as_(i3,Good);
+            i2p = &i1;
+            i3p = &i2;
+            break;
+
+            default: assert(0); break; 
+            #undef assign_as_
+            
+        }
+        
+        //for each node
+        int nodeId = 0;//reset per layer
+        for(i1 = 0      ; i1<i1Len; i1++){
+        for(i2 = *i2p +1; i2<i2Len; i2++){
+        for(i3 = *i3p +1; i3<i3Len; i3++){
+            STAT substat[] = {i1Src[i1], i2Src[i2], i3Src[i3]};
+
+            assert(nodeId<graph.three.combination[idx].len);
+            STATE *node = layerArr+ nodeId++;
+            
+            node->price = cost.upgrade[0];
+            // node->successChance = 0;
+            sprintf(node->msg,"%2d,%2d:%s-%s-%s",
+                /*  */idx,
+                /*  */nodeId -1,
+                STATname[substat[0]],
+                STATname[substat[1]],
+                STATname[substat[2]]
+            );
+            node->whitelisted = 0;
+            
+            node->arg = (STAT*)malloc(sizeof(substat));
+            memcpy(node->arg,substat,sizeof(substat));
+            
+            node->child = graph.three.good.ptr+idx;
+            node->childCount = 1+( idx+1 <= graph.three.good.len-1);
+            
+            node->parentCount = 1;
+            node->parent = graph.three.start.ptr;
+            node->parentChance = (double *)malloc(sizeof(double));
+            node->parentChance[0] = 0;//will hold (1/... +1/... +...)//the nominator are all the same so, later
+            //iterating over substat
+            int ttlw1 = chance.substatWeightTotal;
+            for(int p1 = 0; p1<3; p1++){
+                int ttlw2 = ttlw1-chance.substatWeight[substat[p1]];
+                for(int p2 = 0; p2<3; p2++){
+                    if(p2 == p1) continue;
+                    int ttlw3 = ttlw2-chance.substatWeight[substat[p2]];
+                    node->parentChance[0] += 1.f/ttlw1/ttlw2/ttlw3;
+                }
+            }
+            node->parentChance[0] *= 1.f
+                *chance.substatWeight[substat[0]]
+                *chance.substatWeight[substat[1]]
+                *chance.substatWeight[substat[2]]
+            ;//multiplied by nominator
+            // node->heapNode = NULL;
+
+
+        }
+        }
+        }
+
+    }
+
+    
+    
+    
+    
+    #ifdef graph_init_combination_log
+        double sum = 0;
+        int len = graph.three.combination[0].len
+        +graph.three.combination[1].len
+        +graph.three.combination[2].len
+        +graph.three.combination[3].len
+        ;
+        for(int i = 0; i<len; i++)sum += graph.three.combination[0].ptr[i].parentChance[0];
+        printf("graph.3.combination initialized; p = %lf\n",sum);
+    #endif 
+    #undef graph_init_combination_log
+}
+void graph_init_good_3(){
+    #ifdef graph_init_good_3_log
+        double checksum = 0;    
+        #define addtoChecksum checksum += totalChance;
+        
+        
+    #endif 
+    
+    
+    for(int idx=0; idx<graph.three.good.len; idx++){
+        STATE *node = graph.three.good.ptr + idx;
+
+        node->price = cost.upgrade[1];
+        node->successChance = 0;
+        ///*  */sprintf(node->msg,"Good-%d:(%.6lf)");//below
+        node->whitelisted = 0;
+        
+        node->arg = NULL;
+        node->child = graph.three.upgrade[idx].ptr;
+        node->childCount = graph.three.upgrade[idx].len?2:0;//the first 2 node
+        
+        int hasDown  = 0<=idx - 1 ;
+        int hasEqual = idx<=3;
+        node->parentCount = 
+             (hasDown ? graph.three.combination[idx-1].len:0)
+            +(hasEqual? graph.three.combination[idx].len  :0)
+        ;
+        node->parent = hasDown?
+            graph.three.combination[idx-1].ptr:
+            graph.three.combination[idx].ptr
+        ;
+
+        node->parentChance = (double *)malloc(sizeof(double)*node->parentCount);
+        int pCid = 0;
+        double totalChance = 0;//for detail/msg
+
+        int goodTtlW = 0;
+        for(int i = 0; i<chance.substatGoodCount; i++)goodTtlW+=
+        chance.substatWeight[chance.substatGood[i]];
+        int badTtlW = chance.substatWeightTotal - goodTtlW;
+        if(hasDown){//chance of parent get good
+            for(int pid = 0; pid < graph.three.combination[idx-1].len; pid++){
+                STATE *parent = graph.three.combination[idx-1].ptr + pid;
+                STAT *pStat = (STAT*)parent->arg;
+                
+                int goodW = goodTtlW;
+                int restW = chance.substatWeightTotal;
+                for(int argId = 0; argId < idx-1; argId++){
+                    goodW -= chance.substatWeight[ pStat[argId] ];  
+                    restW -= chance.substatWeight[ pStat[argId] ];  
+                }
+                for(int argId = idx-1; argId < 3; argId++){
+                    restW -= chance.substatWeight[ pStat[argId] ];  
+                }
+                
+                double pC = 1.f*goodW/restW; 
+                node->parentChance[pCid++] = pC;
+                totalChance += parent->parentChance[0]*pC;
+
+                // /*  */printf("good[%d].parentChance[%d,%d]=%lf",idx,idx-1,pid)
+    
+            }
+        }
+        if(hasEqual){//chance of parent get bad
+            for(int pid = 0; pid < graph.three.combination[idx].len; pid++){
+                STATE *parent = graph.three.combination[idx].ptr + pid;
+                
+                int badW = badTtlW;
+                int restW = chance.substatWeightTotal;
+                for(int argId = 2; argId >= idx; argId--){
+                    badW  -= chance.substatWeight[ ((STAT*)parent->arg)[argId] ];
+                    restW -= chance.substatWeight[ ((STAT*)parent->arg)[argId] ];
+                }
+                for(int argId = idx-1; argId >= 0; argId--){
+                    restW -= chance.substatWeight[ ((STAT*)parent->arg)[argId] ];
+                }
+                
+                double pC = 1.f*badW/restW; 
+                node->parentChance[pCid++] = pC;
+                totalChance += parent->parentChance[0]*pC;
+    
+            }
+        }
+        
+        node->heapNode = NULL;
+        sprintf(node->msg,"Good-%d:(%.6lf)",idx,totalChance);
+        addtoChecksum;
+
+    }
+
+
+    //deallocate combination.arg
+    for(int idx = 0; idx<4; idx++){
+        STATE *layer = graph.three.combination[idx].ptr;
+        for(int i = 0; i<graph.three.combination[idx].len; i++){
+            free(layer[i].arg);
+            layer[i].arg = NULL;
+        }
+
+    }
+    #ifdef graph_init_good_3_log
+        #undef addtoChecksum 
+        printf("graph.3.good initialized; from start, sum = %.6lf\n",checksum);
+    #endif 
+    #undef graph_init_good_3_log
+}
+void graph_init_good_4(){
+    #ifdef graph_init_good_4_log
+        // double sum = 0;
+        // int len = graph.three.combination[0].len
+        // +graph.three.combination[1].len
+        // +graph.three.combination[2].len
+        // +graph.three.combination[3].len
+        // ;
+        // for(int i = 0; i<len; i++)sum += graph.three.combination[0].ptr[i].parentChance[0];
+        printf("graph.4.good initialized\n");
+    #endif 
+    #undef graph_init_good_4_log
 }
 
 #ifdef debug
