@@ -38,15 +38,15 @@ int main(){
     // HEAP_file = json_init("result/HEAP.json");
     STATE_file = json_init("result/STATE.json");
 
-    STAT substat[] = {STAT_CD,STAT_ATKP,STAT_SPD};
+    STAT substat[] = {STAT_ATKP,STAT_SPD};
     initGlobalVariable(
         PIECE_BODY
-        ,STAT_CR
+        ,STAT_HEAL
         ,substat
         ,sizeof(substat)/sizeof(STAT)
         ,6
     );
-    
+    struct CHANCE *chance2 = &chance;
 
 
     /* partial */

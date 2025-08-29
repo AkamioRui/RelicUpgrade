@@ -127,16 +127,19 @@ void graph_init(){
     graph.three.start.len = 1;
     graph.four.start.len = 1;
 
-    for(int G=chance.substatGoodCount, k1=1, i=0; i<4; i++){//k1 = c(G,0)
+    for(int G=chance.substatGoodCount, k1=1, i=0; i<4; i++){
+        //k1 = c(G,0)
         graph.three.combination[i].len = k1;
         k1 = k1 * (G-i)/(1+i);// =G/1
     } 
-    for(int B=chance.substatBadCount, k2=1, i=4-1; i>=0; i--){//k1 = c(B,0)
+    for(int B=chance.substatBadCount, k2=1, i=4-1; i>=0; i--){
+        //k1 = c(B,0)
         graph.three.combination[i].len *= k2;
         k2 = k2 * (B-4+1+i)/(4-i);// =B/1
     }
 
-    int idxMax = 1 + chance.substatGoodCount<4?chance.substatGoodCount:4;
+    int idxMax = 1 + 
+    (chance.substatGoodCount<4?chance.substatGoodCount:4);
     graph.three.good.len = idxMax;
     graph.four.good.len  = idxMax;
     
@@ -233,7 +236,7 @@ void graph_init(){
     graph_init_start(4); 
     graph_init_combination();
     graph_init_good_3();//delete comb.arg
-    // graph_init_good_4();
+    graph_init_good_4();
     // graph_init_goo and deallocate itd(4); and deallocate it
     // 
     // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
@@ -401,9 +404,9 @@ void graph_init_combination(){
             
             node->price = cost.upgrade[0];
             // node->successChance = 0;
-            sprintf(node->msg,"%2d,%2d:%s-%s-%s",
-                /*  */idx,
-                /*  */nodeId -1,
+            sprintf(node->msg,"C%2d,%2d:%s-%s-%s",
+                idx,
+                nodeId -1,
                 STATname[substat[0]],
                 STATname[substat[1]],
                 STATname[substat[2]]
@@ -461,8 +464,10 @@ void graph_init_combination(){
     #undef graph_init_combination_log
 }
 void graph_init_good_3(){
+    #define addtoChecksum 
     #ifdef graph_init_good_3_log
         double checksum = 0;    
+        
         #define addtoChecksum checksum += totalChance;
         
         
@@ -545,7 +550,7 @@ void graph_init_good_3(){
         }
         
         node->heapNode = NULL;
-        sprintf(node->msg,"Good-%d:(%.6lf)",idx,totalChance);
+        sprintf(node->msg,"Good3-%d:(%.6lf)",idx,totalChance);
         addtoChecksum;
 
     }
@@ -567,18 +572,112 @@ void graph_init_good_3(){
     #undef graph_init_good_3_log
 }
 void graph_init_good_4(){
+    
+    
+    
+    for(int idx=0; idx<graph.four.good.len; idx++){
+        STATE *node = graph.four.good.ptr + idx;
+
+        node->price = cost.upgrade[0];
+        node->successChance = 0;
+        sprintf(node->msg,"Good4-%d",idx);
+        node->whitelisted = 0;
+        
+        node->arg = NULL;
+        node->child = graph.four.upgrade[idx].ptr;
+        node->childCount = graph.four.upgrade[idx].len?2:0;//the first 2 node
+        
+        
+        node->parentCount = 1;
+        node->parent = graph.four.start.ptr;
+        node->parentChance = (double *)malloc(sizeof(double));
+        node->parentChance[0] = 0;
+
+        
+
+        int i1, i2, i3, i4; 
+        int i1Len,i2Len,i3Len,i4Len;// (good/bad)Len
+        STAT *src1,*src2,*src3,*src4;// (good/bad)Arr
+        int nol=-1,*i2p = &i1,*i3p = &i2,*i4p = &i3;
+        switch(idx){
+            #define assign_to_(q1,q2,q3,q4)\
+            i1Len = chance.substat##q1##Count;\
+            src1 = chance.substat##q1;\
+            i2Len = chance.substat##q2##Count;\
+            src2 = chance.substat##q2;\
+            i3Len = chance.substat##q3##Count;\
+            src3 = chance.substat##q3;\
+            i4Len = chance.substat##q4##Count;\
+            src4 = chance.substat##q4;
+
+            case 0:assign_to_(Bad ,Bad ,Bad ,Bad );break;
+            case 1:assign_to_(Good,Bad ,Bad ,Bad );i2p = &nol;break;
+            case 2:assign_to_(Good,Good,Bad ,Bad );i3p = &nol;break;
+            case 3:assign_to_(Good,Good,Good,Bad );i4p = &nol;break;
+            case 4:assign_to_(Good,Good,Good,Good);break;
+            default:assert(0);
+
+            #undef assign_to_
+        }
+
+        
+        
+        for(i1 = 0; i1<i1Len; i1++){
+        for(i2 = *i2p + 1; i2<i2Len; i2++){
+        for(i3 = *i3p + 1; i3<i3Len; i3++){
+        for(i4 = *i4p + 1; i4<i4Len; i4++){
+            int subsW[4] = {
+                 chance.substatWeight[src1[i1]]
+                ,chance.substatWeight[src2[i2]]
+                ,chance.substatWeight[src3[i3]]
+                ,chance.substatWeight[src4[i4]]
+            };
+
+
+            
+            double denomSum = 0;
+            int denom1 = chance.substatWeightTotal;
+            for(int c1 = 0; c1<4; c1++){
+                int denom2 = denom1 - subsW[c1];
+            for(int c2 = 0; c2<4; c2++){
+                if(c2==c1)continue;
+                int denom3 = denom2 - subsW[c2];
+            for(int c3 = 0; c3<4; c3++){
+                if(c3==c1)continue;
+                if(c3==c2)continue;
+                int denom4 = denom3 - subsW[c3];
+            // for(int c4 = 0; c4<4; c4++){//only 1                
+                denomSum += 1.f/denom1/denom2/denom3/denom4;
+            }
+            }
+            }
+            int nom = subsW[0] * subsW[1] * subsW[2] * subsW[3];
+            node->parentChance[0] += nom * denomSum;
+            
+            
+        }
+        }
+        }
+        }
+        
+        node->heapNode = NULL;
+
+    }
+
+
     #ifdef graph_init_good_4_log
-        // double sum = 0;
-        // int len = graph.three.combination[0].len
-        // +graph.three.combination[1].len
-        // +graph.three.combination[2].len
-        // +graph.three.combination[3].len
-        // ;
-        // for(int i = 0; i<len; i++)sum += graph.three.combination[0].ptr[i].parentChance[0];
-        printf("graph.4.good initialized\n");
+        double checksum = 0.f;
+        for(int i = 0; i<graph.four.good.len; i++) {
+            double pchance = graph.four.good.ptr[i].parentChance[0];
+            checksum+=pchance;
+            // printf("graph.4.good[%d]:%lf",i,pchance);
+        }
+            
+        printf("graph.4.good initialized; sum of pC = %lf\n",checksum);
     #endif 
     #undef graph_init_good_4_log
 }
+
 
 #ifdef debug
     void graph_printState(FILE *file){

@@ -96,9 +96,11 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
     switch (piece){
         case PIECE_HEAD:
             chance.mainstat = 1;
+            mainstat = STAT_HP;
         break;
         case PIECE_HANDS:
             chance.mainstat = 1;
+            mainstat = STAT_ATK;
         break;
         case PIECE_BODY:
             switch (mainstat){

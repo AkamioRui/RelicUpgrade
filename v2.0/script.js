@@ -455,7 +455,7 @@ function drawGraphD3_STATE(jsondata){
   nodeSetting = {
     width : 300,
     height : 25,
-    padding : 2,
+    padding : 10,
     fill: ["white","yellow","lime"]
   }
   
@@ -502,6 +502,8 @@ function drawGraphD3_STATE(jsondata){
     
   }
   getGraphData();
+  
+
   
   //#endregion
 
@@ -552,6 +554,14 @@ function drawGraphD3_STATE(jsondata){
    * @param { d3.Selection<SVGPathElement, d3.HierarchyPointLink<TreeLink<STATELINK,STATENODE>>, SVGGElement, any>} myselection 
    */
   function initLink(myselection){
+    myselection.each(function (d){
+      let sourceClass = "from_"+d.source.id;
+      let targetClass = "to_"+d.target.id;
+      d3.select(this)
+        .classed(sourceClass,true)
+        .classed(targetClass,true);
+    });
+
     let path = myselection.append('path') 
       // .attr('d',linkGenerator)
       .attr('fill',"none")
@@ -563,7 +573,7 @@ function drawGraphD3_STATE(jsondata){
       //   + ((d.source.y*3+d.target.y*2)/5) +')'
       // )
       .attr('dominant-baseline','middle')
-      .attr('text-anchor','middle')
+      .attr('text-anchor','start')
     ;
     linkDataProperty.forEach((property,index)=>{
       text.append('tspan').attr('class',property)
@@ -589,15 +599,37 @@ function drawGraphD3_STATE(jsondata){
       .attr('stroke',color)
     ;
     let text = myselection.select('text')
-      .attr('transform',d=> 'translate('
-        + (d.target.y-nodeSetting.width/2-40) +','
+      .attr('transform',function(d){
+        
+        if(d.target.data.nodeData.detail.indexOf('Good3')!=-1) {
+          //Good3-%d:(%.6lf)
+          let tgtIdx = d.target.data.nodeData.detail.match(/\d+/g)[1];
+          //C%2d,%2d:%s-%s-%s
+          let srcIdx = d.source.data.nodeData.detail.match(/\d+/)[0];
+          
+
+          
+          if(srcIdx==tgtIdx) return 'translate('
+          + (d.source.y+nodeSetting.width/2+5) +','
+          + (d.source.x - 8) +')'
+          else return 'translate('
+          + (d.source.y+nodeSetting.width/2+5) +','
+          + (d.source.x + 8) +')'
+        }
+      
+        else return 'translate('
+        + (d.target.y-nodeSetting.width/2-70) +','
         + (d.target.x) +')'
-      )
+      })
     ;
+
+    
     linkDataProperty.forEach(property=>{
       text.select('tspan.'+property)
       .text(d=>d.linkData[property])
     });
+
+    
     
   }
   
@@ -635,6 +667,11 @@ function drawGraphD3_STATE(jsondata){
       // .each(function (d){
       //   this.oldNodeData = d.data.nodeData;
       // })
+    selection.each(function (d){
+      let idClass = "id_"+d.id;
+      d3.select(this)
+        .classed(idClass,true)
+    });
     selection.append('rect')
       .attr('x'       ,-nodeSetting.width/2)
       .attr('y'       ,-nodeSetting.height/2)
