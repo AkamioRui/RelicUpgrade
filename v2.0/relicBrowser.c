@@ -35,16 +35,16 @@ print the graph (whitelisted = green, blackListed = red, unknown = red);
 
 int main(){
     
-    // HEAP_file = json_init("result/HEAP.json");
+    HEAP_file = json_init("result/HEAP.json");
     STATE_file = json_init("result/STATE.json");
 
-    STAT substat[] = {STAT_ATKP,STAT_SPD};
+    STAT substat[] = {STAT_ATKP,STAT_CR,STAT_CD};
     initGlobalVariable(
-        PIECE_BODY
-        ,STAT_HEAL
+        PIECE_HEAD
+        ,STAT_HP
         ,substat
         ,sizeof(substat)/sizeof(STAT)
-        ,6
+        ,5
     );
     struct CHANCE *chance2 = &chance;
 
@@ -54,15 +54,41 @@ int main(){
     // graph_init_test_pyramid4(sizeof(substat)/sizeof(STAT));
     graph_init();
     struct GRAPH *graph2 = &graph;
-    // while(1){
-    //     if(graph.heap->root == NULL){
-    //         printf("!!!heap is NULL\n");//ment all node is included, if not then there is some elimination
-    //         break;
-    //     }
-    //     if(isMoreEfficient(graph.root.ptr,graph.heap->root->data)) break;
-    //     graph_propagate_peak();
-    // }
-   
+    for(int i = 0;; i++){
+        if(graph.heap->root == NULL){
+            printf("heap is NULL\n");//ment all node is included, if not then there is some elimination
+            break;
+        }
+        if(isMoreEfficient(graph.root.ptr,graph.heap->root->data)) break;
+
+        //min heap check
+        double efficientcy = 0;// rate/cost
+        for(int nodeId = 0; nodeId<graph.root.len; nodeId++){
+            STATE *node = graph.root.ptr + nodeId;
+            if(node->whitelisted)continue;
+
+            double curScore = node->price>0?
+            node->successChance/node->price:
+            0;
+
+            efficientcy = efficientcy>curScore?efficientcy:curScore;
+        }
+        double heapEfficientcy = graph.heap->root->data->successChance / graph.heap->root->data->price;
+        if(efficientcy != heapEfficientcy)printf("%4d; heap inefficient (%lf,%lf) \n",i,efficientcy,heapEfficientcy);
+
+
+        graph_propagate_peak();
+
+        // switch(i){
+        //     case 139:
+        //     case 140:
+        //     json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"");
+        //     json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"");
+        // }
+    }
+    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"");
+    json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"");
+    
     
 
 
@@ -71,7 +97,7 @@ int main(){
 
     graph_close();
     json_close(STATE_file);
-    // json_close(HEAP_file);
+    json_close(HEAP_file);
     
     printf("\ndone\n");
     return 0;

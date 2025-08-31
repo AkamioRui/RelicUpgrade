@@ -617,6 +617,12 @@ function drawGraphD3_STATE(jsondata){
           + (d.source.x + 8) +')'
         }
       
+        else if(d.source.data.nodeData.detail.indexOf('up')!=-1){
+          return 'translate('
+          + (d.source.y+d.target.y)/2 +','
+          + (d.source.x+d.target.x)/2 +')'
+        }
+        
         else return 'translate('
         + (d.target.y-nodeSetting.width/2-70) +','
         + (d.target.x) +')'

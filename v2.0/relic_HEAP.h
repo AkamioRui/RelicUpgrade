@@ -12,16 +12,16 @@
 #define HEAP_DATA void 
 
 //debugging 
-// #define debugging
+#define debugging
 #ifdef debugging
     #define debugging_init
     #define debugging_close 
-    /* js */#define debugging_closeBranch
-    /* js */#define debugging_add 
+    // /* js */#define debugging_closeBranch
+    // /* js */#define debugging_add 
     // /* js */#define debugging_normalizeDown
     // /* js */#define debugging_normalizeUp
     // /* js */#define debugging_swap
-    /* js */#define debugging_HEAP_pop
+    // /* js */#define debugging_HEAP_pop
 
     #define HEAP_NODE_print(node){\
         printf(#node":{");\
@@ -235,6 +235,7 @@ HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
     //if it request for index = 0, ie the root
     assert(index >= 0);
     HEAP_NODE **rootPtr = &(heap->root);
+    /*  */assert(rootPtr);
     
     //get path
     index++;
@@ -251,6 +252,8 @@ HEAP_NODE **HEAP_pointer_to(HEAP *heap, int index){
     //free path
     free(path);
     path = NULL;
+
+    /*  */assert(newNodePtr);
     return newNodePtr;
 
 }
@@ -461,6 +464,7 @@ void *HEAP_pop(HEAP *heap){
         void *peakData = heap->root->data;assert(peakData);
         free(heap->root);
         heap->root = NULL;
+        heap->length--;
         return peakData;
     }
 
@@ -478,6 +482,7 @@ void *HEAP_pop(HEAP *heap){
     *HEAP_pointer_to(heap,heap->length - 1) = NULL;
     free(peakNode);peakNode = NULL;
     heap->length--;
+    
     
     //normalize down the new peakNode (previously the lastNode)
     HEAP_normalizeDown(heap,lastNode);

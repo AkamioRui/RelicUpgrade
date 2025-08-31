@@ -20,7 +20,7 @@
     #define graph_init_good_3_log
     #define graph_init_good_4_log
     #define debug_init_upgrade_log
-    #define debug_propagate_peak
+    // #define debug_propagate_peak
         #define debug_propagate_peak_log
         #define debug_propagate_peak_print
 
@@ -28,7 +28,7 @@
     #define __printHeap
     // #define __printHeap json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,tmp);
     #define __printGraph
-    #define __printGraph json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,tmp);
+    // #define __printGraph json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,tmp);
 #endif
 
 typedef enum STATUS{
@@ -239,12 +239,10 @@ void graph_init(){
     graph_init_good_4();
     // graph_init_goo and deallocate itd(4); and deallocate it
     // 
-    // for(int index = 0, branch = 3; index < graph.three.good.len; index++){
-    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
-    // }
-    // for(int index = 0, branch = 4; index < graph.four.good.len; index++){
-    //     graph_init_upgrade(branch, index, (index + 1)/4.f);
-    // }
+    for(int index = 1; index < graph.three.good.len; index++){
+        graph_init_upgrade(3, index, index/4.f);
+        graph_init_upgrade(4, index, index/4.f);
+    }
 
     #ifdef debug_init
         #ifdef debug_init_print
@@ -677,9 +675,103 @@ void graph_init_good_4(){
     #endif 
     #undef graph_init_good_4_log
 }
+//branch is three or four
+void graph_init_upgrade(int branch, int index, double pwin){
+    
+
+    STATE *upgrade;
+    STATE *goodNode;
+    int maxLayer; //layer number refers to how many node in each layer 
+    switch (branch){
+        case 3:
+            // assert(index < graph.three.good.len);
+            goodNode = graph.three.good.ptr + index;
+            upgrade = graph.three.upgrade[index].ptr;
+            maxLayer = 5; //0,1,2,3,4 upgrade
+        break;
+
+        case 4:
+            // assert(index < graph.four.good.len);
+            goodNode = graph.four.good.ptr + index;
+            upgrade = graph.four.upgrade[index].ptr;
+            maxLayer = 6; //0,1,2,3,4,5,6 upgrade
+        break;
+        
+        default:
+            printf("invalid branch");
+            assert(0);
+        break;
+    }
+
+    STATE *curLayer = upgrade;
+    for(int l = 2; l<=maxLayer ; l++){
+        char parentIsGood = (l==2)
+            ,lastLayer = (l==maxLayer);
+
+        int curCost = cost.upgrade[4 - (maxLayer-l)];
+        STATE *parentLayer = curLayer - (l-1);
+        STATE *childLayer = curLayer + l;
+
+        for(int up = 0; up<l; up++){
+            STATE *curNode = curLayer + up;
+
+            curNode->price = curCost;
+            curNode->successChance = 
+                lastLayer*(index  + up>=threshold);
+            sprintf(curNode->msg,"up%d-%d,%d",branch,index,up);
+            curNode->whitelisted = 0;//1 if true
+
+            curNode->arg = NULL;
+            curNode->child = lastLayer? NULL : childLayer + up;
+            curNode->childCount = (!lastLayer)*2;
+            
+            curNode->parentCount = parentIsGood? 1 : (0 < up)+(up < l-1);
+            curNode->parent = parentIsGood? goodNode : 
+                (up==0? parentLayer: parentLayer + up - 1);
+            if(curNode->parentCount>0) curNode->parentChance = (double *)
+            calloc(curNode->parentCount,sizeof(double));
+            else curNode->parentChance = NULL;
+            if(parentIsGood){
+                curNode->parentChance[0] = (!up)*(1-pwin) + (up)*pwin;
+            } else if(up == 0){
+                curNode->parentChance[0] = (1-pwin);
+            } else if(up == l-1){
+                curNode->parentChance[0] = pwin;
+            } else {
+                curNode->parentChance[0] = pwin;
+                curNode->parentChance[1] = (1-pwin);
+            }
+            
+            
+            if(lastLayer && curNode->successChance){
+                curNode->heapNode = HEAP_add(graph.heap,curNode);
+            } else curNode->heapNode = NULL;
 
 
+        }
+        curLayer = childLayer;
+    }
+
+    #ifdef debug_init_upgrade_log
+        printf("graph.%d.upgrade[%d] initialized\n",branch,index);
+    #endif
+    #undef debug_init_upgrade_log
+}
+
+
+#ifdef graph_init_good_4_log
+        double checksum = 0.f;
+        for(int i = 0; i<graph.four.good.len; i++) {
+            double pchance = graph.four.good.ptr[i].parentChance[0];
+            checksum+=pchance;
+            // printf("graph.4.good[%d]:%lf",i,pchance);
+        }
+            
+        printf("graph.4.good initialized; sum of pC = %lf\n",checksum);
+    #endif 
+    #undef graph_init_good_4_log
 #ifdef debug
+
     void graph_printState(FILE *file){
         for(int i = 0 ; i<graph.root.len; i++){
             STATE *node = graph.root.ptr + i;
@@ -826,89 +918,6 @@ void graph_init_good_4(){
 #endif
 
 
-//branch is three or four
-void graph_init_upgrade(int branch, int index, double pwin){
-    
-
-    STATE *upgrade;
-    STATE *goodNode;
-    int maxLayer; //layer number refers to how many node in each layer 
-    switch (branch){
-        case 3:
-            // assert(index < graph.three.good.len);
-            goodNode = graph.three.good.ptr + index;
-            upgrade = graph.three.upgrade[index].ptr;
-            maxLayer = 5; //0,1,2,3,4 upgrade
-        break;
-
-        case 4:
-            // assert(index < graph.four.good.len);
-            goodNode = graph.four.good.ptr + index;
-            upgrade = graph.four.upgrade[index].ptr;
-            maxLayer = 6; //0,1,2,3,4,5,6 upgrade
-        break;
-        
-        default:
-            printf("invalid branch");
-            assert(0);
-        break;
-    }
-    assert(upgrade);
-    assert(goodNode);
-
-    STATE *curLayer = upgrade;
-    for(int l = 2; l<=maxLayer ; l++){
-        char parentIsGood = (l==2)
-            ,lastLayer = (l==5);
-
-        int curCost = cost.upgrade[4 - (maxLayer-l)];
-        STATE *parentLayer = curLayer - (l-1);
-        STATE *childLayer = curLayer + l;
-
-        for(int up = 0; up<l; up++){
-            STATE *curNode = curLayer + up;
-
-            curNode->price = curCost;
-            curNode->successChance = lastLayer*((index + 1 + up)>=threshold);
-            sprintf(curNode->msg,"up %d,%d",l,up);
-            curNode->whitelisted = 0;//1 if true
-
-            curNode->arg = NULL;
-            curNode->child = lastLayer? NULL : childLayer + up;
-            curNode->childCount = (!lastLayer)*2;
-            
-            curNode->parentCount = parentIsGood? 1 : (0 < up)+(up < l-1);
-            curNode->parent = parentIsGood? goodNode : 
-                (up==0? parentLayer: parentLayer + up - 1);
-            if(curNode->parentCount>0) curNode->parentChance = (double *)
-            calloc(curNode->parentCount,sizeof(double));
-            else curNode->parentChance = NULL;
-            if(parentIsGood){
-                curNode->parentChance[0] = (!up)*(1-pwin) + (up)*pwin;
-            } else if(up == 0){
-                curNode->parentChance[0] = (1-pwin);
-            } else if(up == l-1){
-                curNode->parentChance[0] = pwin;
-            } else {
-                curNode->parentChance[0] = pwin;
-                curNode->parentChance[1] = (1-pwin);
-            }
-            
-            
-            if(lastLayer && curNode->successChance){
-                curNode->heapNode = HEAP_add(graph.heap,curNode);
-            } else curNode->heapNode = NULL;
-
-
-        }
-        curLayer = childLayer;
-    }
-
-    #ifdef debug_init_upgrade_log
-        printf("graph.%d.upgrade[%d] initialized\n",branch,index);
-    #endif
-    #undef debug_init_upgrade_log
-}
 
 //deallocate all the memory allocated inside graph
 void graph_close(){
@@ -1092,7 +1101,7 @@ void HEAP_NODE_fprintNodeD(FILE *outFile,HEAP_NODE *node){
     fprintf(outFile,"{");
     fprintf(outFile," \"detail\":\"%s\"",node_data->msg);
     fprintf(outFile,",\"price\":%.2lf"  ,node_data->price);
-    fprintf(outFile,",\"succesR\":%.2lf",node_data->successChance);
+    fprintf(outFile,",\"succesR\":%.8lf",node_data->successChance);
     fprintf(outFile,",\"accept\":%d"    ,node_data->whitelisted);
     fprintf(outFile,"}");
 
