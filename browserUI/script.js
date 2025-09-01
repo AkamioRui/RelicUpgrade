@@ -25,30 +25,30 @@ const d3 =d3Raw;
 
 // drawGraphD3(jsondata,{width:20,height:20,padding:20});
 drawGraphD3_STATE(await (await fetch("result/STATE.json")).json());
-drawGraphD3(await (await fetch("result/HEAP.json")).json());
-let backButton = d3.select("div > button.back");
-let backButtons = d3.selectAll("div > button.back");
-let backfuncs = [];
-backButtons.each(function (){
-  backfuncs.push( d3.select(this).on("click"));
-});
-backButton.on("click",()=>{
-  backfuncs.forEach((value)=>{
-    value();
-  })  
-})
+// drawGraphD3(await (await fetch("result/HEAP.json")).json());
+// let backButton = d3.select("div > button.back");
+// let backButtons = d3.selectAll("div > button.back");
+// let backfuncs = [];
+// backButtons.each(function (){
+//   backfuncs.push( d3.select(this).on("click"));
+// });
+// backButton.on("click",()=>{
+//   backfuncs.forEach((value)=>{
+//     value();
+//   })  
+// })
 
-let nextButton = d3.select("div > button.next");
-let nextButtons = d3.selectAll("div > button.next");
-let nextfuncs = [];
-nextButtons.each(function (){
-  nextfuncs.push( d3.select(this).on("click"));
-});
-nextButton.on("click",()=>{
-  nextfuncs.forEach((value)=>{
-    value();
-  })  
-})
+// let nextButton = d3.select("div > button.next");
+// let nextButtons = d3.selectAll("div > button.next");
+// let nextfuncs = [];
+// nextButtons.each(function (){
+//   nextfuncs.push( d3.select(this).on("click"));
+// });
+// nextButton.on("click",()=>{
+//   nextfuncs.forEach((value)=>{
+//     value();
+//   })  
+// })
 
 
 
