@@ -11,7 +11,7 @@ typedef enum PIECE{
     PIECE_HEAD,
     PIECE_HANDS,
     PIECE_BODY,
-    PIECE_FEET,
+    PIECE_BOOTS,
     PIECE_PLANAR,
     PIECE_ROPE
 } PIECE;
@@ -33,7 +33,7 @@ typedef enum STAT{
     STAT_ER = -3
 } STAT;
 char *STATname[]={
-    "HP"
+     "HP"
     ,"ATK"
     ,"DEF"
     ,"HP%"
@@ -114,7 +114,7 @@ void initGlobalVariable(PIECE piece, STAT mainstat, STAT *substat, int substat_l
                 default :chance.mainstat = 0;break;
             }
         break;
-        case PIECE_FEET:
+        case PIECE_BOOTS:
             switch (mainstat){
                 case STAT_HPP:chance.mainstat = 0.28f;break;
                 case STAT_ATKP:chance.mainstat = 0.30f;break;

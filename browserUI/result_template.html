@@ -3,40 +3,180 @@
 <html>
     
 <head>
+    <script src="option.js" type="module"></script>  
     <script src="script.js" type="module"></script>  
     <!-- <script src="test.js" type="module"></script>   -->
      <style>
         #option{
+            width: 1600px;
+            padding: 30px 0;
+            background-color: rgb(169, 169, 169);
+            
+            display: flex;
+            justify-content: space-evenly;
 
         }
+
+        #option > div{
+            background-color: rgb(227, 227, 227);
+            box-sizing: border-box;
+            width: 20%;
+            aspect-ratio: 9/16;
+            padding: 10px;
+
+            display: grid;
+            grid: 1fr 9fr / 1fr;
+            /* justify-items: center;
+            align-items: center; */
+            
+            
+
+
+
+        }
+        .tbHead{
+            /* border:1px solid black  ; */
+            box-sizing: border-box;
+            border-bottom:1px solid rgb(169, 169, 169);
+            
+            align-content: center;
+            justify-items: center;
+
+            font-size:3em;
+        }
+        .tbBody{
+            box-sizing: border-box;
+            padding:5px;
+            background-color: rgb(227, 227, 227);
+            
+            display: grid;
+            grid: repeat(auto,max-content) / max-content;
+            align-items: center;
+            justify-items: center;
+            align-content: start;
+            
+        }
+        .tbOpt{
+            margin:5px;
+            padding:5px 20px;
+            background-color: white;
+
+            font-size: 1.5em;
+        }
+        .tbOpt.selected{
+            background-color: green;
+        }
+        .tbOpt.banned{
+            background-color: rgb(169, 169, 169);
+        }
+
+        #thresholdMeter{
+            width: 50%;
+            aspect-ratio: 1/1;
+            align-content: center;
+            justify-items: center;
+            font-size: 3rem;
+        }
+
+        #mainstat .tbOpt{
+            display:none;
+        }
+        
+
+       
+        
      </style>
 </head>
     
 <body>
     <div id="menu">
         <div id="option">
+            <!-- <div id="piece"> </div>
+            <div id="mainstat"> </div> -->
+                
             <div id="piece">
-                <div class="tbHead">PEICE</div>
-                <div class="tbBody"></div>
+                <div class="tbHead">
+                    <div>PEICE</div>
+                </div>
+                <div class="tbBody">
+                    <div class="tbOpt HEAD   "> HEAD   </div>
+                    <div class="tbOpt HANDS  "> HANDS  </div>
+                    <div class="tbOpt BODY   "> BODY   </div>
+                    <div class="tbOpt BOOTS  "> BOOTS  </div>
+                    <div class="tbOpt PLANAR "> PLANAR </div>
+                    <div class="tbOpt ROPE   "> ROPE   </div>
+                </div>                
             </div>
-            
+
             <div id="mainstat">
-                <div class="tbHead">PEICE</div>
-                <div class="tbBody"></div>
+                <div class="tbHead">
+                    <div>MAINSTAT</div>
+                </div>
+                <div class="tbBody">
+                    <div class="tbOpt HP   "> HP   </div>
+                    <div class="tbOpt ATK  "> ATK  </div>
+                    <div class="tbOpt DEF  "> DEF  </div>
+                    <div class="tbOpt HPP  "> HP%  </div>
+                    <div class="tbOpt ATKP "> ATK% </div>
+                    <div class="tbOpt DEFP "> DEF% </div>
+                    <div class="tbOpt SPD  "> SPD  </div>
+                    <div class="tbOpt CR   "> CR   </div>
+                    <div class="tbOpt CD   "> CD   </div>
+                    <div class="tbOpt EHR  "> EHR  </div>
+                    <div class="tbOpt ERS  "> ERS  </div>
+                    <div class="tbOpt BE   "> BE   </div>
+                    <div class="tbOpt DMG  "> DMG  </div>
+                    <div class="tbOpt HEAL "> HEAL </div>
+                    <div class="tbOpt ER   "> ER   </div>
+                    
+                </div>                
             </div>
 
             <div id="substat">
-                <div class="tbHead">PEICE</div>
-                <div class="tbBody"></div>                
+                <div class="tbHead">
+                    <div>SUBSTAT</div>
+                </div>
+                <div class="tbBody">
+                    <div class="tbOpt HP"  > HP   </div>
+                    <div class="tbOpt ATK" > ATK  </div>
+                    <div class="tbOpt DEF" > DEF  </div>
+                    <div class="tbOpt HPP" > HP%  </div>
+                    <div class="tbOpt ATKP"> ATK% </div>
+                    <div class="tbOpt DEFP"> DEF% </div>
+                    <div class="tbOpt SPD" > SPD  </div>
+                    <div class="tbOpt CR"  > CR   </div>
+                    <div class="tbOpt CD"  > CD   </div>
+                    <div class="tbOpt EHR" > EHR  </div>
+                    <div class="tbOpt ERS" > ERS  </div>
+                    <div class="tbOpt BE"  > BE   </div>
+                </div>                
             </div>
+            
 
-            <input type="range" id="threshold">
+            <div id="threshold">
+                <div class="tbHead">
+                    <div>Threshold</div>
+                </div>
+                <div class="tbBody">
+                    <div id="thresholdMeter">
+                        <div>6</div> 
+                    </div>
+                    <div>
+                        <input type="range" id="thresholdSlider" min="1" max="9" step="1">
+                    </div>
+                </div> 
+                
+            </div>
+            
         </div>
 
-        <div>
-            <div id="code"></div>
+        <div id="result">
+            <div id="code">relicBrowser.exe 0 0 0 0 0</div>
         </div>
         
+        <div id="guide">
+
+        </div>
         
     </div>
      
