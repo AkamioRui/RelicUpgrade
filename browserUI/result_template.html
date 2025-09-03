@@ -97,7 +97,9 @@
         }
         
 
-       
+       #guide{
+        font-size: 1.5em;
+       }
         
      </style>
 </head>
@@ -109,6 +111,28 @@
         2. open cmd inside the 'relic' folder (or cd into that folder)
         3. open cmd (make sure the path is to relic/browserUI/), paste the code generated, and run it
         4. refresh the web
+
+        Interpreting the graph:
+        each node has a name (at the left side of the node) describing its current condition:
+            a. root.                A relic that has just been created
+            b. start n.             A relic that has the desired mainstat and has n initial substat (either 3 or 4)
+            c. C n1,n2: s1,s2,s3.   A relic that has sub1, sub2, sub3. n1 refer to how many desired substat present.
+            d. good n1-n2.          A relic with all 4 substat that has n2 desired substat present. n1 refer to whether it start with 3 or 4 substat.
+            e.up n1-n2,n3.          A relic where the desired substat in total has been upgraded n3 times. n1 refer to whether it start with 3 or 4 substat, 
+                                    n2 refer to how many desired substat present before any substat is upgraded. Since each layer corresponds to the same level, the level of the relic can be implicitly interpeted.
+        each node has a color 
+            b. other than green implies a relic with this condition should be discarded.                                     
+            a. when a node is green, it means that relic with this condition should be upgraded. 
+                Note that while its rare, a green node that doesnt have a green parent instead should be treated as white node.
+        each node has 3 number in the syntax: chance/cost=rate. 
+            it describe the chance/cost/rate of the relic that is currently at the condition described by that node's name, and that it will follows the decision taken by the graph.
+            a. cost.    Refer to the average relic exp that will be spend from the current condition until getting relic with the desired quality. It is assumed that 1 relic fragment = 195 exp. 
+            b. chance.  Refer to the average probability of getting relic with the desired quality,
+            c. rate.    cost/chance*1000000. 
+        each link between node has a number that represent the probability that the parent node (left node) will become the child node (right node) when upgraded
+            
+        
+
 
     </pre>
 

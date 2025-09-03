@@ -1,3 +1,4 @@
+This program shows which a relic should be discarded and which should be upgraded.
 
 
 requirement:
@@ -7,5 +8,8 @@ the only requirement is to be able to host an HTTP server. This can be done via:
 2. using vscode live server plugin 
 3. PHP: php -S localhost:8000
 etc
+
+
+While the program just need the relicUpgrade.exe and the html/css/js stuff, I still included the full source code.
 
 
