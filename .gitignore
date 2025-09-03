@@ -1,4 +1,4 @@
-v1.0/
-browserUI/testing/
+v1.0/*
+browserUI/testing/*
 browserUI/result/*
-.vscode/
+.vscode/*
