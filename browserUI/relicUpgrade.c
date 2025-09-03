@@ -90,17 +90,19 @@ void printGuide(){
     );    
 }
 
+// ./browserUI/relicUpgrade 2 7 5 8 4
+//gdb --args ./relicUpgrade 2 7 5 8 4
 int main(int argc, char **argv){
     //relicUpgrade piece mainstat threshold sub1 sub2 ...
+    
     if(argc < 5){
         printf("too few argument\n");
         printGuide();
         return 1;
     }
-
-    PIECE piece;
-    STAT mainstat;
-    int threshold;
+    PIECE piece ;
+    STAT mainstat ;
+    int threshold ;
     int substatC = argc - 4;
     STAT substat[12];
 
@@ -126,9 +128,28 @@ int main(int argc, char **argv){
             return 1;
         }
     }
-    
-    
 
+    FILE* lableFile = fopen("result/LABEL.json","w");
+        fprintf(lableFile,"{\n");
+        fprintf(lableFile,"   \"piece\":%d,\n",piece);
+        fprintf(lableFile,"   \"mainstat\":%d,\n",mainstat);
+        fprintf(lableFile,"   \"threshold\":%d,\n",threshold);
+        fprintf(lableFile,"   \"substat\":[");
+        for(int i = 0; i<substatC; i++){
+            if(i != 0)fprintf(lableFile,", %d",substat[i]);
+            else      fprintf(lableFile,"%d",substat[i]);
+        }
+        fprintf(lableFile,"]\n");
+        fprintf(lableFile,"}");
+    fclose(lableFile);
+
+
+    // PIECE piece = 2;
+    // STAT mainstat = 7;
+    // int threshold = 5;
+    // int substatC = 2;
+    // STAT substat[12] = {8,4,0};
+    
 
 
     initGlobalVariable(
@@ -142,7 +163,7 @@ int main(int argc, char **argv){
 
 
     
-    HEAP_file = json_init("result/HEAP.json");
+    // HEAP_file = json_init("result/HEAP.json");
     STATE_file = json_init("result/STATE.json");
     graph_init();
     // struct GRAPH *graph2 = &graph;
@@ -161,7 +182,7 @@ int main(int argc, char **argv){
         graph_propagate_peak();
         printAt;
     }
-    json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"");
+    // json_printGraph(HEAP_file,graph.heap->root,(JSON_PRINT_FUNC *)__json_printSpanningTree_HEAP_NODE,"");
     json_printGraph(STATE_file,graph.root.ptr,(JSON_PRINT_FUNC *)__json_printSpanningTree_STATE,"");
     
     
@@ -170,7 +191,7 @@ int main(int argc, char **argv){
 
     graph_close();
     json_close(STATE_file);
-    json_close(HEAP_file);
+    // json_close(HEAP_file);
     
     printf("\ndone\n");
     return 0;

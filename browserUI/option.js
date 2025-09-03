@@ -5,8 +5,10 @@ let d3 = d3_raw;
 
 let pieceCode = '_';
 let mainstatCode = '_';
-let thresholdCode = '_';
+let thresholdCode = '6';
 let substatCode = [];
+
+
 let getCode = ()=>`./relicUpgrade ${pieceCode} ${mainstatCode} ${thresholdCode} ${substatCode.join(' ')}`;   
 
 
@@ -68,12 +70,58 @@ BOOTS :3,
 PLANAR:4,
 ROPE  :5
 };
+let piece_code2Str = {
+'0': 'HEAD'  ,
+'1': 'HANDS' ,
+'2': 'BODY'  ,
+'3': 'BOOTS' ,
+'4': 'PLANAR',
+'5': 'ROPE'  
+};
+let stat_code2Str = {
+'0'  :'HP'      ,
+'1'  :'ATK'     ,
+'2'  :'DEF'     ,
+'3'  :'HPP'     ,
+'4'  :'ATKP'    ,
+'5'  :'DEFP'    ,
+'6'  :'SPD'     ,
+'7'  :'CR'      ,
+'8'  :'CD'      ,
+'9'  :'EHR'     ,
+'10' :'ERS'     ,
+'11' :'BE'      ,
+'-1' :'DMG'     ,
+'-2' :'HEAL'    ,
+'-3' :'ER'      ,
+
+};
 
 
 let pieceOpt = d3.selectAll('#piece .tbOpt');
 let mainstatOpt = d3.selectAll('#mainstat .tbOpt');
 let thresholdOpt = d3.selectAll('#thresholdSlider');
 let substatOpt = d3.selectAll('#substat .tbOpt');
+let codeElement = d3.select('#code');
+let descElement = d3.select('#relicDesc');
+
+
+  fetch('/browserUI/result/LABEL.json').then(
+    response=>{
+        if(response.ok) return response.json();
+        else return Promise.reject(new Error("no file"));
+    }
+  ). then (
+    json => {
+        descElement.text(
+            `piece : ${piece_code2Str[json.piece]}\n`
+            + `mainstat : ${stat_code2Str[json.mainstat]}\n`
+            + `threshold : ${json.threshold}\n`
+            + `substat : ${json.substat.map(v=>stat_code2Str[v]).join(' ')}`
+        )
+    }
+  )
+
 
 
 
@@ -131,7 +179,7 @@ pieceOpt.each(function(){//append onclick event
         });
     
         //apply changes to code
-        console.log(getCode());
+        codeElement.text(getCode());
     });
 });
 
@@ -174,7 +222,7 @@ mainstatOpt.each(function(){//append onclick event
         }
   
         //apply changes to code
-        console.log(getCode());
+        codeElement.text(getCode());
 
     });
 });
@@ -208,7 +256,7 @@ substatOpt.each(function(){//append onclick event
             substatCode.push(thisSubCode);
         }
         
-        console.log(getCode());
+        codeElement.text(getCode());
     });
 
 });
@@ -220,7 +268,7 @@ thresholdOpt.on('input',function(){
     
     //update global var
     thresholdCode = this.value;
-    console.log(getCode());
+    codeElement.text(getCode());
 });
 
 

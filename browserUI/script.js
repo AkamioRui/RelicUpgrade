@@ -27,10 +27,16 @@ const d3 =d3Raw;
 // drawGraphD3(jsondata,{width:20,height:20,padding:20});
 
 
-
-//if(fetch fail dont call this function)
-// drawGraphD3_STATE(await (await fetch("result/STATE.json")).json());
-
+fetch("result/STATE.json").then(
+  response=>{
+    if(response.ok) return response.json();
+    else return Promise.reject(
+      new Error("generate the result file first using the code provided above")
+    );
+  }
+).then(
+  theJson => drawGraphD3_STATE(theJson)
+)
 
 
 

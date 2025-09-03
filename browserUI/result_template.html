@@ -81,6 +81,20 @@
         #mainstat .tbOpt{
             display:none;
         }
+
+        #result{
+            font-size: 3em;
+
+            display: grid;
+            grid: repeat(2, max-content) / repeat(2,max-content);
+            
+            
+            /* justify-content: start; */
+            
+        }
+        #result div{
+            padding: 0 50px;
+        }
         
 
        
@@ -89,6 +103,15 @@
 </head>
     
 <body>
+    <pre id="guide">
+        instruction:
+        1. set the setting to match the desired relic
+        2. open cmd inside the 'relic' folder (or cd into that folder)
+        3. open cmd (make sure the path is to relic/browserUI/), paste the code generated, and run it
+        4. refresh the web
+
+    </pre>
+
     <div id="menu">
         <div id="option">
             <!-- <div id="piece"> </div>
@@ -171,12 +194,15 @@
         </div>
 
         <div id="result">
-            <div id="code">relicBrowser.exe 0 0 0 0 0</div>
+            
+            <div>Code: </div>
+            <div id="code">_</div>
+            
+            <div>Currently Showing</div>
+            <pre id="relicDesc">_</pre>
         </div>
         
-        <div id="guide">
-
-        </div>
+        
         
     </div>
      
