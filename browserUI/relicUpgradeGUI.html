@@ -124,11 +124,11 @@
             b. other than green implies a relic with this condition should be discarded.                                     
             a. when a node is green, it means that relic with this condition should be upgraded. 
                 Note that while its rare, a green node that doesnt have a green parent instead should be treated as white node.
-        each node has 3 number in the syntax: chance/cost=rate. 
+        each node has 3 number in the syntax: cost/chacne=rate. 
             it describe the chance/cost/rate of the relic that is currently at the condition described by that node's name, and that it will follows the decision taken by the graph.
             a. cost.    Refer to the average relic exp that will be spend from the current condition until getting relic with the desired quality. It is assumed that 1 relic fragment = 195 exp. 
             b. chance.  Refer to the average probability of getting relic with the desired quality,
-            c. rate.    cost/chance*1000000. 
+            c. rate.    cost/chance. 
         each link between node has a number that represent the probability that the parent node (left node) will become the child node (right node) when upgraded
             
         
