@@ -105,22 +105,36 @@ let substatOpt = d3.selectAll('#substat .tbOpt');
 let codeElement = d3.select('#code');
 let descElement = d3.select('#relicDesc');
 
+d3.select('#jsonLabel').on('input',function(){
+    let value = d3.select(this).property('value');
+    let json = JSON.parse(value);
 
-  fetch('/browserUI/result/LABEL.json').then(
-    response=>{
-        if(response.ok) return response.json();
-        else return Promise.reject(new Error("no file"));
-    }
-  ). then (
-    json => {
-        descElement.text(
-            `piece : ${piece_code2Str[json.piece]}\n`
-            + `mainstat : ${stat_code2Str[json.mainstat]}\n`
-            + `threshold : ${json.threshold}\n`
-            + `substat : ${json.substat.map(v=>stat_code2Str[v]).join(' ')}`
-        )
-    }
-  )
+    descElement.text(
+        `piece : ${piece_code2Str[json.piece]}\n`
+        + `mainstat : ${stat_code2Str[json.mainstat]}\n`
+        + `threshold : ${json.threshold}\n`
+        + `substat : ${json.substat.map(v=>stat_code2Str[v]).join(' ')}`
+
+    );
+     
+  
+  })
+
+//   fetch('/browserUI/result/LABEL.json').then(
+//     response=>{
+//         if(response.ok) return response.json();
+//         else return Promise.reject(new Error("no file"));
+//     }
+//   ). then (
+//     json => {
+//         descElement.text(
+//             `piece : ${piece_code2Str[json.piece]}\n`
+//             + `mainstat : ${stat_code2Str[json.mainstat]}\n`
+//             + `threshold : ${json.threshold}\n`
+//             + `substat : ${json.substat.map(v=>stat_code2Str[v]).join(' ')}`
+//         )
+//     }
+//   )
 
 
 

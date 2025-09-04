@@ -27,19 +27,24 @@ const d3 =d3Raw;
 // drawGraphD3(jsondata,{width:20,height:20,padding:20});
 
 
-fetch("result/STATE.json").then(
-  response=>{
-    if(response.ok) return response.json();
-    else return Promise.reject(
-      new Error("generate the result file first using the code provided above")
-    );
-  }
-).then(
-  theJson => drawGraphD3_STATE(theJson)
-)
+// fetch("result/STATE.json").then(
+//   response=>{
+//     if(response.ok) return response.json();
+//     else return Promise.reject(
+//       new Error("generate the result file first using the code provided above")
+//     );
+//   }
+// ).then(
+//   theJson => drawGraphD3_STATE(theJson)
+// )
 
 
+d3.select('#jsonState').on('input',function(){
+  let value = d3.select(this).property('value');
+  let json = JSON.parse(value);
+  drawGraphD3_STATE(json);  
 
+})
 
 
 
