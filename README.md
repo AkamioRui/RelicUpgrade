@@ -9,6 +9,11 @@ the only requirement is to be able to host an HTTP server. This can be done via:
 3. PHP: php -S localhost:8000
 etc
 
+installation:
+1. git clone or download the zip file from the release branch
+2. open relicUpgradeGUI.html
+
+
 
 While the program just need the relicUpgrade.exe and the html/css/js stuff, I still included the full source code.
 
