@@ -398,8 +398,8 @@ function drawGraphD3_STATE(jsondata){
     );
     
     text.select('tspan.number').text((d)=>''
-      +(d.data.nodeData.succesR).toFixed(4) + '/'
-      +(d.data.nodeData.price).toFixed(0) + '='
+      +(d.data.nodeData.price).toFixed(0)+ '/'
+      +(d.data.nodeData.succesR).toFixed(4) + '='
       +(d.data.nodeData.succesR!=0?
         (d.data.nodeData.price/d.data.nodeData.succesR).toFixed(2) : "NAN")
     );
