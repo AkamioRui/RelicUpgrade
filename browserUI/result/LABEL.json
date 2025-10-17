@@ -1,6 +1,6 @@
 {
-   "piece":1,
-   "mainstat":1,
-   "threshold":7,
-   "substat":[8, 7]
+   "piece":2,
+   "mainstat":7,
+   "threshold":5,
+   "substat":[8, 4]
 }
