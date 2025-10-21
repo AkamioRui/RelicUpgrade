@@ -1,6 +1,12 @@
-import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
-/** @type {import( "d3" )} */
-let d3 = d3_raw;
+// import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+// /** @type {import( "d3" )} */
+// let d3 = d3_raw;
+
+import * as d3 from 'd3';
+import event from 'node:events';
+
+
+
 
 //constant
 const code_piece = {
@@ -85,6 +91,9 @@ PLANAR:4,
 ROPE  :5
 };
 
+//global
+let piece, mainstat, substat;
+
 
 //element
 const _menu = d3.select('#menu');
@@ -97,7 +106,7 @@ const _substat  = create_piece(_option,'piece',Object.values(code_piece));
 
 /**
  * @param {string[]} optionList 
- * @returns {d3.Selection<HTMLDivElement, string, HTMLElement, any>}
+ * @returns {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {selecting: string}}
  */
 function create_piece(_parent){
     //constant
@@ -115,6 +124,14 @@ function create_piece(_parent){
     const _tbOpt_list  = _tbBody.selectAll('.tbOpt').data(optionList).enter()
         .append('div').attr('class',(d)=>d).classed('tbOpt',true)
         .text((d)=>d)
+    ;
+
+    //logic
+    let chosen = new event();
+    chosen.value = '_';
+
+    _piece.chosen = chosen;
+
 
 
     return _piece;
