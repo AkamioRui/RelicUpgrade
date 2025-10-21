@@ -2,6 +2,8 @@ import * as d3Raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
 /** @type {import("d3")} */
 const d3 = d3Raw;
 
+import {execFile} from 'child_process';
+
 // test();
 function test(){
   let a = {
@@ -50,5 +52,13 @@ function test2(){
 
 }
 
+execFille();
+function execFille(){
+  execFile('./test.exe',(error,stdout,stderr)=>{
+    if(error)console.log('error',error);
+    if(stdout)console.log('stdout',stdout);
+    if(stderr)console.log('stderr',stderr);
+  })
+}
 
 

@@ -129,7 +129,7 @@ int main(int argc, char **argv){
         }
     }
 
-    FILE* lableFile = fopen("result/LABEL.json","w");
+    FILE* lableFile = fopen("../result/LABEL.json","w");
         fprintf(lableFile,"{\n");
         fprintf(lableFile,"   \"piece\":%d,\n",piece);
         fprintf(lableFile,"   \"mainstat\":%d,\n",mainstat);
@@ -164,7 +164,7 @@ int main(int argc, char **argv){
 
     
     // HEAP_file = json_init("result/HEAP.json");
-    STATE_file = json_init("result/STATE.json");
+    STATE_file = json_init("../result/STATE.json");
     graph_init();
     // struct GRAPH *graph2 = &graph;
 

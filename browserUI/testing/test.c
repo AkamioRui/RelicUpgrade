@@ -149,10 +149,6 @@ void assigningString(){
 
 
 int main(){
-   
-   assert(!"here");
-
-
 
     printf("\ndone\n");
     return 0;
