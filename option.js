@@ -1,263 +1,298 @@
-// import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
-// /** @type {import( "d3" )} */
-// let d3 = d3_raw;
+import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+/** @type {import( "d3" )} */
+let d3 = d3_raw;
 
-import * as event from 'node:events';
-import * as util from 'node:util';
-import * as d3 from 'd3';
+// import * as event from 'node:events';
+// import * as util from 'node:util';
+// import * as d3 from 'd3';
 
 // const d3 = import('d3');
 // const event = require('node:events');
+    // const emitter = new EventTarget();
+    // emitter.addEventListener('custom', e => console.log(e.detail));
+    // emitter.dispatchEvent(new CustomEvent('custom', { detail: 42 }));
+
 // const util = require('node:util');
 
-console.log('hello');
+// console.log('hello');
 
 
 
-// /**
-//  * @template T
-//  */
-// class VarPlus{
-//     #value;
-//     #event;
 
-//     /**
-//      * @param {T} val 
-//      */
-//     constructor(val){
-//         this.#event = new event();
-//         this.#value = val;
-//     }
+/**
+ * @template T
+ */
+class VarPlus{
+    #value;
+    #event;
 
-//     /**
-//      * @returns {T} 
-//      */
-//     get(){return this.#value;}
+    /**
+     * @param {T} val 
+     */
+    constructor(val){
+        this.#event = [];
+        this.#value = val;
+    }
 
-//     /**
-//      * @param {T} value 
-//      */
-//     set(value){
-//         this.#value = value;
-//         this.#event.emit('modified',value);
-//     }
+    /**
+     * @returns {T} 
+     */
+    get(){
+        return this.#value;
+    }
 
-//     /**
-//      * 
-//      * @param {VarPlus} varplus 
-//      * @param {(value:T)=>{}} fn 
-//      */
-//     static depends(varplus,fn,immediateFire = true) {
-//         varplus.#event.on('modified',fn);
-//         if(immediateFire)fn(varplus.#value);
-//     } 
+    /**
+     * @param {T} value 
+     */
+    set(value){
+        this.#value = value;
+        this.#event.forEach(fn=>fn(value));
+    }
 
-//     [util.inspect.custom](){
-//         return String(this.#value);
-//     }
-// };
+    // /**
+    //  * 
+    //  * @param {VarPlus} varplus 
+    //  * @param {(value:T)=>{}} fn 
+    //  */
+    // static depends(varplus,fn,immediateFire = true) {
+    //     varplus.#event.push(fn);
+    //     if(immediateFire)fn(varplus.#value);
+    // } 
+
+    /**
+     * 
+     * @param {(value:T)=>{}} fn 
+     * @param {boolean} immediateFire 
+     */
+    modify(fn,immediateFire = true){
+        this.#event.push(fn);
+        if(immediateFire)fn(this.#value);
+    }
 
 
-// //constant
-// const code_piece = {
-//     '0': 'HEAD'  ,
-//     '1': 'HANDS' ,
-//     '2': 'BODY'  ,
-//     '3': 'BOOTS' ,
-//     '4': 'PLANAR',
-//     '5': 'ROPE'  
-// };
-// const piece_mainstat = {
-//     HEAD   :['HP'],    
-//     HANDS  :['ATK'],    
-//     BODY   :[
-//       'HPP',
-//       'ATKP',
-//       'DEFP',
-//       'CD',
-//       'CR',
-//       'EHR',
-//       'HEAL'
-//     ],    
-//     BOOTS  :[
-//       'HPP',
-//       'ATKP',
-//       'DEFP',
-//       'SPD'
-//     ],    
-//     PLANAR :[
-//       'HPP',
-//       'ATKP',
-//       'DEFP',
-//       'DMG'
-//     ],    
-//     ROPE   :[
-//       'HPP',
-//       'ATKP',
-//       'DEFP',
-//       'BE',
-//       'ER'
-//     ],      
-// };
-// const code_stat = {
-//     '0'  :'HP'      ,
-//     '1'  :'ATK'     ,
-//     '2'  :'DEF'     ,
-//     '3'  :'HPP'     ,
-//     '4'  :'ATKP'    ,
-//     '5'  :'DEFP'    ,
-//     '6'  :'SPD'     ,
-//     '7'  :'CR'      ,
-//     '8'  :'CD'      ,
-//     '9'  :'EHR'     ,
-//     '10' :'ERS'     ,
-//     '11' :'BE'      ,
-//     '-1' :'DMG'     ,
-//     '-2' :'HEAL'    ,
-//     '-3' :'ER'      ,
-// };
-// const keyword_code = {
-// HP     : 0,
-// ATK    : 1,
-// DEF    : 2,
-// HPP    : 3,
-// ATKP   : 4,
-// DEFP   : 5,
-// SPD    : 6,
-// CR     : 7,
-// CD     : 8,
-// EHR    : 9,
-// ERS    : 10,
-// BE     : 11,
-// DMG    : -1,
-// HEAL   : -2,
-// ER     : -3,
+    
+    toString(){
+        return String(this.#value);
+    }
+};
+ 
 
-// HEAD  :0,
-// HANDS :1,
-// BODY  :2,
-// BOOTS :3,
-// PLANAR:4,
-// ROPE  :5
-// };
 
-//global
 
+//constant
+const code_piece = {
+    '0': 'HEAD'  ,
+    '1': 'HANDS' ,
+    '2': 'BODY'  ,
+    '3': 'BOOTS' ,
+    '4': 'PLANAR',
+    '5': 'ROPE'  
+};
+const piece_mainstat = {
+    HEAD   :['HP'],    
+    HANDS  :['ATK'],    
+    BODY   :[
+      'HPP',
+      'ATKP',
+      'DEFP',
+      'CD',
+      'CR',
+      'EHR',
+      'HEAL'
+    ],    
+    BOOTS  :[
+      'HPP',
+      'ATKP',
+      'DEFP',
+      'SPD'
+    ],    
+    PLANAR :[
+      'HPP',
+      'ATKP',
+      'DEFP',
+      'DMG'
+    ],    
+    ROPE   :[
+      'HPP',
+      'ATKP',
+      'DEFP',
+      'BE',
+      'ER'
+    ],      
+};
+const code_stat = {
+    '0'  :'HP'      ,
+    '1'  :'ATK'     ,
+    '2'  :'DEF'     ,
+    '3'  :'HPP'     ,
+    '4'  :'ATKP'    ,
+    '5'  :'DEFP'    ,
+    '6'  :'SPD'     ,
+    '7'  :'CR'      ,
+    '8'  :'CD'      ,
+    '9'  :'EHR'     ,
+    '10' :'ERS'     ,
+    '11' :'BE'      ,
+    '-1' :'DMG'     ,
+    '-2' :'HEAL'    ,
+    '-3' :'ER'      ,
+};
+const keyword_code = {
+HP     : 0,
+ATK    : 1,
+DEF    : 2,
+HPP    : 3,
+ATKP   : 4,
+DEFP   : 5,
+SPD    : 6,
+CR     : 7,
+CD     : 8,
+EHR    : 9,
+ERS    : 10,
+BE     : 11,
+DMG    : -1,
+HEAL   : -2,
+ER     : -3,
+
+HEAD  :0,
+HANDS :1,
+BODY  :2,
+BOOTS :3,
+PLANAR:4,
+ROPE  :5
+};
 
 
 //element
-// const _menu = d3.select('#menu');
-// const _option = _menu.append('div').attr('id','option');
-// const _piece    = create_piece(_option);
-// const _mainstat = create_piece(_option,'piece',Object.values(code_piece));
+const _menu = d3.select('#menu');
+const _option = _menu.append('div').attr('id','option');
+const _piece    = create_piece(_option);
+const _mainstat = create_mainstat(_option,_piece);
 // const _substat  = create_piece(_option,'piece',Object.values(code_piece));
 
 
 
-// /**
-//  * @param {d3.Selection<HTMLDivElement, any, HTMLElement, any> } _parent
-//  * @returns {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {chosen: VarPlus}}
-//  */
-// function create_piece(_parent){
-//     //constant
-//     const optionList = Object.values(code_piece);
-//     const thisName = 'piece';
-//     const initVal = '_';
+/**
+ * @param {d3.Selection<HTMLDivElement, any, HTMLElement, any> } _parent
+ * @returns {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {chosen: VarPlus<any>}}
+ */
+function create_piece(_parent){
+    //constant
+    const optionList = Object.values(code_piece);
+    const thisName = 'piece';
+    const initVal = '_';
     
 
-//     //element
-//     const _piece = _parent.append('div').attr('id',thisName);
+    //element
+    /** @type {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {chosen: VarPlus<any>}} */
+    const _piece = _parent.append('div').attr('id',thisName);
 
-//     const _tbHead = _piece.append('div').classed('tbHead',true);
-//     const _tbBody = _piece.append('div').classed('tbBody',true);
+    const _tbHead = _piece.append('div').classed('tbHead',true);
+    const _tbBody = _piece.append('div').classed('tbBody',true);
 
-//     const _title = _tbHead.append('div').text(thisName.toLocaleUpperCase());
-//     const _tbOpt_list  = _tbBody.selectAll('.tbOpt').data(optionList).enter()
-//         .append('div').attr('class',(d)=>d).classed('tbOpt',true)
-//         .text((d)=>d)
+    const _title = _tbHead.append('div').text(thisName.toLocaleUpperCase());
+    const _tbOpt_list  = _tbBody.selectAll('.tbOpt').data(optionList).enter()
+        .append('div').attr('class',(d)=>d).classed('tbOpt',true)
+        .text((d)=>d)
         
-//     ;
+    ;
 
-//     //logic
-//     _piece.chosen = new VarPlus(initVal);
-
-//     _tbOpt_list.on('click',function(d){
-//         console.log(d);
-        
-//         // _tbOpt_list.classed('selected')
-//     });
-
-
-// // let thisPiece = this.classList[1];
-// //     let thisPieceCode = keyword_code[thisPiece];
-// //     let thisSelection = d3.select(this);
-// //     let thisMainstat = piece_mainstat[thisPiece];
-// //     let thisMainstatStr = thisMainstat.map(v=>'.'+v).join(', ');
-
-// //     thisSelection.on('click',function(){
-
-// //         //piece wise 
-// //         // if selected : node not selected
-// //         // if not selected : node be selected
-// //         if(thisSelection.classed('selected')){
-// //             thisSelection.classed('selected',false);
-// //             pieceCode = '_';
-            
-// //         } else {
-// //             pieceCode = thisPieceCode;
-// //             pieceOpt.classed('selected',false);
-// //             thisSelection.classed('selected',true);
-
-// //             //change mainstat option
-            
-// //         }
-
-        
-// //         //mainstat wise
-// //         // after piece wise
-// //         // if none selected: show nothing
-// //         // if there is piece selected: show piece mainstat
-// //         //none is selected
-// //         mainstatOpt.classed('selected',false);
-// //         mainstatCode = '_';
-// //         mainstatOpt.style('display','none'); 
-// //         if(typeof pieceCode === 'number'){
-// //             d3.selectAll('#mainstat :is('+thisMainstatStr+')')
-// //                 .style('display','block')
-// //                 ;
-// //         }
-
-// //         //substat wise
-// //         // since mainstat is not going to be clicked, then unban all sub
-// //         substatOpt.classed('banned',false);
-// //         substatCode = [];
-// //         substatOpt.each(function(){
-// //             if (
-// //                 d3.select(this).classed('selected') &&
-// //                 !d3.select(this).classed('banned') 
-// //             )substatCode.push(keyword_code[this.classList[1]]);
-// //         });
+    //logic
+    _piece.chosen = new VarPlus(initVal);
     
-// //         //apply changes to code
-// //         codeElement.text(getCode());
-// //     });
-// // });
 
-//     return _piece;
-// }
+    _tbOpt_list.on('click',function(e,d){
+        _piece.chosen.set(_piece.chosen.get() === d ? '_' : d);
+    });
+
+    _piece.chosen.modify((value)=>{
+        _tbOpt_list.classed('selected',false);
+        if(value !== '_'){
+            _tbOpt_list.filter((d)=>d===value)
+                .classed('selected',true);
+        }
+    });    
+
+    return _piece;
+}
+
+/**
+ * @param {d3.Selection<HTMLDivElement, any, HTMLElement, any> } _parent
+ * @param {d3.Selection<HTMLDivElement, string, HTMLElement, any>  & {chosen: VarPlus<any>}} _piece
+ * @returns {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {chosen: VarPlus<any>}}
+ */
+function create_mainstat(_parent,_piece){
+    //constant
+    // const optionList = Object.values(code_piece);
+    const thisName = 'mainstat';
+    const initVal = '_';
+    
+
+    //element
+    /** @type {d3.Selection<HTMLDivElement, string, HTMLElement, any> & {chosen: VarPlus<any>}} */
+    const _mainstat = _parent.append('div').attr('id',thisName);
+
+    const _tbHead = _mainstat.append('div').classed('tbHead',true);
+    const _tbBody = _mainstat.append('div').classed('tbBody',true);
+
+    const _title = _tbHead.append('div').text(thisName.toLocaleUpperCase());
+    let _tbOpt_list  = _tbBody.selectAll('.tbOpt');//the rest depend on _piece.chosen
+    
+    
+
+    //logic
+    _mainstat.chosen = new VarPlus(initVal);
+
+    _piece.chosen.modify(function upMainstatOption(pieceValue){
+        console.log('update mainstat option due to piece change : ',pieceValue);
+
+        let optionList = pieceValue === '_' ? [] : piece_mainstat[pieceValue];
+        
+        
+        _tbOpt_list = _tbOpt_list.data(optionList,d=>d).join(
+            enter => enter.append('div').attr('class',(d)=>d).classed('tbOpt',true)
+                .text(d=>d)
+                .on('click',(e,d)=>{
+                    
+                    _mainstat.chosen.set(_mainstat.chosen.get() === d ? '_' : d);
+                })
+            ,
+            merge => merge,
+            exit => exit.remove()
+        )
+
+        console.log("in",_mainstat.chosen.get(), optionList);
+        _mainstat.chosen.set(
+            optionList.some(d=>d === _mainstat.chosen.get()) ?
+            _mainstat.chosen.get() : '_');
+    }) 
+
+    
+
+    _mainstat.chosen.modify(function updateSelected(value){
+        /*  */console.log(_mainstat.chosen.get());
+        _tbOpt_list.classed('selected',false);
+        if(value !== '_'){
+            _tbOpt_list.filter((d)=>d===value)
+                .classed('selected',true);
+        }
+    });    
+
+    return _mainstat;
+}
    
-    
-// <div class="tbHead">
-//     <div>PEICE</div>
-// </div>
-// <div class="tbBody">
-//     <div class="tbOpt HEAD   "> HEAD   </div>
-//     <div class="tbOpt HANDS  "> HANDS  </div>
-//     <div class="tbOpt BODY   "> BODY   </div>
-//     <div class="tbOpt BOOTS  "> BOOTS  </div>
-//     <div class="tbOpt PLANAR "> PLANAR </div>
-//     <div class="tbOpt ROPE   "> ROPE   </div>
-// </div> 
+function printStat(v){
+    console.log({
+        piece:_piece.chosen.get(),
+        mainstat:_mainstat.chosen.get()
+    });
+}
+_mainstat.chosen.modify(printStat);
+_piece.chosen.modify(printStat);    
+
+
+console.log('_piece.chosen',_piece.chosen);
+console.log('_mainstat.chosen',_mainstat.chosen);
 
     
 

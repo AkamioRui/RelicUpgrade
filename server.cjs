@@ -8,6 +8,9 @@ const fs = require('node:fs');
 // import * as path from 'node:path';
 // import * as childProcess from 'node:child_process';
 // import * as fs from 'node:fs';
+// import * as url from 'node:url';
+// const __filename = url.fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 
 //param
@@ -30,9 +33,17 @@ const server = http.createServer((req,res)=>{
         console.log('served option');
         let file = path.join(__dirname,req.url);
         try{
-            let body = fs.readFileSync(file).toString();
-            res.writeHead(200,{'content-type':'application/javascript'});
-            res.end(body);
+            // let body = fs.readFileSync(file).toString();
+            res.writeHead(200,{'content-type':'text/javascript'});
+            fs.createReadStream(file).pipe(res);
+            // {
+            //     '.html': 'text/html',
+            //     '.js': 'text/javascript',
+            //     '.css': 'text/css',
+            //     '.json': 'application/json'
+            //   }
+            
+            // res.end(body);
         } catch(e){
             console.log(`${req.url} doesnt exist`);
         }
