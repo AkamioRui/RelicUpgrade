@@ -12,6 +12,12 @@ const fs = require('node:fs');
 // const __filename = url.fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 
+// {
+//     '.html': 'text/html',
+//     '.js': 'text/javascript',
+//     '.css': 'text/css',
+//     '.json': 'application/json'
+//   }
 
 //param
 const port = 8000;
@@ -20,30 +26,46 @@ const port = 8000;
 
 //server
 const server = http.createServer((req,res)=>{
+    console.log(`---${req.url}`);
 
     if(req.url == '/'){
-        console.log('served html');
+        console.log('   return index.html');
         
         let file = path.join(__dirname,'relicUpgradeGUI.html');
         let body = fs.readFileSync(file).toString();
         res.writeHead(200,{'content-type':'text/html'});
         res.end(body);
 
+
     } else if(req.url.match(/optionGUI/)){
-        console.log('served option');
+        console.log('   served option');
         let file = path.join(__dirname,req.url);
         try{
-            // let body = fs.readFileSync(file).toString();
             res.writeHead(200,{'content-type':'text/javascript'});
             fs.createReadStream(file).pipe(res);
-            // {
-            //     '.html': 'text/html',
-            //     '.js': 'text/javascript',
-            //     '.css': 'text/css',
-            //     '.json': 'application/json'
-            //   }
-            
-            // res.end(body);
+        } catch(e){
+            console.log(`${req.url} doesnt exist`);
+        }
+
+
+    } else if(req.url.match(/resultGUI/)){
+        console.log('   served result');
+        let file = path.join(__dirname,req.url);
+        try{
+            res.writeHead(200,{'content-type':'text/javascript'});
+            fs.createReadStream(file).pipe(res);
+        
+        } catch(e){
+            console.log(`${req.url} doesnt exist`);
+        }
+
+
+    } else if(req.url.match(/VarPlus/)){
+        console.log('   served VarPlus');
+        let file = path.join(__dirname,req.url);
+        try{
+            res.writeHead(200,{'content-type':'text/javascript'});
+            fs.createReadStream(file).pipe(res);
         } catch(e){
             console.log(`${req.url} doesnt exist`);
         }

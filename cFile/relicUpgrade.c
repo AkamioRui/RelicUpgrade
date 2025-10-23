@@ -89,22 +89,46 @@ void printGuide(){
         "ER     : -3\n"       
     );    
 }
+void createLABEL(
+    PIECE piece, 
+    STAT mainstat, 
+    int threshold, 
+    int substatC, 
+    STAT *substat
+){
+    FILE* lableFile = fopen("../result/LABEL.json","w");
+        fprintf(lableFile,"{\n");
+        fprintf(lableFile,"   \"piece\":%d,\n",piece);
+        fprintf(lableFile,"   \"mainstat\":%d,\n",mainstat);
+        fprintf(lableFile,"   \"threshold\":%d,\n",threshold);
+        fprintf(lableFile,"   \"substat\":[");
+        for(int i = 0; i<substatC; i++){
+            if(i != 0)fprintf(lableFile,", %d",substat[i]);
+            else      fprintf(lableFile,"%d",substat[i]);
+        }
+        fprintf(lableFile,"]\n");
+        fprintf(lableFile,"}");
+    fclose(lableFile);
+}
+
 
 // ./browserUI/relicUpgrade 2 7 5 8 4
 //gdb --args ./relicUpgrade 2 7 5 8 4
 int main(int argc, char **argv){
     //relicUpgrade piece mainstat threshold sub1 sub2 ...
     
-    if(argc < 5){
-        printf("too few argument\n");
-        printGuide();
-        return 1;
-    }
     PIECE piece ;
     STAT mainstat ;
     int threshold ;
     int substatC = argc - 4;
     STAT substat[12];
+    
+    if(argc < 5){
+        printf("too few argument\n");
+        printGuide();
+        return 1;
+    }
+    
 
     if(sscanf(argv[1], "%d", &piece    )<1){
         printf("piece must be a code\n");
@@ -129,19 +153,7 @@ int main(int argc, char **argv){
         }
     }
 
-    FILE* lableFile = fopen("../result/LABEL.json","w");
-        fprintf(lableFile,"{\n");
-        fprintf(lableFile,"   \"piece\":%d,\n",piece);
-        fprintf(lableFile,"   \"mainstat\":%d,\n",mainstat);
-        fprintf(lableFile,"   \"threshold\":%d,\n",threshold);
-        fprintf(lableFile,"   \"substat\":[");
-        for(int i = 0; i<substatC; i++){
-            if(i != 0)fprintf(lableFile,", %d",substat[i]);
-            else      fprintf(lableFile,"%d",substat[i]);
-        }
-        fprintf(lableFile,"]\n");
-        fprintf(lableFile,"}");
-    fclose(lableFile);
+    // createLABEL(piece, mainstat, threshold, substatC, substat);
 
 
     // PIECE piece = 2;

@@ -2,7 +2,7 @@
 /**
  * @template T
  */
-class VarPlus{
+export default class VarPlus{
     #value;
     #event;
 
@@ -10,34 +10,43 @@ class VarPlus{
      * @param {T} val 
      */
     constructor(val){
-        this.#event = new event();
+        this.#event = [];
         this.#value = val;
     }
 
     /**
      * @returns {T} 
      */
-    get(){return this.#value;}
+    get(){
+        return this.#value;
+    }
 
     /**
      * @param {T} value 
      */
     set(value){
         this.#value = value;
-        this.#event.emit('modified',value);
+        this.#event.forEach(fn=>fn(value));
     }
+
+  
 
     /**
      * 
-     * @param {VarPlus} varplus 
      * @param {(value:T)=>{}} fn 
+     * @param {boolean} immediateFire 
      */
-    static depends(varplus,fn) {
-        varplus.#event.on('modified',fn);
-    } 
+    modify(fn,immediateFire = true){
+        this.#event.push(fn);
+        if(immediateFire)fn(this.#value);
+    }
 
-    [util.inspect.custom](){
+
+    
+    toString(){
         return String(this.#value);
     }
 };
 
+
+ 

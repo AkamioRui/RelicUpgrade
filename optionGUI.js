@@ -1,3 +1,4 @@
+import VarPlus  from './VarPlus.js'
 import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
 /** @type {import( "d3" )} */
 let d3 = d3_raw;
@@ -16,55 +17,6 @@ let d3 = d3_raw;
 
 
 
-/**
- * @template T
- */
-class VarPlus{
-    #value;
-    #event;
-
-    /**
-     * @param {T} val 
-     */
-    constructor(val){
-        this.#event = [];
-        this.#value = val;
-    }
-
-    /**
-     * @returns {T} 
-     */
-    get(){
-        return this.#value;
-    }
-
-    /**
-     * @param {T} value 
-     */
-    set(value){
-        this.#value = value;
-        this.#event.forEach(fn=>fn(value));
-    }
-
-  
-
-    /**
-     * 
-     * @param {(value:T)=>{}} fn 
-     * @param {boolean} immediateFire 
-     */
-    modify(fn,immediateFire = true){
-        this.#event.push(fn);
-        if(immediateFire)fn(this.#value);
-    }
-
-
-    
-    toString(){
-        return String(this.#value);
-    }
-};
- 
 
 
 
