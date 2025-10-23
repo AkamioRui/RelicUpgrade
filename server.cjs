@@ -29,7 +29,7 @@ const server = http.createServer((req,res)=>{
         res.writeHead(200,{'content-type':'text/html'});
         res.end(body);
 
-    } else if(req.url.match(/option/)){
+    } else if(req.url.match(/optionGUI/)){
         console.log('served option');
         let file = path.join(__dirname,req.url);
         try{
@@ -47,6 +47,9 @@ const server = http.createServer((req,res)=>{
         } catch(e){
             console.log(`${req.url} doesnt exist`);
         }
+
+    } else if(req.url.match(/calculate/)){
+        console.log('calculating relic');
 
     } else {
         console.log(`${req.url} doesnt exist`);
