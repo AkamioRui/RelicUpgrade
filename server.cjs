@@ -3,6 +3,15 @@ const path = require('node:path');
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
 
+//custom
+function myExecfile(file,args=[]){
+    return new Promise((resolve,reject)=>{
+        childProcess.execFile(file,args,(err,stdout,stderr)=>{
+            if(err)reject({err,stdout,stderr});
+            else resolve({stdout,stderr});
+        })    
+    })
+}
 
 // import * as http from 'node:http';
 // import * as path from 'node:path';
@@ -72,6 +81,27 @@ const server = http.createServer((req,res)=>{
 
     } else if(req.url.match(/calculate/)){
         console.log('calculating relic');
+        myExecfile(path.join(__dirname,'cFile','relicUpgrade.exe'),['2', '7', '5', '8', '4']).then(
+            ({stdout,stderr})=>{
+                console.log('calculation complete');
+                console.log(stderr??'');
+                console.log(stdout??'');
+                
+                res.writeHead(200,{'content-type':'text/plain'});
+                res.end('calculation complete\n'+stderr);
+
+            }
+        ).catch(
+            ({err,stdout,stderr})=>{
+                console.log('calculation error',err);
+                console.log(stdout??'');
+                console.log(stderr??'');
+                res.writeHead(500,{'content-type':'text/plain'});
+                res.end('calculation error\n');
+            }
+        )
+          
+        //TODO, add destination as params to relicUpgrade.exe
 
     } else {
         console.log(`${req.url} doesnt exist`);
@@ -81,6 +111,7 @@ const server = http.createServer((req,res)=>{
 
     /* 
 curl http://localhost:8000/    
+curl http://localhost:8000/calculate
     
     */
 });

@@ -109,6 +109,8 @@ void createLABEL(
         fprintf(lableFile,"]\n");
         fprintf(lableFile,"}");
     fclose(lableFile);
+
+    
 }
 
 
@@ -117,6 +119,12 @@ void createLABEL(
 int main(int argc, char **argv){
     //relicUpgrade piece mainstat threshold sub1 sub2 ...
     
+    /*  */ for(int i = 0; i<argc; i++){
+        fprintf(stderr,"%s ",argv[i]);
+    }
+    
+    
+
     PIECE piece ;
     STAT mainstat ;
     int threshold ;
@@ -176,7 +184,7 @@ int main(int argc, char **argv){
 
     
     // HEAP_file = json_init("result/HEAP.json");
-    STATE_file = json_init("../result/STATE.json");
+    STATE_file = json_init("./result/STATE.json");
     graph_init();
     // struct GRAPH *graph2 = &graph;
 

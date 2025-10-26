@@ -151,6 +151,7 @@ void assigningString(){
 int main(){
 
     printf("\ndone\n");
-    return 0;
+    fprintf(stderr,"fault found");
+    return 1;
 }
 
