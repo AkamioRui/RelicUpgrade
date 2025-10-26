@@ -80,30 +80,42 @@ const server = http.createServer((req,res)=>{
         }
 
     } else if(req.url.match(/calculate/)){
-        console.log('calculating relic');
-        myExecfile(
-            path.join(__dirname,'cFile','relicUpgrade.exe'),
-            [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4']
-        )
-        .then(
-            ({stdout,stderr})=>{
-                console.log('calculation complete');
-                console.log(stderr??'');
-                console.log(stdout??'');
-                
-                res.writeHead(200,{'content-type':'text/plain'});
-                res.end('calculation complete\n'+stderr);
 
+        let program = path.join(__dirname,'cFile','relicUpgrade.exe');
+        let args = [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4']
+        callRelicUpgrade(1);
+
+        function callRelicUpgrade(threshold){
+            if(threshold > 9 ) {
+                res.writeHead(200,{'content-type':'text/plain'});
+                res.end('calculation done\n');
+                return;
             }
-        ).catch(
-            ({err,stdout,stderr})=>{
-                console.log('calculation error',err);
-                console.log(stdout??'');
-                console.log(stderr??'');
-                res.writeHead(500,{'content-type':'text/plain'});
-                res.end('calculation error\n');
-            }
-        )
+            args[0] = path.join(__dirname,'result',`${threshold}.json`);
+            args[3] = threshold.toString();
+
+            myExecfile(program,args)
+            .then(
+                ({stdout,stderr})=>{
+                    console.log('calculation complete');
+                    console.log(stderr??'');
+
+                    callRelicUpgrade(threshold+1);
+                }
+            ).catch(
+                ({err,stdout,stderr})=>{
+                    console.log('calculation error',err);
+                    console.log(stdout??'');
+                    console.log(stderr??'');
+                    res.writeHead(500,{'content-type':'text/plain'});
+                    res.end('calculation error\n');
+                }
+            )
+        }
+
+
+        console.log('calculating relic');
+        
           
         //TODO, add destination as params to relicUpgrade.exe
 
