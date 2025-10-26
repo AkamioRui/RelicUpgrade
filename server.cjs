@@ -2,6 +2,7 @@ const http = require('node:http');
 const path = require('node:path');
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
+const { resolveCaa } = require('node:dns');
 
 //custom
 function myExecfile(file,args=[]){
@@ -31,10 +32,15 @@ function myExecfile(file,args=[]){
 //param
 const port = 8000;
 
-
+const knownFile=[
+    {name:'optionGUI.js','head':'text/javascript'},
+    {name:'resultGUI.js','head':'text/javascript'},
+    {name:'script.js','head':'text/javascript'},
+    {name:'VarPlus.js','head':'text/javascript'},
+]
 
 //server
-const server = http.createServer((req,res)=>{
+const server = http.createServer(async (req,res)=>{
     console.log(`---${req.url}`);
 
     if(req.url == '/'){
@@ -44,51 +50,61 @@ const server = http.createServer((req,res)=>{
         let body = fs.readFileSync(file).toString();
         res.writeHead(200,{'content-type':'text/html'});
         res.end(body);
-
-
-    } else if(req.url.match(/optionGUI/)){
-        console.log('   served option');
-        let file = path.join(__dirname,req.url);
-        try{
-            res.writeHead(200,{'content-type':'text/javascript'});
-            fs.createReadStream(file).pipe(res);
-        } catch(e){
-            console.log(`${req.url} doesnt exist`);
-        }
-
-
-    } else if(req.url.match(/resultGUI/)){
-        console.log('   served result');
-        let file = path.join(__dirname,req.url);
-        try{
-            res.writeHead(200,{'content-type':'text/javascript'});
-            fs.createReadStream(file).pipe(res);
         
-        } catch(e){
-            console.log(`${req.url} doesnt exist`);
-        }
+        console.log('\n');return;
+
+    } 
+    
+    let found = knownFile.some(v=>{
+        if(req.url.match(v.name)){
+            console.log(`served ${v.name}`);
+
+            let file = path.join(__dirname,req.url);
+            try{
+                res.writeHead(200,{'content-type':v.head});
+                fs.createReadStream(file).pipe(res);
+            } catch(e){
+                console.log(`${req.url} doesnt exist`);
+                console.log(e);
+                
+            }
+            
+            return true;
+        } else return false;
+        
+    });
+    if(found)return;
 
 
-    } else if(req.url.match(/VarPlus/)){
-        console.log('   served VarPlus');
-        let file = path.join(__dirname,req.url);
-        try{
-            res.writeHead(200,{'content-type':'text/javascript'});
-            fs.createReadStream(file).pipe(res);
-        } catch(e){
-            console.log(`${req.url} doesnt exist`);
-        }
-
-    } else if(req.url.match(/calculate/)){
+    if(req.url.match(/calculate/)){
 
         let program = path.join(__dirname,'cFile','relicUpgrade.exe');
-        let args = [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4']
-        callRelicUpgrade(1);
+        let args = [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4'];
 
+        async function sendAllFile(endIndex){
+            res.writeHead(200,{'content-type':'application/json'});
+            res.write('[\n');
+            for(let i = 1; i<=endIndex; i++){
+                
+                
+                await new Promise((resolve,reject)=>{
+                    fs.createReadStream(path.join(__dirname,'result',`${i}.json`)) 
+                    .on('end',resolve)
+                    .on('error',reject)
+                    .pipe(res,{end:false})
+                })
+    
+                if(i<endIndex) res.write(',\n');
+            }
+            res.write(']\n');
+            res.end();
+
+        }
+
+        callRelicUpgrade(1);
         function callRelicUpgrade(threshold){
             if(threshold > 9 ) {
-                res.writeHead(200,{'content-type':'text/plain'});
-                res.end('calculation done\n');
+                sendAllFile(9);
                 return;
             }
             args[0] = path.join(__dirname,'result',`${threshold}.json`);
@@ -114,16 +130,10 @@ const server = http.createServer((req,res)=>{
         }
 
 
-        console.log('calculating relic');
+    } else console.log(`${req.url} doesnt exist`);
         
-          
-        //TODO, add destination as params to relicUpgrade.exe
+        
 
-    } else {
-        console.log(`${req.url} doesnt exist`);
-        
-        
-    }
 
     /* 
 curl http://localhost:8000/    

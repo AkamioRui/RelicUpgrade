@@ -1,24 +1,10 @@
 
 import * as d3Raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
-
 /** @type {import ("d3")} */  
 const d3 =d3Raw;
 
 //@ts-check
-/** 
- * @typedef {object} node
- * @property {number} depth 
- * @property {number} price 
- * @property {number} succesR - success rate
- * @property {string} detail
- * @property {string} accept
- */
-/** 
- * @typedef {object} link
- * @property {number} src
- * @property {number} dst
- * @property {number} chance
- */
+
 
 
 
@@ -39,12 +25,12 @@ const d3 =d3Raw;
 // )
 
 
-d3.select('#jsonState').on('input',function(){
-  let value = d3.select(this).property('value');
-  let json = JSON.parse(value);
-  drawGraphD3_STATE(json);  
+// d3.select('#jsonState').on('input',function(){
+//   let value = d3.select(this).property('value');
+//   let json = JSON.parse(value);
+//   drawGraphD3_STATE(json);  
 
-})
+// })
 
 
 
@@ -79,9 +65,15 @@ d3.select('#jsonState').on('input',function(){
  * @typedef {object} STATELINK
  * @property {number} chance
  * */ 
+/**  
+ * @typedef {object[]} JsonData
+ * @property {TreeLink<STATELINK,STATENODE>[]} treeLinks
+ * @property {OuterLink<STATELINK>[]} outerLinks
+ * @property {string} msg
+ * */ 
 /**
  * 
- * @param {{treeLinks:TreeLink<STATELINK,STATENODE>[],outerLinks:OuterLink<any>[],msg:string}[]} jsondata 
+ * @param {{treeLinks:TreeLink<STATELINK,STATENODE>[],outerLinks:OuterLink<STATELINK>[],msg:string}[]} jsondata 
  * @param {{width:number,height:number,padding:number}} nodeSetting 
  */
 function drawGraphD3_STATE(jsondata){
@@ -134,7 +126,7 @@ function drawGraphD3_STATE(jsondata){
     treeNodes = root.descendants();
 
     treeLinks.forEach((link)=>{
-      link.linkData = link.target.data.linkData;
+      link.linkData = link.target.data.linkData;//give link memory
     })
     /** @type {d3.HierarchyNode<TreeLink<any, any>>[]} */
     let treeNodesMap = [];
@@ -507,6 +499,7 @@ function drawGraphD3_STATE(jsondata){
 
 }
 
+export {drawGraphD3_STATE};
 
 
 
