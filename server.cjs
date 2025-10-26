@@ -2,7 +2,6 @@ const http = require('node:http');
 const path = require('node:path');
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
-const { resolveCaa } = require('node:dns');
 
 //custom
 function myExecfile(file,args=[]){
@@ -79,7 +78,14 @@ const server = http.createServer(async (req,res)=>{
     if(req.url.match(/calculate/)){
 
         let program = path.join(__dirname,'cFile','relicUpgrade.exe');
-        let args = [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4'];
+        // let args = [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4'];
+
+        let [empty, reqName, ...params] = req.url.split('/');
+        let args = [path.join(__dirname,'result','mySTATE.json'), ...params];
+        
+        console.log(args);
+        
+        
 
         async function sendAllFile(endIndex){
             res.writeHead(200,{'content-type':'application/json'});

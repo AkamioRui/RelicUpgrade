@@ -12,9 +12,15 @@ const _result = _menu.append('div').attr('id','result');
 const _clacButton = _result.append('button')
     .text('calculate')    
     .on('click',async ()=>{
-        
+        //TODO temporary values
+        let piece = '2';
+        let mainstat = '7';
+        let substat = ['8','4','5'];
+
+
+        let command = `/calculate/${piece}/${mainstat}/_/${substat.join('/')}`;
         /** @type {relic.JsonData} */
-        let data = await fetch('/calculate')
+        let data = await fetch(command)
         .then(v=>v.json())
         .then(v=>v.map(d=>d[0]));
         
