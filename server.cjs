@@ -84,8 +84,6 @@ const server = http.createServer(async (req,res)=>{
         let args = [path.join(__dirname,'result','mySTATE.json'), ...params];
         
         console.log(args);
-        
-        
 
         async function sendAllFile(endIndex){
             res.writeHead(200,{'content-type':'application/json'});

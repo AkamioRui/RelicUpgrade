@@ -1,22 +1,22 @@
 import VarPlus  from './VarPlus.js'
+import * as relic from './script.js'
 import * as d3_raw from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
 /** @type {import( "d3" )} */
 let d3 = d3_raw;
 
-// import * as event from 'node:events';
-// import * as util from 'node:util';
-// import * as d3 from 'd3';
 
-// const d3 = import('d3');
+
 // const event = require('node:events');
     // const emitter = new EventTarget();
     // emitter.addEventListener('custom', e => console.log(e.detail));
     // emitter.dispatchEvent(new CustomEvent('custom', { detail: 42 }));
-
-// const util = require('node:util');
-
-
-
+// thresholdOpt.on('input',function(){
+//     d3.select('#thresholdMeter > div').text(this.value);
+    
+//     //update global var
+//     thresholdCode = this.value;
+//     codeElement.text(getCode());
+// });
 
 
 
@@ -104,12 +104,19 @@ const keyword_code = {
 };
 
 
-//element
+// option element
 const _menu = d3.select('#menu');
 const _option = _menu.append('div').attr('id','option');
 const _piece    = create_piece(_option);
 const _mainstat = create_mainstat(_option,_piece);
 const _substat  = create_substat(_option,_mainstat);
+
+//result elment
+const _clacButton = _result.append('button')
+    .text('calculate')    
+;
+const _result = _menu.append('div').attr('id','result');
+
 
 
 /**
@@ -299,13 +306,61 @@ function create_substat(_parent,_mainstat){
 // _substat.chosen.modify(printStat);    
 
   
-// thresholdOpt.on('input',function(){
-//     d3.select('#thresholdMeter > div').text(this.value);
+//result logic
+
+// logic
+_clacButton.on('click',async ()=>{
+    //TODO extract values from menu GUI
+    //TODO temporary values
+    //TODO update result table value
+    let piece = '2';
+    let mainstat = '7';
+    let substat = ['8','4','5'];
+
+
+    let command = `/calculate/${piece}/${mainstat}/_/${substat.join('/')}`;
+    /** @type {relic.JsonData} */
+    let data = await fetch(command)
+    .then(v=>v.json())
+    .then(v=>v.map(d=>d[0]));
     
-//     //update global var
-//     thresholdCode = this.value;
-//     codeElement.text(getCode());
-// });
+    
+    console.log(data.map(d=>d.treeLinks[0].nodeData));
+    
+    
+    
+
+})
+
+
+//appear after the calculation finished
+const _threshold = _result.append('div').attr('id','summary');
+
+let range = 5;
+let start = 1;
+
+let summary = [
+    {key:'threshold',value:'days(53100)'},
+    {key:2,value:100},
+    {key:3,value:123},
+    {key:4,value:345},
+    {key:5,value:567}
+];
+
+
+let _summary = _threshold.selectAll('.summaryNode')
+    .data(summary).enter()
+    .append('div')
+    // .classed('summaryNode',true)
+    
+    ;
+_summary.append('div').text(d=>d.key)    
+_summary.append('div').text(d=>d.value)    
+
+// function init(){}    
+// function update(){}    
+
+    
 
 
 
