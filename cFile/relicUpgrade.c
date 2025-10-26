@@ -114,52 +114,71 @@ void createLABEL(
 }
 
 
-// ./browserUI/relicUpgrade 2 7 5 8 4
+// ./browserUI/relicUpgrade /Destination/path 2 7 5 8 4
 //gdb --args ./relicUpgrade 2 7 5 8 4
 int main(int argc, char **argv){
-    //relicUpgrade piece mainstat threshold sub1 sub2 ...
+    //relicUpgrade destination piece mainstat threshold sub1 ...
     
-    /*  */ for(int i = 0; i<argc; i++){
-        fprintf(stderr,"%s ",argv[i]);
-    }
+    
     
     
 
     PIECE piece ;
     STAT mainstat ;
     int threshold ;
-    int substatC = argc - 4;
+    int substatC = argc - 5;
     STAT substat[12];
+    char *destination;
+
+
     
-    if(argc < 5){
+    //arg validation and extraction
+    if(argc < 6){
         printf("too few argument\n");
         printGuide();
         return 1;
     }
-    
 
-    if(sscanf(argv[1], "%d", &piece    )<1){
-        printf("piece must be a code\n");
+    //destination
+    destination = argv[1];
+    fprintf(stderr,"destination = %s\n",destination);
+
+    //piece
+    if(sscanf(argv[2], "%d", &piece    )<1){
+        fprintf(stderr,"piece must be a code\n");
         printGuide();
         return 1;
-    }
-    if(sscanf(argv[2], "%d", &mainstat )<1){
-        printf("mainstat must be a code\n");
+    } else fprintf(stderr,"piece = %s \n",PIECE2str(piece));
+    
+    //mainstat
+    if(sscanf(argv[3], "%d", &mainstat )<1){
+        fprintf(stderr,"mainstat must be a code\n");
         printGuide();
         return 1;
-    }
-    if(sscanf(argv[3], "%d", &threshold)<1){
-        printf("threshold must be a code\n");
+    } else fprintf(stderr,"mainstat = %s \n",STAT2str(mainstat));
+    
+    //threshold
+    if(sscanf(argv[4], "%d", &threshold)<1){
+        fprintf(stderr,"threshold must be a code\n");
         printGuide();
         return 1;
-    }
+    } else fprintf(stderr,"threshold = %d \n",threshold);
+    
+    //substat
     for(int i = 0; i<substatC; i++) {
-        if(sscanf(argv[i+4],"%d",substat+i)<1){
-            printf("all substat must be a code\n");
+        if(sscanf(argv[i+5],"%d",substat+i)<1){
+            fprintf(stderr,"all substat must be a code\n");
             printGuide();
             return 1;
         }
     }
+    fprintf(stderr,"substat =");
+    for(int j = 0 ; j<substatC; j++){
+        fprintf(stderr," %s",STAT2str(substat[j]));
+    }
+    fprintf(stderr,"\n");
+    
+ 
 
     // createLABEL(piece, mainstat, threshold, substatC, substat);
 
@@ -184,7 +203,7 @@ int main(int argc, char **argv){
 
     
     // HEAP_file = json_init("result/HEAP.json");
-    STATE_file = json_init("./result/STATE.json");
+    STATE_file = json_init(destination);//TODO destination
     graph_init();
     // struct GRAPH *graph2 = &graph;
 

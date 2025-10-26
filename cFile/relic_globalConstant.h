@@ -47,6 +47,38 @@ char *STATname[]={
     ,"BE"
 };
 
+char* PIECE2str(PIECE piece){
+    switch(piece){
+        case PIECE_HEAD:   return "HEAD";
+        case PIECE_HANDS:  return "HANDS";
+        case PIECE_BODY:   return "BODY";
+        case PIECE_BOOTS:  return "BOOTS";
+        case PIECE_PLANAR: return "PLANAR";
+        case PIECE_ROPE:   return "ROPE";
+        default:           return "INVALID PIECE";
+    }
+}
+char* STAT2str(STAT stat){
+    switch(stat){
+        case STAT_HP:   return "HP";
+        case STAT_ATK:  return "ATK";
+        case STAT_DEF:  return "DEF";
+        case STAT_HPP:  return "HPP";
+        case STAT_ATKP: return "ATKP";
+        case STAT_DEFP: return "DEFP";
+        case STAT_SPD:  return "SPD";
+        case STAT_CR:   return "CR";
+        case STAT_CD:   return "CD";
+        case STAT_EHR:  return "EHR";
+        case STAT_ERS:  return "ERS";
+        case STAT_BE:   return "BE";
+        case STAT_DMG:  return "DMG";
+        case STAT_HEAL: return "HEAL";
+        case STAT_ER:   return "ER";
+        default:        return "invalid stat";
+    }
+}
+
 
 // global variable
 struct COST{

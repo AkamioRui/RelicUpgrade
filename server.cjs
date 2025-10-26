@@ -81,7 +81,11 @@ const server = http.createServer((req,res)=>{
 
     } else if(req.url.match(/calculate/)){
         console.log('calculating relic');
-        myExecfile(path.join(__dirname,'cFile','relicUpgrade.exe'),['2', '7', '5', '8', '4']).then(
+        myExecfile(
+            path.join(__dirname,'cFile','relicUpgrade.exe'),
+            [path.join(__dirname,'result','mySTATE.json'), '2', '7', '5', '8', '4']
+        )
+        .then(
             ({stdout,stderr})=>{
                 console.log('calculation complete');
                 console.log(stderr??'');
