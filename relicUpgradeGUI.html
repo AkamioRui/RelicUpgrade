@@ -88,15 +88,20 @@
                 grid: auto / auto-flow;
                 gap:5px;
                 
+                align-items: start;
+                
+
+
                 & > div{
                     display: grid;
-                    grid: auto auto/ auto-flow;
+                    grid: auto auto auto/ auto-flow;
                     gap:2px;
                 }
 
                 & > div > div{
                     background-color: rgb(237, 237, 237);
                     display:flex;
+                    flex-flow:column;
                     justify-content: center;
                 }
 
@@ -200,12 +205,27 @@
         
         
     </div>
+
+    <!-- <div style="display: flex;flex-direction: column
+    ;">
+        <div>1</div>
+        <div>2</div>
+        <div>3</div>
+        <div>4</div>
+        <div>5</div>
+        <div>6</div>
+    </div> -->
      
+     
+     
+     
+     
+     
+
       
   <!-- <script src="script.js" type="module"></script> -->
   <!-- <script src="option.js" type="module"></script> -->
   <script src="optionGUI.js" type="module"></script>
-  <script src="resultGUI.js" type="module"></script>
   
     
 </body>

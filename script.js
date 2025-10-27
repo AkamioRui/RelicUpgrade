@@ -76,10 +76,11 @@ const d3 =d3Raw;
  * @param {{treeLinks:TreeLink<STATELINK,STATENODE>[],outerLinks:OuterLink<STATELINK>[],msg:string}[]} jsondata 
  * @param {{width:number,height:number,padding:number}} nodeSetting 
  */
-function drawGraphD3_STATE(jsondata){
+function drawGraphD3_STATE(parent,jsondata){
 
   //common element
-  const all = d3.select('body').append('div');
+  // const all = d3.select('body').append('div');
+  const all = parent;
   const backButton = all.append('button').text('back').attr('class','back');
   const msgBox = all.append('p').attr('class','msgBox')
     .style('display','inline')

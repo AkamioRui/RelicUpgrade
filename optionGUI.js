@@ -122,8 +122,8 @@ const _result = _menu.append('div').attr('id','result');
 const _clacButton = _result.append('button')
     .text('calculate')    
 ;
-// const cost = 53400;
-const cost = 264000;
+const cost = 53400;
+// const cost = 264000;
 const _summary = _result.append('div').attr('id','summary');
 const _summary_header = _summary.append('div');
     _summary_header.append('div').text(d=>`Threshold`)    
@@ -327,8 +327,9 @@ function create_substat(_parent,_mainstat){
 //result logic
 //#region 
 
-let summary = /** @type {VarPlus<{threshold:number,cost:number}[]>} */( new VarPlus([]));
+let summary = /** @type {VarPlus<{threshold:number,cost:number,avoid:string[]}[]>} */( new VarPlus([]));
 
+let graphNo = new VarPlus(0);
 
 function validate_input(){
     let piece = _piece.chosen.get();
@@ -350,10 +351,15 @@ _clacButton.on('click',async ()=>{
     let result = validate_input();
     if( !result ) return;
     let [piece, mainstat, substat] = result;
+    // let [piece, mainstat, substat] = [0,0,[4,6]];
+    
 
+    //turn off graph
+    graphNo.set(0);
 
     // execution
     let command = `/calculate/${piece}/${mainstat}/_/${substat.join('/')}`;
+    
     console.log(command);
     /** @type {relic.JsonData} */
     let data = await fetch(command)
@@ -361,18 +367,22 @@ _clacButton.on('click',async ()=>{
     .then(v=>v.map(d=>d[0]));
     
     
-    // console.log(data.map(d=>d.treeLinks[0].nodeData));
-    // let a = new Array(9).fill(1).map((_,i)=>({threshold:i+1,cost:Math.floor(Math.random()*1000)}));//TODO temporary value
     summary.set(data.map((d,i)=>{
+        
         let rootdata = d.treeLinks[0].nodeData;
         let price = rootdata.succesR>0?
             (rootdata.price/rootdata.succesR/cost).toFixed(1):
             '_'
         ;
+        let breaks = d.treeLinks.filter(
+            l=>l.nodeData.inHeap == '1'
+        ).map(l=>l.nodeData.detail);
+        
     
         return {
             threshold: i+1,
-            cost: price
+            cost: price,
+            avoid: breaks
         }
     }));
     
@@ -382,6 +392,7 @@ _clacButton.on('click',async ()=>{
 
 
 summary.modify(summaryData=>{
+    console.log(summaryData);
 
     _summary_list = _summary_list
         .data(summaryData,
@@ -389,9 +400,21 @@ summary.modify(summaryData=>{
         )
         .join(
             enter => {
+
+
                 let Enter = enter.append('div').classed('summaryNode',true)
+
                 Enter.append('div').classed('thold',true).text(d=>d.threshold)
+                
                 Enter.append('div').classed('cost',true).text(d=>d.cost);
+                
+                Enter.append('div').classed('avoid_list',true).selectAll('.avoid')
+                    .data(d=>d.avoid)
+                    .enter()
+                    .append('div').classed('avoid',true)    
+                    .text(d=>d)
+                    
+                ;
                 return Enter;
             }  
             ,
@@ -399,6 +422,16 @@ summary.modify(summaryData=>{
                 update
                 .select('.cost')
                 .text(d=>d.cost)
+
+                update.select('.avoid_list').selectAll('.avoid')
+                .data(d=>d.avoid)
+                .join(
+                    enter => enter.append('div').classed('avoid',true)
+                        .text(d=>d)
+                    ,
+                    update => update.text(d=>d),
+                    exit => exit.remove()
+                )
                 return update;
             }
             ,
@@ -408,6 +441,8 @@ summary.modify(summaryData=>{
     ;
       
 });
+
+
 // //appear after the calculation finished
 // const _threshold = _result.append('div').attr('id','summary');
 
