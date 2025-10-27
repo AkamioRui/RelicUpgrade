@@ -451,7 +451,8 @@ function drawGraphD3_STATE(jsondata){
     resizeSVG();
     
     
-    linkElements = linkElements.data(treeLinks, function (d){
+    linkElements = linkElements
+    .data(treeLinks, function (d){
       return d.source.id+','+d.target.id;
     } ).join(//normal: black, enter:green
       enter =>{
