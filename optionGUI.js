@@ -122,8 +122,8 @@ const _result = _menu.append('div').attr('id','result');
 const _clacButton = _result.append('button')
     .text('calculate')    
 ;
-const cost = 53400;
-// const cost = 264000;
+// const cost = 53400;
+const cost = 264000;
 const _summary = _result.append('div').attr('id','summary');
 const _summary_header = _summary.append('div');
     _summary_header.append('div').text(d=>`Threshold`)    
