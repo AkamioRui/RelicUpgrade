@@ -1,0 +1,5 @@
+### get page
+get http://localhost:3000/
+
+### calc 
+get http://localhost:3000/calculate/2/7/_/8/4

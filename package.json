@@ -2,17 +2,18 @@
   "name": "relic",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.cjs"
+    "start": "node server.cjs",
+    "electron": "electron ."
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@types/d3": "^7.4.3",
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "electron": "^39.2.7"
